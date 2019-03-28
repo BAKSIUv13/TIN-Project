@@ -14,15 +14,27 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}")
 set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}")
 
-#include_directories("${CMAKE_SOURCE_DIR}/src")
+include_directories("${CMAKE_SOURCE_DIR}")
 
 #include(CTest)
 #enable_testing()
 
-add_subdirectory("${CMAKE_SOURCE_DIR}/src")
-get_directory_property(SOURCES DIRECTORY "${CMAKE_SOURCE_DIR}/src" DEFINITION SOURCES)
+add_subdirectory(core)
+get_directory_property(
+  SOURCES_core DIRECTORY core DEFINITION SOURCES
+)
 
-add_executable(server "${SOURCES}")
+add_subdirectory(xd)
+get_directory_property(
+  SOURCES_xd DIRECTORY xd DEFINITION SOURCES
+)
+
+add_executable(server
+  main.cc
+  "${SOURCES_core}"
+  "${SOURCES_xd}"
+)
+
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
