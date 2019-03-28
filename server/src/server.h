@@ -4,7 +4,7 @@
 namespace tin {
 class Server{
 
-};
-}
+}; // class Server
+} // namespace tin
 
-#endif  // TIN_PROJECT_SERVER_H_
+#endif // TIN_PROJECT_SERVER_H_

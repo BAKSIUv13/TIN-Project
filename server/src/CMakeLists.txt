@@ -1,5 +1,6 @@
 set(SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/main.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/server.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/some_sockets.cc"
   #"${CMAKE_CURRENT_SOURCE_DIR}"
 )
