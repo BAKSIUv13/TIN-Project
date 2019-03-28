@@ -1,0 +1,5 @@
+{
+    "C_Cpp.clang_format_fallbackStyle": "Google",
+    "cpplint.root": "${workspaceFolder}/server",
+    "cpplint.repository": "${workspaceFolder}/server"
+}
