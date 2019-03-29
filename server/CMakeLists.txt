@@ -35,6 +35,9 @@ add_executable(server
   "${SOURCES_xd}"
 )
 
+target_link_libraries(server
+  pthread
+)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
