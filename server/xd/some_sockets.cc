@@ -3,6 +3,7 @@
 #include "xd/some_sockets.h"
 
 #include <unistd.h>
+#include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -92,18 +93,21 @@ namespace tin {
   void *client_func(void *vp) {
     sleep(3);
     int cli_sock;
-    cli_sock = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+    cli_sock = socket(AF_INET, SOCK_STREAM/* | SOCK_NONBLOCK*/, 0);
+    if (cli_sock < 0) {
+      std::cerr << "error client socket: " << std::strerror(errno) << '\n';
+      return nullptr;
+    }
     int connect_ret;
     struct sockaddr_in saddr;
     saddr.sin_family = AF_INET;
     saddr.sin_addr.s_addr = INADDR_LOOPBACK;
     saddr.sin_port = htons(33000);
     connect_ret = connect(cli_sock,
-      reinterpret_cast<const struct sockaddr *>(&saddr),
+      reinterpret_cast<struct sockaddr *>(&saddr),
       sizeof(saddr));
-    if (connect_ret != 0) {
-      std::cerr << "connect error: " << connect_ret << '\n'
-        << "errno: " << std::strerror(errno) << '\n';
+    if (connect_ret < 0) {
+      std::cerr << "connect error: " << std::strerror(errno) << '\n';
       return nullptr;
     }
     std::cout << "Połączyło się z serwerem :3\n";
@@ -129,7 +133,19 @@ namespace tin {
     client_thr = Thread(client_func, nullptr);
     serv_thr.Join();
     client_thr.Join();
+    /*pid_t pid = fork();
+    if (pid < 0) {
+      std::cerr << "fork error: " << std::strerror(errno) << '\n';
+      return 1;
+    } else if (pid == 0) {  // child
+      client_func(nullptr);
+    } else {
+      server_func(nullptr);
+      int status;
+      wait(&status);
+    }*/
     return 0;
+    /*
     int socks[3];
     socks[0] = socket(AF_INET, SOCK_STREAM, 0);
     socks[1] = socket(AF_INET, SOCK_STREAM, 0);
@@ -169,6 +185,6 @@ namespace tin {
         << "errno: " << std::strerror(errno) << '\n';
       return 2;
     }
-    return 0;
+    return 0;  */
   }
 }  // namespace tin
