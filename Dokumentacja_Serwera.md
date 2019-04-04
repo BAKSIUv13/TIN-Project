@@ -7,12 +7,12 @@ Osoba odpowiedzialna: Piotr Małyszek
 Serwer będzie zrobiony w języku C++. Będzie on samodzielną aplikacją
 uruchamianą w terminalu.
 
-Serwer będzie przechowywał aktualny stan obrazka, tzn. wszystkie obiekty, które
-na nim są. Oprócz tego będzie przechowywał wszystkie zalogowane sesje
-użytkowników, a także informacje o nich, m. in. pozycja kursora (jeśli jest
-ustawiony, że ma ją trzymać), zaznaczone (zablokowane) obiekty. Będzie również
-możliwość zalogowania się jako administrator, który będzie mógł cofać ruchy
-innych, wyrzucać ich, banować i robić właściwie wszystko, co się da.
+Serwer będzie przechowywał aktualny stan obrazków, tzn. wszystkie obiekty, które
+na nich są. Oprócz tego będzie przechowywał wszystkie zalogowane sesje
+użytkowników, a także informacje o nich, m. in. wybrany obrazek, pozycja kursora
+(jeśli jest ustawiony, że ma ją trzymać), zaznaczone (zablokowane) obiekty.
+Będzie również możliwość zalogowania się jako administrator, który będzie mógł
+cofać ruchy innych, wyrzucać ich, banować i robić właściwie wszystko, co się da.
 
 ## Uwierzytelnianie
 
@@ -57,7 +57,7 @@ w postaci Base64, a skrót jako zwykła liczba.
 
 Serwer będzie odbierał od klientów pakiety danych, w których będą zawarte
 opisy ich czynności i na ich podstawie będzie zmieniał 'stan świata', tzn.
-stan obrazka i  informacje o użytkownikach. Co jakiś czas będzie również wysyłał
+stan obrazków i informacje o użytkownikach. Co jakiś czas będzie również wysyłał
 aktualizacje stanu świata do wszystkich użytkowników.
 
 Będzie również możliwość wymuszenia wysłania całego stanu do klienta, która
