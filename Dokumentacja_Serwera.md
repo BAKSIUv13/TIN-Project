@@ -57,7 +57,7 @@ w postaci Base64, a skrót jako zwykła liczba.
 
 Serwer będzie odbierał od klientów pakiety danych, w których będą zawarte
 opisy ich czynności i na ich podstawie będzie zmieniał 'stan świata', tzn.
-stan obrazkai  informacje o użytkownikach. Co jakiś czas będzie również wysyłał
+stan obrazka i  informacje o użytkownikach. Co jakiś czas będzie również wysyłał
 aktualizacje stanu świata do wszystkich użytkowników.
 
 Będzie również możliwość wymuszenia wysłania całego stanu do klienta, która
