@@ -17,6 +17,7 @@ class Thread {
   ~Thread();
   bool Joinable();
   int Join(void **vp = nullptr);
+  void join() {Join();}  // std
   int Cancel();
  private:
   void Destroy_();
