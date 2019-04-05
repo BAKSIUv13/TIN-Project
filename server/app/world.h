@@ -12,11 +12,12 @@ namespace tin {
 class World{
  public:
   using ArtistTable = std::map<int, Artist>;
+  using ImageTable = std::map<int, Image>;
 
   int AddArtist();
   void RemoveArtist();
  private:
-  Image image_;
+  ImageTable images_;
   ArtistTable artists_;
 };  // class World
 }  // namespace tin

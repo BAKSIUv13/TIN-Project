@@ -1,0 +1,16 @@
+// Copyright 2077 jabka
+
+#ifndef SERVER_CONFIGURATOR_SETTING_H_
+#define SERVER_CONFIGURATOR_SETTING_H_
+
+namespace tin {
+enum Setting {
+  HOST_ADDRESS,
+  HOST_PORT,
+  MAX_USERS,
+  DEAL_WITH_CURSORS,
+
+  THE_END
+};
+}
+#endif  // SERVER_CONFIGURATOR_SETTING_H_
