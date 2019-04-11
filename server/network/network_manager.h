@@ -8,15 +8,15 @@
 namespace tin {
 class NetworkManager {
  public:
-  NetworkManager();
-  ~NetworkManager();
+  NetworkManager() {}
+  ~NetworkManager() {}
 
-  void StartService();
-  void StopService();
+  void StartService() {}
+  void StopService() {}
 
-  void Send();
+  void Send() {}
 
-  void GetThings();
+  void GetThings() {}
  private:
   int tcp4_sock_;
   int tcp6_sock_;

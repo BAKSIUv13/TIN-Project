@@ -26,12 +26,16 @@ static std::array<char, 16> fgfg(uint32_t x) {
 
 namespace tin {
   SocketTCP4::SocketTCP4()
-    : status_(BLANK), fd_(-1) {
+    : fd_(-1), status_(BLANK) {
   }  // fd -1 means socket is not open
 
   //  SocketTCP4::SocketTCP4(uint32_t address, uint16_t port)
   //  : Socket() {
   //  int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+
+  SocketTCP4::~SocketTCP4() {
+    Destroy_();
+  }
 
   int SocketTCP4::Open() {
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -43,13 +47,14 @@ namespace tin {
     }
     fd_ = sock_fd;
     status_ = CREATED;
+    return 0;
   }
 
-  SocketTCP4::SocketTCP4(SocketTCP4 &&other) {
+  SocketTCP4::SocketTCP4(SocketTCP4 &&other) noexcept {
     Move_(&other);
   }
 
-  SocketTCP4 &SocketTCP4::operator=(SocketTCP4 &&other) {
+  SocketTCP4 &SocketTCP4::operator=(SocketTCP4 &&other) noexcept {
     Destroy_();
     Move_(&other);
     return *this;
@@ -92,7 +97,11 @@ namespace tin {
   }
 
   int SocketTCP4::Listen(int queue_length) {
-    return listen(fd_, queue_length);
+    int listen_ret = listen(fd_, queue_length);
+    if (listen_ret == 0) {
+      status_ = LISTENING;
+    }
+    return listen_ret;
   }
 
   int SocketTCP4::Connect(uint32_t address, uint16_t port) {
@@ -130,6 +139,10 @@ namespace tin {
       new_sock->addr_other_ = saddr.sin_addr.s_addr;
       new_sock->port_other_ = saddr.sin_port;
       int hahaha = getsockname(accept_ret, &saddr_l, &addrlen);
+      if (hahaha < 0) {
+        std::cerr << "najgorzej\n";
+        std::terminate();
+      }
       new_sock->addr_local_ = saddr.sin_addr.s_addr;
       new_sock->port_local_ = saddr.sin_port;
       std::fprintf(stderr, "serv local xd %s:%d\nclient local  %s:%d\n"

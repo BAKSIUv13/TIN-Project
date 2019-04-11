@@ -10,18 +10,17 @@
 namespace tin {
 class TheConfig {
  public:
+  TheConfig() {}
+  ~TheConfig() {}
 
-  TheConfig();
-  ~TheConfig();
+  std::string GetSetting(Setting) {return std::string();}
+  void SetSetting(Setting, std::string) {}
 
-  std::string GetSetting(Setting);
-  void SetSetting(Setting, std::string);
-
-  void LoadFromFile(std::string path);
-  void SaveToFile(std::string path);
+  void LoadFromFile(std::string path) {}
+  void SaveToFile(std::string path) {}
 
  private:
-  void LoadDefault_();
+  void LoadDefault_() {}
 };  // class TheConfig
 }  // namespace tin
 

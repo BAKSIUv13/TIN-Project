@@ -13,7 +13,7 @@ class SocketTCP4 {
     BLANK,
     CREATED,
     BOND,
-    //  LISTENING,
+    LISTENING,
     CONNECTED,
   };
 

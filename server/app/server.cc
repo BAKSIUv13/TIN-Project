@@ -16,9 +16,9 @@ Server::Server() {
 }
 
 void Server::Run() {
-  static constexpr uint32_t HARDCODED_SERVER_ADDRESS = 0x7f000001;
+  //  static constexpr uint32_t HARDCODED_SERVER_ADDRESS = 0x7f000001;
   static constexpr uint16_t HARDCODED_SERVER_PORT = 23456;
-  static constexpr size_t MAX_CLIENTS = 10;
+  //  static constexpr size_t MAX_CLIENTS = 10;
 
   SocketTCP4 sock;
 
@@ -48,9 +48,10 @@ void Server::Run() {
 
 
   while (1) {
-    maxfd = sock.GetFD();
+    maxfd = fg;
     FD_ZERO(&set2);
     FD_SET(p1[0], &set2);
+    FD_SET(sock.GetFD(), &set2);
     for (auto &x : socks) {
       if (x.GetFD() > maxfd) maxfd = x.GetFD();
       FD_SET(x.GetFD(), &set2);
@@ -75,6 +76,7 @@ void Server::Run() {
           std::cout << "Przyszło coś z " << x.GetFD() << ":\n";
           ssize_t ile = read(x.GetFD(),
             reinterpret_cast<void *>(znaks), sizeof(znaks));
+            (void)ile;
         }
       }
       if (FD_ISSET(sock.GetFD(), &set2)) {
