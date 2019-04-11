@@ -1,7 +1,7 @@
 // Copyright 0 0
 
-#ifndef SERVER_CORE_SOCKET_H_
-#define SERVER_CORE_SOCKET_H_
+#ifndef SERVER_CORE_SOCKET_TCP4_H_
+#define SERVER_CORE_SOCKET_TCP4_H_
 
 #include <cstdint>
 
@@ -13,26 +13,30 @@ class SocketTCP4 {
     BLANK,
     CREATED,
     BOND,
-    LISTENING,
-    CONNECTED
+    //  LISTENING,
+    CONNECTED,
   };
 
   SocketTCP4();
   //  explicit SocketTCP4(uint32_t address, uint16_t port);
   SocketTCP4(const SocketTCP4 &) = delete;
-  SocketTCP4(SocketTCP4 &&);
-  SocketTCP4 &operator=(SocketTCP4 &&);
+  SocketTCP4(SocketTCP4 &&) noexcept;
+  SocketTCP4 &operator=(SocketTCP4 &&) noexcept;
   ~SocketTCP4();
 
-  int Create();
+  explicit operator int() {return fd_;}
+
+  int Open();
   int Bind(uint32_t, uint16_t);
   int BindAny(uint16_t);
-  int Listen();
-  int Connect();
-  int Accept();
+  int Listen(int queue_length);
+  int Connect(uint32_t, uint16_t);
+  int Accept(SocketTCP4 *);
+  int Close();
+  int Shutdown(int how);
 
   Status GetStatus() {return status_;}
-  int GetFD();  // This shall be used for 'select'.
+  int GetFD() {return fd_;}  // This shall be used for 'select'.
 
  private:
   static const struct Accept_Flag_t {} Accept_Flag;
@@ -51,4 +55,4 @@ class SocketTCP4 {
 
 }  // namespace tin
 
-#endif  // SERVER_CORE_SOCKET_H_
+#endif  // SERVER_CORE_SOCKET_TCP4_H_
