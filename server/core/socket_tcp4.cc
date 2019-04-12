@@ -12,13 +12,13 @@
 #include <iostream>
 #include <array>
 
-
 static std::array<char, 16> fgfg(uint32_t x) {
   // nie chciało mi się szukać tyhc funkcji więc napisałem sam na rzaie
   std::array<char, 16> xc;
   char *gd = xc.data();
-  for (uint32_t i = 0; i < 32; i += 8) {
-    gd += snprintf(gd, 16 * sizeof(char), "%d.", (x << i) & 255);
+  for (uint32_t i = 24;; i -= 8) {
+    gd += snprintf(gd, 16 * sizeof(char), "%d.", (x >> i) & 255);
+    if (i == 0) break;
   }
   *(gd - 1) = '\0';
   return xc;
@@ -81,8 +81,8 @@ namespace tin {
       reinterpret_cast<struct sockaddr *>(&saddr),
       sizeof(saddr));
     if (bind_ret == 0) {
-      addr_local_ = address;  // nie wiem
-      port_local_ = port;  // czy dobrze xd
+      addr_here_ = address;  // nie wiem
+      port_here_ = port;  // czy dobrze xd
       status_ = BOND;
 #ifdef SOME_DEBUG
     } else {
@@ -113,8 +113,8 @@ namespace tin {
       reinterpret_cast<struct sockaddr *>(&saddr),
       sizeof(saddr));
     if (connect_ret == 0) {
-      addr_other_ = address;
-      port_other_ = port;
+      addr_there_ = address;
+      port_there_ = port;
       status_ = CONNECTED;
     }
     return connect_ret;
@@ -136,20 +136,20 @@ namespace tin {
       }
       new_sock->status_ = CONNECTED;
       new_sock->fd_ = accept_ret;
-      new_sock->addr_other_ = saddr.sin_addr.s_addr;
-      new_sock->port_other_ = saddr.sin_port;
+      new_sock->addr_there_ = ntohl(saddr.sin_addr.s_addr);
+      new_sock->port_there_ = ntohs(saddr.sin_port);
       int hahaha = getsockname(accept_ret, &saddr_l, &addrlen);
       if (hahaha < 0) {
         std::cerr << "najgorzej\n";
         std::terminate();
       }
-      new_sock->addr_local_ = saddr.sin_addr.s_addr;
-      new_sock->port_local_ = saddr.sin_port;
-      std::fprintf(stderr, "serv local xd %s:%d\nclient local  %s:%d\n"
-        "client other  %s:%d\n",
-        fgfg(addr_local_).data(), ntohs(port_local_),
-        fgfg(new_sock->addr_local_).data(), ntohs(new_sock->port_local_),
-        fgfg(new_sock->addr_other_).data(), ntohs(new_sock->port_other_));
+      new_sock->addr_here_ = ntohl(saddr.sin_addr.s_addr);
+      new_sock->port_here_ = ntohs(saddr.sin_port);
+      std::fprintf(stderr, "serv here xd  %s:%d\nclient here   %s:%d\n"
+        "client there  %s:%d\n",
+        fgfg(addr_here_).data(), port_here_,
+        fgfg(new_sock->addr_here_).data(), new_sock->port_here_,
+        fgfg(new_sock->addr_there_).data(), new_sock->port_there_);
       return 0;
     }
     return accept_ret;

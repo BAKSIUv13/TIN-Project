@@ -47,10 +47,10 @@ class SocketTCP4 {
 
   int fd_;
   Status status_;
-  uint32_t addr_local_;
-  uint16_t port_local_;
-  uint32_t addr_other_;
-  uint16_t port_other_;
+  uint32_t addr_here_;
+  uint16_t port_here_;
+  uint32_t addr_there_;
+  uint16_t port_there_;
 };
 
 }  // namespace tin
