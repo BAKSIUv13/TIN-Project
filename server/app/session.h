@@ -1,4 +1,4 @@
-// Copyright 2077 jabka
+// Copyright 2019 piotrek
 
 #ifndef SERVER_APP_SESSION_H_
 #define SERVER_APP_SESSION_H_

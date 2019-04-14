@@ -1,4 +1,4 @@
-// Copyright 0 0
+// Copyright 2019 Piotrek
 
 #ifndef SERVER_CORE_SEL_H_
 #define SERVER_CORE_SEL_H_

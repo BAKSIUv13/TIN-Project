@@ -1,4 +1,4 @@
-// Copyright 0 0
+// Copyright 2019 Piotrek
 
 #ifndef SERVER_NETWORK_NWS_H_
 #define SERVER_NETWORK_NWS_H_

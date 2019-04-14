@@ -253,6 +253,11 @@ void Server::SpecialHardcodeInit() {
   AddSession(0x7878787878787878, Username("Teemo"));  // 'x'
   AddSession(0x3535353535353535, Username("mrrrauuu  hehe"));  // '5'
   AddSession(0x6161616161616161, Username("ZabujcaZla"));  // 'a'
+  AddSession(0x3939393939393939, Username("djiwd9qwdk"));  // '9'
+  AddSession(0x4b4b4b4b4b4b4b4b, Username("jestem kotem"));  // 'K'
+  AddSession(0x2020202020202020, Username("1 2 3"));  // ' '
+  AddSession(0x3030303030303030, Username("1_1"));  // '0'
+  AddSession(0x4a4a4a4a4a4a4a4a, Username("Samurai Jack"));  // 'J'
 }
 
 int Server::AddSession(SessionId sid, const Username &name) {

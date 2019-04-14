@@ -1,4 +1,4 @@
-// Copyright 0 0
+// Copyright 2019 Piotrek
 
 #include "network/network_manager.h"
 
