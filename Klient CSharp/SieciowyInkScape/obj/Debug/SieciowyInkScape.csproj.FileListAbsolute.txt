@@ -1,0 +1,22 @@
+E:\Users\User\Documents\Visual Studio 2017\Projects\SieciowyInkScape\SieciowyInkScape\bin\Debug\SieciowyInkScape.exe.config
+E:\Users\User\Documents\Visual Studio 2017\Projects\SieciowyInkScape\SieciowyInkScape\bin\Debug\SieciowyInkScape.exe
+E:\Users\User\Documents\Visual Studio 2017\Projects\SieciowyInkScape\SieciowyInkScape\bin\Debug\SieciowyInkScape.pdb
+E:\Users\User\Documents\Visual Studio 2017\Projects\SieciowyInkScape\SieciowyInkScape\obj\Debug\SieciowyInkScape.csprojAssemblyReference.cache
+E:\Users\User\Documents\Visual Studio 2017\Projects\SieciowyInkScape\SieciowyInkScape\obj\Debug\SieciowyInkScape.Properties.Resources.resources
+E:\Users\User\Documents\Visual Studio 2017\Projects\SieciowyInkScape\SieciowyInkScape\obj\Debug\SieciowyInkScape.csproj.GenerateResource.cache
+E:\Users\User\Documents\Visual Studio 2017\Projects\SieciowyInkScape\SieciowyInkScape\obj\Debug\SieciowyInkScape.csproj.CoreCompileInputs.cache
+E:\Users\User\Documents\Visual Studio 2017\Projects\SieciowyInkScape\SieciowyInkScape\obj\Debug\SieciowyInkScape.exe
+E:\Users\User\Documents\Visual Studio 2017\Projects\SieciowyInkScape\SieciowyInkScape\obj\Debug\SieciowyInkScape.pdb
+E:\Users\User\Documents\Visual Studio 2017\Projects\SieciowyInkScape\SieciowyInkScape\obj\Debug\SieciowyInkScape.MainForm.resources
+E:\Users\User\Documents\Visual Studio 2017\Projects\SieciowyInkScape\SieciowyInkScape\obj\Debug\SieciowyInkScape.LoginForm.resources
+E:\Users\User\Documents\Visual Studio 2017\Projects\TIN-Project\Klient CSharp\SieciowyInkScape\bin\Debug\SieciowyInkScape.exe.config
+E:\Users\User\Documents\Visual Studio 2017\Projects\TIN-Project\Klient CSharp\SieciowyInkScape\bin\Debug\SieciowyInkScape.exe
+E:\Users\User\Documents\Visual Studio 2017\Projects\TIN-Project\Klient CSharp\SieciowyInkScape\bin\Debug\SieciowyInkScape.pdb
+E:\Users\User\Documents\Visual Studio 2017\Projects\TIN-Project\Klient CSharp\SieciowyInkScape\obj\Debug\SieciowyInkScape.csprojAssemblyReference.cache
+E:\Users\User\Documents\Visual Studio 2017\Projects\TIN-Project\Klient CSharp\SieciowyInkScape\obj\Debug\SieciowyInkScape.MainForm.resources
+E:\Users\User\Documents\Visual Studio 2017\Projects\TIN-Project\Klient CSharp\SieciowyInkScape\obj\Debug\SieciowyInkScape.LoginForm.resources
+E:\Users\User\Documents\Visual Studio 2017\Projects\TIN-Project\Klient CSharp\SieciowyInkScape\obj\Debug\SieciowyInkScape.Properties.Resources.resources
+E:\Users\User\Documents\Visual Studio 2017\Projects\TIN-Project\Klient CSharp\SieciowyInkScape\obj\Debug\SieciowyInkScape.csproj.GenerateResource.cache
+E:\Users\User\Documents\Visual Studio 2017\Projects\TIN-Project\Klient CSharp\SieciowyInkScape\obj\Debug\SieciowyInkScape.csproj.CoreCompileInputs.cache
+E:\Users\User\Documents\Visual Studio 2017\Projects\TIN-Project\Klient CSharp\SieciowyInkScape\obj\Debug\SieciowyInkScape.exe
+E:\Users\User\Documents\Visual Studio 2017\Projects\TIN-Project\Klient CSharp\SieciowyInkScape\obj\Debug\SieciowyInkScape.pdb
