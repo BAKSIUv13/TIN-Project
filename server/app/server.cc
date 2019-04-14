@@ -13,7 +13,40 @@
 
 namespace tin {
 Server::Server() {
+  if (pipe(end_pipe_)) {
+    std::cerr << "Serwer się nie zrobił bo pipe się  niwe otworzyło :< "
+      << std::strerror(errno) << '\n';
+    std::terminate();
+  }
   return;
+}
+Server::~Server() {
+  close(end_pipe_[0]);
+  close(end_pipe_[1]);
+}
+
+void Server::Run2() {
+  static constexpr NetStartConf HARDCODED_NET = {42000};
+  static constexpr int STDIN_FD = STDIN_FILENO;
+  nm_.Start(HARDCODED_NET);
+  bool not_exit = true;
+  Sel sel;
+  while (not_exit) {
+    if (true) {
+      sel.AddFD(STDIN_FD, Sel::READ);
+    }
+    sel.AddFD(end_pipe_[0], Sel::READ);
+    nm_.FeedMainSel(&sel);
+
+    sel.Select();
+    if (Sel::READ & sel.Get(end_pipe_[0])) {
+      not_exit = false;
+    } else if (Sel::READ & sel.Get(STDIN_FD)) {
+      // Tutaj będzie obsługa stdin.
+    } else {
+      nm_.DealWithSelResult(&sel);
+    }
+  }
 }
 
 void Server::Run() {

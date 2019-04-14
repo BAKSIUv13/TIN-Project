@@ -1,9 +1,9 @@
 // Copyright 1077 jabka
 
+#include <arpa/inet.h>
+
 #include <iostream>
 #include <array>
-
-#include <arpa/inet.h>
 
 #include "xd/some_sockets.h"
 #include "app/server.h"
@@ -33,5 +33,5 @@ int main(int argc, char **argv, char **env) {
   //  return 0;
 
   tin::Server server;
-  server.Run();
+  server.Run2();
 }

@@ -21,12 +21,19 @@ class Server {
 
   Server();
   Server(const Server &) = delete;
+  ~Server();
 
 
   /// To nie wiem, czy będzie.
   void Run();
+  void Run2();
 
+  void SpecialHardcodeInit();
 
+  void AddSession(SessionId, std::string);
+
+  /// From other thread??
+  void StopRun2();
 
   World &GetWorld() {return world_;}
   NetworkManager &GetNetManager() {return nm_;}
@@ -40,6 +47,7 @@ class Server {
   NetworkManager nm_;
   TheConfig conf_;
   AccountManager am_;
+  int end_pipe_[2];
 };  // class Server
 }  // namespace tin
 
