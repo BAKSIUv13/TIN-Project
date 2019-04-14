@@ -11,12 +11,14 @@
 #include "app/session.h"
 #include "app/world.h"
 #include "configurator/the_config.h"
+#include "core/username.h"
 #include "network/network_manager.h"
+#include "network/nws.h"
 
 namespace tin {
 class Server {
  public:
-  using LogUserTable = std::map<std::string, LoggedUser>;
+  using LogUserTable = std::map<Username, LoggedUser>;
   using SessionToUserTable = std::map<SessionId, LoggedUser *>;
 
   Server();
@@ -30,13 +32,14 @@ class Server {
 
   void SpecialHardcodeInit();
 
-  void AddSession(SessionId, std::string);
+  void AddSession(SessionId, Username);
+  void DelSession(SessionId);
 
   /// From other thread??
   void StopRun2();
 
   World &GetWorld() {return world_;}
-  NetworkManager &GetNetManager() {return nm_;}
+  // NetworkManager &GetNetManager() {return nm_;}
   TheConfig &GetConf() {return conf_;}
   AccountManager &GetAccountManager() {return am_;}
 
@@ -47,6 +50,7 @@ class Server {
   NetworkManager nm_;
   TheConfig conf_;
   AccountManager am_;
+  Nws nws;
   int end_pipe_[2];
 };  // class Server
 }  // namespace tin

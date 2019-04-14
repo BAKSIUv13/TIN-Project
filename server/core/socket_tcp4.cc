@@ -55,6 +55,9 @@ namespace tin {
   }
 
   SocketTCP4 &SocketTCP4::operator=(SocketTCP4 &&other) noexcept {
+    if (this == &other) {
+      return *this;
+    }
     Destroy_();
     Move_(&other);
     return *this;

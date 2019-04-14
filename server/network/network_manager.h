@@ -9,6 +9,7 @@
 #include "core/socket_tcp4.h"
 #include "core/sel.h"
 #include "app/session.h"
+#include "network/nws.h"
 
 namespace tin {
 
@@ -26,14 +27,15 @@ class NetworkManager {
   // void StartService() {}
   // void StopService() {}
 
-  void Start(const NetStartConf &);
+  void Initialize(const NetStartConf &);
+  void Finish();
 
   // void Send() {}
 
   // void GetThings() {}
 
-  void FeedMainSel(Sel *);
-  void DealWithSelResult(Sel *, );
+  void FeedMainSel(Sel *, Nws *);
+  void DealWithSelResult(Sel *, Nws *);
  private:
   SocketTCP4 sock;
   std::map<int, SocketTCP4> client_socks;

@@ -28,7 +28,7 @@ Server::~Server() {
 void Server::Run2() {
   static constexpr NetStartConf HARDCODED_NET = {42000};
   static constexpr int STDIN_FD = STDIN_FILENO;
-  nm_.Start(HARDCODED_NET);
+  nm_.Initialize(HARDCODED_NET);
   bool not_exit = true;
   Sel sel;
   while (not_exit) {

@@ -29,11 +29,17 @@ class Username {
 
   int GetState() const {return state_;}
 
-  bool operator==(const Username &) const;
-  bool operator!=(const Username &) const;
+  bool operator==(const Username &o) const {return Compare_(o) == 0;}
+  bool operator!=(const Username &o) const {return Compare_(o) != 0;}
+  bool operator<(const Username &o) const {return Compare_(o) < 0;}
+  bool operator>(const Username &o) const {return Compare_(o) > 0;}
+  bool operator<=(const Username &o) const {return Compare_(o) <= 0;}
+  bool operator>=(const Username &o) const {return Compare_(o) >= 0;}
+  bool RawEqual(const Username &o) const {return RawCompare_(o) == 0;}
+  bool RawLess(const Username &o) const {return RawCompare_(o) < 0;}
 
-  operator std::string() {return std::string(c_);}
-  operator const char *() {return c_;}
+  operator const char *() const {return c_;}
+  //  explicit operator std::string() const {return std::string(c_);}
 
 
  private:
@@ -41,7 +47,9 @@ class Username {
   char c_[MAX_NAME_LEN + 1];
 
   int Check_() const;
-  bool RawEqual_(const Username &) const;
+  void ZeroBad_();
+  int Compare_(const Username &) const;
+  int RawCompare_(const Username &) const;
 };
 
 }  // namespace tin
