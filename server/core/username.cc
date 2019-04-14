@@ -7,11 +7,11 @@
 #include <locale>
 
 namespace tin {
-
+/*
 Username::Username() : state_(BLANK) {
   c_[0] = '\0';
 }
-
+*/
 Username::Username(const Username &other) {
   memcpy(this, &other, sizeof(*this));
 }

@@ -17,7 +17,8 @@ class Username {
   };
   static constexpr struct CondenseFlag_t {} CondenseFlag {};
   static constexpr int MAX_NAME_LEN = 16;
-  Username();
+  constexpr Username() : state_(BLANK), c_{'\0'} {}
+  // Username();
   Username(const Username &);
   // Username(Username &&);
   Username &operator=(const Username &);

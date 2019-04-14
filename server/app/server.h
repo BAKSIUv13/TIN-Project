@@ -12,6 +12,7 @@
 #include "app/world.h"
 #include "configurator/the_config.h"
 #include "core/username.h"
+#include "core/sock_stream_state.h"
 #include "network/network_manager.h"
 #include "network/nws.h"
 
@@ -20,6 +21,8 @@ class Server {
  public:
   using LogUserTable = std::map<Username, LoggedUser>;
   using SessionToUserTable = std::map<SessionId, LoggedUser *>;
+  using FdToUserTable = std::map<int, LoggedUser *>;
+  using StatesTable = std::map<int, SockStreamState>;
 
   Server();
   Server(const Server &) = delete;
@@ -32,11 +35,23 @@ class Server {
 
   void SpecialHardcodeInit();
 
-  void AddSession(SessionId, Username);
+  int AddSession(SessionId, const Username &);
   void DelSession(SessionId);
+  int RegisterSock(int fd);
+  int DropSock(int fd);
+  int AssocSessWithSock(SessionId, int fd);
+  void DeassocSess(SessionId);
+  void DeassocSock(int fd);
 
-  /// From other thread??
-  void StopRun2();
+  void DealWithMsgs(int fd, const std::string &msg);
+  void UploadFromState(int fd);
+
+  /// From other thread?? This fn is blocking chyba.
+  int StopRun2();
+
+  void PrepareNws_();
+  void UnprepareNws_();
+  void DoAllTheThings_();
 
   World &GetWorld() {return world_;}
   // NetworkManager &GetNetManager() {return nm_;}
@@ -46,7 +61,9 @@ class Server {
  private:
   World world_;
   LogUserTable users_;
-  SessionToUserTable users_by_sessions_;
+  SessionToUserTable sess_to_users_;
+  FdToUserTable fds_to_users_;
+  StatesTable sss_;
   NetworkManager nm_;
   TheConfig conf_;
   AccountManager am_;

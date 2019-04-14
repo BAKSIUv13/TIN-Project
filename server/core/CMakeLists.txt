@@ -4,4 +4,5 @@ set(SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/sel.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/nquad.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/username.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/sock_stream_state.cc"
 )

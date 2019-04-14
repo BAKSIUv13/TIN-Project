@@ -27,7 +27,7 @@ class NetworkManager {
   // void StartService() {}
   // void StopService() {}
 
-  void Initialize(const NetStartConf &);
+  int Initialize(const NetStartConf &);
   void Finish();
 
   // void Send() {}
@@ -36,11 +36,15 @@ class NetworkManager {
 
   void FeedMainSel(Sel *, Nws *);
   void DealWithSelResult(Sel *, Nws *);
+
+  // tymczasowe??
+  // void CloseSock(int fd);
+
  private:
   SocketTCP4 sock;
   std::map<int, SocketTCP4> client_socks;
-  std::map<SessionId, SocketTCP4 *> sess_to_socks;
-  std::map<int, SessionId> fd_to_sess;
+  // std::map<SessionId, SocketTCP4 *> sess_to_socks;
+  // std::map<int, SessionId> fd_to_sess;
 };  // class NetworkManager
 }  // namespace tin
 
