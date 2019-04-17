@@ -1,6 +1,6 @@
 // Copyright 1029 Piotrek
 
-#include "core/sock_stream_state.h"
+#include "app/socket_stuff.h"
 
 namespace tin {
 

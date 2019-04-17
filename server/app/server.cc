@@ -15,10 +15,15 @@
 #include "core/nquad.h"
 #include "core/mquads.h"
 
+
+static constexpr int STDIN_FD = STDIN_FILENO;
+
+
 namespace tin {
-Server::Server() {
+Server::Server()
+    : runs_(false) {
   if (pipe(end_pipe_)) {
-    std::cerr << "Serwer się nie zrobił bo pipe się  niwe otworzyło :< "
+    std::cerr << "Serwer się nie zrobił bo potok się nie otworzył :< "
       << std::strerror(errno) << '\n';
     std::terminate();
   }
@@ -29,27 +34,75 @@ Server::~Server() {
   close(end_pipe_[1]);
 }
 
-void Server::Run2() {
-  static constexpr NetStartConf HARDCODED_NET = {42000};
-  static constexpr bool DEAL_WITH_STDIN = true;
-  static constexpr int STDIN_FD = STDIN_FILENO;
-  static constexpr int BUF_SIZE = 256;
+int Server::InitializeListener_(uint16_t port, int queue_size) {
+  int result = 0;
+  result = listening_sock_.Open();
+  if (result < 0) return -1;
+  result = listening_sock_.BindAny(port);
+  if (result < 0) return -2;
+  result = listening_sock_.Listen(queue_size);
+  if (result < 0) return -3;
+  return 0;
+}
+
+void Server::Run(uint16_t port, int queue_size) {
   char buf[BUF_SIZE + 1];
-  int init_ret = nm_.Initialize(HARDCODED_NET);
+  // int init_ret = nm_.Initialize(HARDCODED_NET);
+  int init_ret = InitializeListener_(port, queue_size);
   if (init_ret < 0) {
     return;
   }
-  PrepareNws_();
   bool not_exit = true;
-  Sel sel;
-  while (not_exit) {
-    if (DEAL_WITH_STDIN) {
-      sel.AddFD(STDIN_FD, Sel::READ);
-    }
-    sel.AddFD(end_pipe_[0], Sel::READ);
-    nm_.FeedMainSel(&sel, &nws);
+  runs_ = true;
+  while (not_exit && runs_) {
+    LoopTick_();
+    continue;
+  }
+}
 
-    sel.Select();
+
+int Server::FeedSel_() {
+  sel_.Zero();
+  if (DEAL_WITH_STDIN) {
+    sel_.AddFD(STDIN_FD, Sel::READ);
+  }
+  sel_.AddFD(end_pipe_[0], Sel::READ);
+  sel_.AddFD(listening_sock_.GetFD(), Sel::READ);
+  for (auto sock_st = sock_stuff_.begin();
+      sock_st != sock_stuff_.end();
+      ++sock_st) {
+    if (sock_st->second.shall_read) {
+      sel_.AddFD(sock_st->first, Sel::READ);
+    }
+    if (sock_st->second.shall_write) {
+      sel_.AddFD(sock_st->first, Sel::WRITE);
+    }
+  }
+}
+
+int Server::RegisterSockFromAccept_(SocketTCP4 &&sock) {
+  int fd = sock.GetFD();
+  auto cse_ret = client_socks_.emplace(fd, std::move(sock));
+  if (!cse_ret.second) {
+    std::cerr << "Nie udało się dodać socketu do mapy z socketami :< " << fd
+      << "trzeba coś z tym zrobić.\n";
+    return -1;
+  }
+  auto sse_ret = sock_stuff_.emplace(fd, SocketStuff {});
+  if (!sse_ret.second) {
+    std::cerr << "Nie udało się dodać info o kliencie do mapy, hehe błąd xd\n"
+      << "Jakby co to gniazdo ma numer " << fd << "\n";
+    client_socks_.erase(cse_ret.first);
+    return -2;
+  }
+  sse_ret.first->second.shall_read = true;
+  return 0;
+}
+
+int Server::DoSel_() {
+  sel_.Select();
+}
+
     if (Sel::READ & sel.Get(end_pipe_[0])) {
       std::cerr << "Przyszło zamknięcie ze specjanego potoku.\n";
       not_exit = false;
@@ -68,11 +121,10 @@ void Server::Run2() {
     sel.Zero();
     DoAllTheThings_();
   }
-  UnprepareNws_();
+ 
 }
 
-
-int Server::StopRun2() {
+int Server::StopRun() {
   return write(end_pipe_[1], "", 1);
 }
 
@@ -335,6 +387,21 @@ int Server::AssocSessWithSock(SessionId sid, int fd) {
     return -3;
   }
   std::cerr.copyfmt(ios_state);
+  return 0;
+}
+
+int Server::LoopTick_() {
+  FeedSel_();
+  DoSel_();
+  ReadMainFds_();
+  if (WriteToSocks_() == 0) {
+    
+  }
+  DealWithSockets_();
+  // Tutaj nie mamy strachu o sockety dodane acceptem, bo one nie są oddane
+  // przez accept.
+  DeleteMarkedSocks_();
+
   return 0;
 }
 
