@@ -47,6 +47,10 @@ int Server::InitializeListener_(uint16_t port, int queue_size) {
 
 void Server::Run(uint16_t port, int queue_size) {
   char buf[BUF_SIZE + 1];
+  buf[1] = 'x';
+  buf[2] = 'd';
+  buf[3] = ' ';
+  buf[4] = buf[1];
   // int init_ret = nm_.Initialize(HARDCODED_NET);
   int init_ret = InitializeListener_(port, queue_size);
   if (init_ret < 0) {
@@ -68,118 +72,114 @@ int Server::FeedSel_() {
   }
   sel_.AddFD(end_pipe_[0], Sel::READ);
   sel_.AddFD(listening_sock_.GetFD(), Sel::READ);
-  for (auto sock_st = sock_stuff_.begin();
-      sock_st != sock_stuff_.end();
-      ++sock_st) {
-    if (sock_st->second.shall_read) {
-      sel_.AddFD(sock_st->first, Sel::READ);
+  for (auto sock_it = client_socks_.begin();
+      sock_it != client_socks_.end();
+      ++sock_it) {
+    if (sock_it->second.second.shall_read) {
+      sel_.AddFD(sock_it->first, Sel::READ);
     }
-    if (sock_st->second.shall_write) {
-      sel_.AddFD(sock_st->first, Sel::WRITE);
+    if (sock_it->second.second.shall_write) {
+      sel_.AddFD(sock_it->first, Sel::WRITE);
     }
   }
+  return 0;
 }
 
 int Server::RegisterSockFromAccept_(SocketTCP4 &&sock) {
   int fd = sock.GetFD();
-  auto cse_ret = client_socks_.emplace(fd, std::move(sock));
-  if (!cse_ret.second) {
+  auto emplace_ret = client_socks_.emplace(fd,
+    std::make_pair(std::move(sock), SocketStuff {}));
+  if (!emplace_ret.second) {
     std::cerr << "Nie udało się dodać socketu do mapy z socketami :< " << fd
       << "trzeba coś z tym zrobić.\n";
     return -1;
   }
-  auto sse_ret = sock_stuff_.emplace(fd, SocketStuff {});
-  if (!sse_ret.second) {
-    std::cerr << "Nie udało się dodać info o kliencie do mapy, hehe błąd xd\n"
-      << "Jakby co to gniazdo ma numer " << fd << "\n";
-    client_socks_.erase(cse_ret.first);
-    return -2;
-  }
-  sse_ret.first->second.shall_read = true;
+  emplace_ret.first->second.second.shall_read = true;
   return 0;
 }
 
 int Server::DoSel_() {
-  sel_.Select();
+  return sel_.Select();
 }
 
-    if (Sel::READ & sel.Get(end_pipe_[0])) {
-      std::cerr << "Przyszło zamknięcie ze specjanego potoku.\n";
-      not_exit = false;
-    } else if (DEAL_WITH_STDIN && (Sel::READ & sel.Get(STDIN_FD))) {
-      std::cin.getline(buf, BUF_SIZE);
-      if (std::cin.eof()) {
-        std::cerr << "Na stdin przyszedł koniec, zamykanko :>\n";
-        not_exit = false;
-      } else if (std::cin.good()) {
-        std::cerr << "Na stdin wpisano:\n" << buf << '\n';
-      }
-      std::cin.clear();
-    } else {
-      nm_.DealWithSelResult(&sel, &nws);
-    }
-    sel.Zero();
-    DoAllTheThings_();
+int Server::ReadMainFds_() {
+  static constexpr std::streamsize IN_BUF_SIZE = 256;
+  char in_buf[IN_BUF_SIZE];
+  if (Sel::READ & sel_.Get(end_pipe_[0])) {
+    std::cerr << "Przyszło zamknięcie ze specjanego potoku.\n";
+    runs_ = false;
+    return 0;
   }
- 
+  if (DEAL_WITH_STDIN && (Sel::READ & sel_.Get(STDIN_FD))) {
+    std::cin.getline(in_buf, IN_BUF_SIZE);
+    if (std::cin.eof()) {
+      std::cerr << "Na stdin przyszedł koniec, zamykanko :>\n";
+      runs_ = false;
+    } else if (std::cin.good()) {
+      std::cerr << "Na stdin wpisano:\n" << in_buf << '\n';
+    }
+    std::cin.clear();
+  }
+  return 0;
 }
 
 int Server::StopRun() {
   return write(end_pipe_[1], "", 1);
 }
 
-void Server::DoAllTheThings_() {
-  for (size_t i = 0; i < nws.new_sockets.size(); ++i) {
-    int fd = nws.new_sockets.at(i);
-    if (RegisterSock(fd) < 0) {
-      std::terminate();
-    }
-  }
-  nws.new_sockets.clear();
-  for (
-      auto it = nws.received_messages.begin();
-      it != nws.received_messages.end();
-      ++it) {
-    DealWithMsgs(it->fd, it->msg);
-  }
-  nws.received_messages.clear();
-  for (auto it = sss_.begin(); it != sss_.end(); ++it) {
-    UploadFromState(it->first);
-  }
-  for (size_t i = 0; i < nws.sockets_to_drop.size(); ++i) {
-    int fd = nws.sockets_to_drop.at(i);
-    if (DropSock(fd) < 0) {
-      std::terminate();
-    }
-  }
-  nws.sockets_to_close = std::move(nws.sockets_to_drop);
+int Server::WriteToSocks_() {
+  return 0;
 }
 
-void Server::UploadFromState(int fd) {
-  SockStreamState &s = sss_.at(fd);
-  if (s.errors.size() > 0) {
-    std::cerr << "Błędy :<\n";
-    nws.AddMsgSend(fd, "OwO!jabłka xd źle cos\n");
-    nws.AddSockToDrop(fd);
+
+int Server::DealWithSocketsIncome_() {
+  int sockets_read;
+  for (auto it = client_socks_.begin(); it != client_socks_.end(); ++it) {
+    if (!(it->second.second.shall_read)
+        || !(Sel::READ & sel_.Get(it->first))) {
+      continue;
+    }
+    if (ReadClientSocket_(it->first) >= 0)
+      ++sockets_read;
   }
-  return;
+  return sockets_read;
 }
 
-void Server::DealWithMsgs(int fd, const std::string &msg) {
+int Server::ReadClientSocket_(int fd) {
+  // SocketTCP4 &sock = client_socks_.at(fd).first;
+
+  //
+  SocketStuff &stuff = client_socks_.at(fd).second;
+
+  ssize_t read_ret = read(fd, stuff.buf, stuff.BUF_SIZE);
+  if (read_ret < 0) {
+    std::cerr << "Błąd przy czytaniu socketu " << fd
+      << "\n errno: " << std::strerror(errno) << "\n";
+    return -1;
+  }
+  stuff.buf[read_ret] = '\0';
+  std::cerr << "Na socket o numerze " << fd << " przyszło:\n"
+    << stuff.buf << "\n";
+  int deal_ret = DealWithReadBuf_(fd);
+  return 0;
+}
+
+int Server::DealWithReadBuf_(int fd) {
   static constexpr size_t NQS = sizeof(NQuad);
-  SockStreamState &s = sss_.at(fd);
-  size_t max = msg.size();
+  SocketTCP4 &sock = client_socks_.at(fd).first;
+  SocketStuff &stuff = client_socks_.at(fd).second;
+  size_t max = strnlen(stuff.buf, stuff.BUF_SIZE);
   size_t i = 0;
   auto load_to = [&](size_t x) -> bool {
     size_t strc = max - i;
-    if (s.chars_loaded > x) {
+    if (stuff.chars_loaded > x) {
       std::cerr << "Tutaj mamy chyba błąd, to później już :<\n";
       std::terminate();
-    } else if (s.chars_loaded == x) {
+    } else if (stuff.chars_loaded == x) {
       return true;
     } else {
       if (strc > 0) {
-        size_t chars_to_copy = x - s.chars_loaded;
+        size_t chars_to_copy = x - stuff.chars_loaded;
         if (chars_to_copy > strc) {
           memcpy(&s.buf[s.chars_loaded], &msg.c_str()[i], strc);
           i += strc;
@@ -250,15 +250,44 @@ void Server::DealWithMsgs(int fd, const std::string &msg) {
   return;
 }
 
-int Server::RegisterSock(int fd) {
-  auto emplace_ret = sss_.emplace(fd, SockStreamState{});
-  if (!emplace_ret.second) {
-    std::cerr << "Nie można było dodać socketu " << fd
-      << ", bo już był :<\n";
-    return -1;
+void Server::DoAllTheThings_() {
+  for (size_t i = 0; i < nws.new_sockets.size(); ++i) {
+    int fd = nws.new_sockets.at(i);
+    if (RegisterSock(fd) < 0) {
+      std::terminate();
+    }
   }
-  return 0;
+  nws.new_sockets.clear();
+  for (
+      auto it = nws.received_messages.begin();
+      it != nws.received_messages.end();
+      ++it) {
+    DealWithMsgs(it->fd, it->msg);
+  }
+  nws.received_messages.clear();
+  for (auto it = sss_.begin(); it != sss_.end(); ++it) {
+    UploadFromState(it->first);
+  }
+  for (size_t i = 0; i < nws.sockets_to_drop.size(); ++i) {
+    int fd = nws.sockets_to_drop.at(i);
+    if (DropSock(fd) < 0) {
+      std::terminate();
+    }
+  }
+  nws.sockets_to_close = std::move(nws.sockets_to_drop);
 }
+
+void Server::UploadFromState(int fd) {
+  SockStreamState &s = sss_.at(fd);
+  if (s.errors.size() > 0) {
+    std::cerr << "Błędy :<\n";
+    nws.AddMsgSend(fd, "OwO!jabłka xd źle cos\n");
+    nws.AddSockToDrop(fd);
+  }
+  return;
+}
+
+
 
 int Server::DropSock(int fd) {
   std::cerr << "Próba dropnięcioa socketu " << fd << "\n";
@@ -279,9 +308,6 @@ void Server::DeassocSock(int fd) {
   fds_to_users_.erase(fd);
 }
 
-void Server::UnprepareNws_() {
-  nws.Clear();
-}
 
 void Server::SpecialHardcodeInit() {
   AddSession(0x3131313131313131, Username("fajny ziom"));  // '1'
@@ -391,18 +417,13 @@ int Server::AssocSessWithSock(SessionId sid, int fd) {
 }
 
 int Server::LoopTick_() {
-  FeedSel_();
-  DoSel_();
-  ReadMainFds_();
-  if (WriteToSocks_() == 0) {
-    
-  }
-  DealWithSockets_();
-  // Tutaj nie mamy strachu o sockety dodane acceptem, bo one nie są oddane
-  // przez accept.
-  DeleteMarkedSocks_();
+  int feed_sel_ret = FeedSel_();
+  int do_sel_ret = DoSel_();
+  int read_main_fds_ret = ReadMainFds_();
+  int srite_to_socks_ret = WriteToSocks_();
+  int deal_with_sockets_income_ret = DealWithSocketsIncome_();
+  int delete_marked_socks_ret = DeleteMarkedSocks_();
 
   return 0;
 }
-
 }  // namespace tin

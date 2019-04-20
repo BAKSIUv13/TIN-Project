@@ -26,14 +26,14 @@ struct SocketStuff {
         chars_loaded(0), which_segment(0) {
     buf[BUF_SIZE] = '\0';
   }
-  union {
-    char buf[BUF_SIZE + 1];
-    NQuad qbuf[BUF_SIZE / sizeof(NQuad)];
-  };
+  char buf[BUF_SIZE + 1];
+  
   bool marked_to_delete;
   bool shall_read;
   bool shall_write;
-  NQuad instr_quad;
+  NQuad first_quads[3];
+  NQuad &magic() {return first_quads[0];}
+  NQuad &instr();
   size_t chars_loaded;
   size_t which_segment;
   std::queue<Error> errors;

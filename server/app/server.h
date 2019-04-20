@@ -5,6 +5,7 @@
 
 #include <string>
 #include <map>
+#include <utility>
 
 #include "account_manager/account_manager.h"
 #include "app/logged_user.h"
@@ -26,6 +27,7 @@ class Server {
   // using SessionToUserTable = std::map<SessionId, LoggedUser *>;
   // using FdToUserTable = std::map<int, LoggedUser *>;
   // using StatesTable = std::map<int, SockStreamState>;
+
 
 
   static constexpr uint16_t DEFAULT_PORT = 42000;
@@ -71,17 +73,20 @@ class Server {
   int RegisterSockFromAccept_(SocketTCP4 &&);
   int DropSock_(int fd);
   int FeedSel_();
+  int ReadMainFds_();
   int DoSel_();
-  int DealWithSockets_();
-  int DeleteMarkedSockets_();
+  int WriteToSocks_();
+  int DealWithSocketsIncome_();
+  int ReadClientSocket_(int fd);
+  int DealWithReadBuf_(int fd);
+  int DeleteMarkedSocks_();
 
   bool runs_;
 
   World world_;
   Sel sel_;
   SocketTCP4 listening_sock_;
-  std::map<int, SocketTCP4> client_socks_;
-  std::map<int, SocketStuff> sock_stuff_;
+  std::map<int, std::pair<SocketTCP4, SocketStuff> > client_socks_;
   std::map<Username, LoggedUser> users_;
   std::map<SessionId, LoggedUser *> sess_to_users_;
   std::map<int, LoggedUser *> socks_to_users_;

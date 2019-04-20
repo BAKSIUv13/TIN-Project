@@ -26,7 +26,8 @@ static std::array<char, 16> fgfg(uint32_t x) {
 
 namespace tin {
   SocketTCP4::SocketTCP4()
-    : fd_(-1), status_(BLANK) {
+      : fd_(-1), status_(BLANK) {
+    std::cerr << "SocketTCP4: empty constructor\n";
   }  // fd -1 means socket is not open
 
   //  SocketTCP4::SocketTCP4(uint32_t address, uint16_t port)
@@ -34,10 +35,12 @@ namespace tin {
   //  int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 
   SocketTCP4::~SocketTCP4() {
+    std::cerr << "SocketTCP4: destructor\n";
     Destroy_();
   }
 
   int SocketTCP4::Open() {
+    std::cerr << "SocketTCP4: open\n";
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd < 0) {
 #ifdef SOME_DEBUG
@@ -51,10 +54,12 @@ namespace tin {
   }
 
   SocketTCP4::SocketTCP4(SocketTCP4 &&other) noexcept {
+    std::cerr << "SocketTCP4: move constructor\n";
     Move_(&other);
   }
 
   SocketTCP4 &SocketTCP4::operator=(SocketTCP4 &&other) noexcept {
+    std::cerr << "SocketTCP4: move assign\n";
     if (this == &other) {
       return *this;
     }
@@ -64,6 +69,7 @@ namespace tin {
   }
 
   void SocketTCP4::Destroy_() {
+    std::cerr << "SocketTCP4: destroy\n";
     if (status_ != BLANK) {
       close(fd_);
       status_ = BLANK;
@@ -71,11 +77,13 @@ namespace tin {
   }
 
   void SocketTCP4::Move_(SocketTCP4 *other) {
+    std::cerr << "SocketTCP4: move\n";
     std::memcpy(this, other, sizeof(*this));
     other->status_ = BLANK;
   }
 
   int SocketTCP4::Bind(uint32_t address, uint16_t port) {
+    std::cerr << "SocketTCP4: bind\n";
     struct sockaddr_in saddr;
     saddr.sin_family = AF_INET;
     saddr.sin_addr.s_addr = htonl(address);
@@ -96,10 +104,12 @@ namespace tin {
   }
 
   int SocketTCP4::BindAny(uint16_t port) {
+    std::cerr << "SocketTCP4: bind any\n";
     return Bind(INADDR_ANY, port);
   }
 
   int SocketTCP4::Listen(int queue_length) {
+    std::cerr << "SocketTCP4: listen\n";
     int listen_ret = listen(fd_, queue_length);
     if (listen_ret == 0) {
       status_ = LISTENING;
@@ -108,6 +118,7 @@ namespace tin {
   }
 
   int SocketTCP4::Connect(uint32_t address, uint16_t port) {
+    std::cerr << "SocketTCP4: connect\n";
     struct sockaddr_in saddr;
     saddr.sin_family = AF_INET;
     saddr.sin_addr.s_addr = htonl(address);
@@ -124,6 +135,7 @@ namespace tin {
   }
 
   int SocketTCP4::Accept(SocketTCP4 *new_sock) {
+    std::cerr << "SocketTCP4: accept\n";
     if (new_sock->status_ != BLANK) {
       return -1000;
     }
@@ -159,12 +171,14 @@ namespace tin {
   }
 
   int SocketTCP4::Close() {
+    std::cerr << "SocketTCP4: close\n";
     int close_ret = close(fd_);
     status_ = BLANK;
     return close_ret;
   }
 
   int SocketTCP4::Shutdown(int how) {
+    std::cerr << "SocketTCP4: shutdown\n";
     return shutdown(fd_, how);
   }
 }  // namespace tin

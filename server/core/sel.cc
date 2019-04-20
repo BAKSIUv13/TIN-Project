@@ -11,7 +11,7 @@
 
 namespace tin {
 
-static constexpr int check = 1 / (FD_SETSIZE == Sel::MAX_SIZE ? 1 : 0);
+static_assert(FD_SETSIZE == Sel::MAX_SIZE);
 
 static void set_bit(void *where, int which) {
   uint8_t *buf = reinterpret_cast<uint8_t *>(where);
