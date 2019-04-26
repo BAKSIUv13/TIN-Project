@@ -78,7 +78,7 @@ class Server {
   int WriteToSocks_();
   int DealWithSocketsIncome_();
   int ReadClientSocket_(int fd);
-  int DealWithReadBuf_(int fd);
+  int DealWithReadBuf_(int fd, int chars_read);
   int DeleteMarkedSocks_();
 
   bool runs_;

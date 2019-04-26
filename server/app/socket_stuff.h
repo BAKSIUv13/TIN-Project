@@ -13,10 +13,11 @@ namespace tin {
 
 struct SocketStuff {
   static constexpr size_t BUF_SIZE = 256;
-  static constexpr size_t MAX_SEGMENTS = 1024 * 1024;
+  static constexpr int MAX_SEGMENTS = 1024 * 1024;
   static constexpr bool END_ON_BAD_DATA = true;
   enum Error {
     OTHER = 1,
+    CLOSE,
     NOT_OWO,
     AUTH_FAILED,
     SESS_CAPTURE_FAILED,
@@ -27,15 +28,21 @@ struct SocketStuff {
     buf[BUF_SIZE] = '\0';
   }
   char buf[BUF_SIZE + 1];
-  
   bool marked_to_delete;
   bool shall_read;
   bool shall_write;
-  NQuad first_quads[3];
-  NQuad &magic() {return first_quads[0];}
-  NQuad &instr();
-  size_t chars_loaded;
-  size_t which_segment;
+  alignas(NQuad) char first_quads[3 * sizeof(NQuad)];
+  NQuad &magic() {
+    return reinterpret_cast<NQuad *>(first_quads)[0];
+  }
+  NQuad &instr() {
+    return reinterpret_cast<NQuad *>(first_quads)[1];
+  }
+  NQuad &instr2() {
+    return reinterpret_cast<NQuad *>(first_quads)[2];
+  }
+  int chars_loaded;  // of actual message
+  int which_segment;  // same
   std::queue<Error> errors;
 };
 

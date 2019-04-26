@@ -46,11 +46,11 @@ int Server::InitializeListener_(uint16_t port, int queue_size) {
 }
 
 void Server::Run(uint16_t port, int queue_size) {
-  char buf[BUF_SIZE + 1];
+  /* char buf[BUF_SIZE + 1];
   buf[1] = 'x';
   buf[2] = 'd';
   buf[3] = ' ';
-  buf[4] = buf[1];
+  buf[4] = buf[1]; */
   // int init_ret = nm_.Initialize(HARDCODED_NET);
   int init_ret = InitializeListener_(port, queue_size);
   if (init_ret < 0) {
@@ -156,22 +156,26 @@ int Server::ReadClientSocket_(int fd) {
     std::cerr << "Błąd przy czytaniu socketu " << fd
       << "\n errno: " << std::strerror(errno) << "\n";
     return -1;
+  } else if (read_ret == 0) {
+    std::cerr << "Na gniazdo przyszło zamknięcie, na razie kończymy.\n";
+    stuff.marked_to_delete = true;
+    // ZAMKNIĘCIE
+    return 1;
   }
   stuff.buf[read_ret] = '\0';
   std::cerr << "Na socket o numerze " << fd << " przyszło:\n"
     << stuff.buf << "\n";
-  int deal_ret = DealWithReadBuf_(fd);
+  int deal_ret = DealWithReadBuf_(fd, read_ret);
   return 0;
 }
 
-int Server::DealWithReadBuf_(int fd) {
-  static constexpr size_t NQS = sizeof(NQuad);
+int Server::DealWithReadBuf_(int fd, int chars_read) {
+  static constexpr int NQS = sizeof(NQuad);
   SocketTCP4 &sock = client_socks_.at(fd).first;
   SocketStuff &stuff = client_socks_.at(fd).second;
-  size_t max = strnlen(stuff.buf, stuff.BUF_SIZE);
-  size_t i = 0;
+  int i = 0;  // przetworzone chary
   auto load_to = [&](size_t x) -> bool {
-    size_t strc = max - i;
+    int strc = chars_read - i;
     if (stuff.chars_loaded > x) {
       std::cerr << "Tutaj mamy chyba błąd, to później już :<\n";
       std::terminate();
@@ -197,57 +201,73 @@ int Server::DealWithReadBuf_(int fd) {
     }
   };
   auto reset = [&]() -> void {
-    s.chars_loaded = 0;
-    s.which_segment = 0;
-    s.instr_quad = MQ::ZERO;
+    stuff.chars_loaded = 0;
+    stuff.which_segment = 0;
   };
   while (true) {
-    std::cerr << "Przed switchem:\nchary: " << s.chars_loaded
+    std::cerr << "Przed switchem:\nchary: " << stuff.chars_loaded
       << "\ni: " << i
-      << "\nmax: " << max << '\n';
-    switch (s.instr_quad) {
-      case MQ::ZERO:
-        std::cerr << "Wchodzę sobie pod case MQ::ZERO\n";
-        if (!load_to(2 * NQS)) {
-          std::cerr << "Czekam, aż będę miać 2 słowa :<\n";
-          return;
-        }
-        if (s.qbuf[0] != MQ::OWO) {
-          std::cerr << s.qbuf[0] << '\n';
-          s.errors.push(s.NOT_OWO);
-          return;
-        }
-        s.instr_quad = s.qbuf[1];
-        break;
-      case MQ::CAPTURE_SESSION: {
-        std::cerr << "Wchodzę sobie pod case MQ::CAPTURE_SESSION\n";
-        if (!load_to(4 * NQS)) return;
-        SessionId sid = s.qbuf[2];
-        sid <<= 32;
-        sid |= s.qbuf[3];
-        if (AssocSessWithSock(sid, fd) < 0) {
-          std::cerr << "meh :<\n";
-          s.errors.push(s.SESS_CAPTURE_FAILED);
-        } else {
-          std::cerr << "Podobno zajął sesję xd\n";
-          std::string name {sess_to_users_.at(sid)->GetName()};
-          std::string send_msg{"OwO!ueuo"};
-          std::string send_msg2{"Zalogowano jako <<"};
-          send_msg2 += name += ">>\n";
-          NQuad len {(uint32_t)send_msg2.size()};
-          send_msg += len.c[0] += len.c[1] += len.c[2] += len.c[3];
-          send_msg += send_msg2;
-          nws.AddMsgSend(fd, send_msg);
-        }
-        reset();
-        break;
+      << "\nchars read: " << chars_read
+      << '\n';
+    if (i >= chars_read) {
+      std::cerr << "No to ten koniec czytanuia\n";
+      return 0;
+    }
+    if (stuff.chars_loaded < NQS) {
+      int chars_to_copy = chars_read - i;
+      if (chars_to_copy > NQS - stuff.chars_loaded) {
+        chars_to_copy = NQS - stuff.chars_loaded;
       }
-      default:
-        s.errors.push(s.OTHER);
-        return;
+      memcpy(stuff.first_quads + stuff.chars_loaded, stuff.buf + i,
+        chars_to_copy);
+      i += chars_to_copy;
+      stuff.chars_loaded += chars_to_copy;
+      continue;
+    } else {
+      // Tutaj już wiemy, że mamy cały pierwszy quad.
+      if (stuff.magic() != MQ::OWO) {
+        std::cerr << "Pierwszy quadzik to nie \"OwO!\", więc jest źle xd\n";
+        stuff.errors.push(stuff.Error::NOT_OWO);
+        return 1;
+      }
+      if (stuff.chars_loaded < 2 * NQS) {
+        int chars_to_copy = chars_read - i;
+        if (chars_to_copy > 2 * NQS - stuff.chars_loaded) {
+          chars_to_copy = 2 * NQS - stuff.chars_loaded;
+        }
+        memcpy(stuff.first_quads + stuff.chars_loaded, stuff.buf + i,
+          chars_to_copy);
+        i += chars_to_copy;
+        stuff.chars_loaded += chars_to_copy;
+        continue;
+      } else {
+        switch (stuff.instr().Uint()) {
+          case MQ::CAPTURE_SESSION:
+            std::cerr << "Wchodzę sobie pod case MQ::CAPTURE_SESSION\n";
+            SessionId sid = s.qbuf[2];
+            sid <<= 32;
+            sid |= s.qbuf[3];
+            if (AssocSessWithSock(sid, fd) < 0) {
+              std::cerr << "meh :<\n";
+              s.errors.push(s.SESS_CAPTURE_FAILED);
+            } else {
+              std::cerr << "Podobno zajął sesję xd\n";
+              std::string name {sess_to_users_.at(sid)->GetName()};
+              std::string send_msg{"OwO!ueuo"};
+              std::string send_msg2{"Zalogowano jako <<"};
+              send_msg2 += name += ">>\n";
+              NQuad len {(uint32_t)send_msg2.size()};
+              send_msg += len.c[0] += len.c[1] += len.c[2] += len.c[3];
+              send_msg += send_msg2;
+              nws.AddMsgSend(fd, send_msg);
+            }
+            reset();
+            break;
+        }
+      }
     }
   }
-  return;
+  return 0;
 }
 
 void Server::DoAllTheThings_() {

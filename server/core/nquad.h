@@ -12,10 +12,7 @@
 namespace tin {
 
 struct NQuad {
-  union {
-    alignas(int32_t) char c[4];
-    uint32_t raw_uint;
-  };
+  uint32_t raw_uint;
   constexpr NQuad()
     : raw_uint(0) {
   }
