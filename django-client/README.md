@@ -1,4 +1,4 @@
-# VENV-django-client
+# django-client
 
 ## Setting up environment
 

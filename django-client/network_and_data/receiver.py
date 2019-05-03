@@ -8,9 +8,8 @@ import queue
 import select
 from network_and_data import network
 
-R_QUEUE_ELEMENT_SIZE = 4 # bytes
-R_QUEUE_SIZE = 1024 # 1024 * 4 = 4096 bytes
-SELECT_TIMEOUT = 10.0
+R_QUEUE_ELEMENT_SIZE = 1
+R_QUEUE_SIZE = 1024
 
 class Receiver(threading.Thread):
     """Class responsible for receive data."""
@@ -24,10 +23,18 @@ class Receiver(threading.Thread):
 
     def run(self):
         """Receive data and check if is_stopped is true."""
+        i = 0
         while True:
+            i += 1
+            print('before select ', i)
             to_read, _, _ = select.select(self._read_channel, [], [], )
+            print('after select ', i)
             for read in to_read:
                 if read is self._s:
                     data = self._s.recv(R_QUEUE_ELEMENT_SIZE)
                     if data:
                         self.r_queue.put(data, block=True, timeout=None)
+                    else:
+                        # no data, connection lost
+                        print('CLOSE RECEIVER')
+                        return

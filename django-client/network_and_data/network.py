@@ -13,7 +13,6 @@ def prepare_socket(host, port):
     _s = socket.socket(socket.AF_INET,
                        socket.SOCK_STREAM,
                        socket.IPPROTO_TCP)
-    _s.connect((host, port))
-    _s.setblocking(False) # bacause of select
+    _s.connect((host, port)) # tuple because of AF_INET address format
 
     return _s
