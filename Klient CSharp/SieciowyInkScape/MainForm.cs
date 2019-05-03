@@ -17,7 +17,7 @@ namespace SieciowyInkScape
     {
         enum ErrorCodes
         {
-            BAD_HEADER, PACKET_TOO_LONG, SEND_TIMEDOUT
+            BAD_HEADER, PACKET_TOO_LONG, SEND_TIMEDOUT, RECEIVED_TOO_MUCH, RECEIVE_FAILURE, SEND_FAILURE
         }
         struct Codes // po konwersji littleendian -> bigendian litery będą zamienione
         {
@@ -103,6 +103,19 @@ namespace SieciowyInkScape
                 case ErrorCodes.PACKET_TOO_LONG:
                     throw new Exception("Pakiet był za długi!");
                     break;
+                case ErrorCodes.RECEIVED_TOO_MUCH:
+                    throw new Exception("Socket odebrał za dużo danych!");
+                    break;
+                case ErrorCodes.RECEIVE_FAILURE:
+                    throw new Exception("Socket przy odbiorze zgłosił size <= 0");
+                    break;
+                case ErrorCodes.SEND_FAILURE:
+                    throw new Exception("Socket przy wysyłaniu zgłosił size <= 0");
+                    break;
+                default:
+                    throw new Exception("Nieznany błąd o ID: " + (errorCode).ToString());
+                    break;
+
             }
         }
 
@@ -114,8 +127,8 @@ namespace SieciowyInkScape
                 socket = ConnectSocket(server, port);
                 if (socket == null) return false;
 
-                socket.ReceiveTimeout = 1000;
-                socket.SendTimeout = 1000;
+                //socket.ReceiveTimeout = 1000;
+                //socket.SendTimeout = 1000;
 
 
 
@@ -131,14 +144,26 @@ namespace SieciowyInkScape
            
         }
 
-        void SocketReceive(uint size)
+        void SocketReceive(int size)
         {
             if(size > 1024*1024) MakeError(ErrorCodes.PACKET_TOO_LONG);
 
             while (size > buf.Length) buf = new byte[buf.Length * 2];
 
-            bool retry;
+            int received = 0;
 
+            while(received != size)
+            {
+                if(received > size) MakeError(ErrorCodes.RECEIVED_TOO_MUCH);
+
+                int ret = socket.Receive(buf, received, size - received, SocketFlags.None);
+                if (ret <= 0) MakeError(ErrorCodes.RECEIVE_FAILURE);
+
+                received += ret;
+            }
+
+            /* bool retry;
+            
             do
             {
                 retry = false;
@@ -161,27 +186,24 @@ namespace SieciowyInkScape
                 }
             }
             while (retry);
-
+            */
 
         }
 
         void SocketSend(byte[] message)
         {
-            try
+            byte[] toSend = new byte[4 + message.Length];
+            Array.Copy(SocketSetUInt32(Codes.OwO), 0, toSend, 0, 4);
+            Array.Copy(message, 0, toSend, 4, message.Length);
+
+            int sent = 0;
+            while (toSend.Length != sent)
             {
-                socket.Send(SocketSetUInt32(Codes.OwO));
-                socket.Send(message);
-            }
-            catch (SocketException ex)
-            {
-                if (ex.ErrorCode == 10060)
-                {
-                    MakeError(ErrorCodes.SEND_TIMEDOUT);
-                }
-                else
-                {
-                    throw ex;
-                }
+                int ret = socket.Send(toSend, sent, toSend.Length - sent, SocketFlags.None);
+                if (ret <= 0) MakeError(ErrorCodes.SEND_FAILURE);
+
+                sent += ret;
+
             }
         }
 
@@ -199,13 +221,15 @@ namespace SieciowyInkScape
             return toRet;
         }
 
-        UInt32 SocketGetUInt32()
+        UInt32 SocketReceiveUInt32()
         {
+            SocketReceive(4);
             if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 4);
             return System.BitConverter.ToUInt32(buf, 0);
         }
-        string SocketGetString(uint size)
+        string SocketReceiveString(UInt32 size)
         {
+            SocketReceive((int)size);
             return Encoding.ASCII.GetString(buf, 0, (int)size);
         }
 
@@ -213,12 +237,11 @@ namespace SieciowyInkScape
         {
             while(true)
             {
-                SocketReceive(4);
-                UInt32 header = SocketGetUInt32();
+                
+                UInt32 header = SocketReceiveUInt32();
                 if(header == Codes.OwO) // początek komunikatu
                 {
-                    SocketReceive(4);
-                    UInt32 messageType = SocketGetUInt32();
+                    UInt32 messageType = SocketReceiveUInt32();
 
                     switch(messageType)
                     {
@@ -228,14 +251,10 @@ namespace SieciowyInkScape
                             UInt32 messageLength;
                             string message;
 
-                            SocketReceive(4);
-                            usernameLength = SocketGetUInt32();
-                            SocketReceive(usernameLength);
-                            username = SocketGetString(usernameLength);
-                            SocketReceive(4);
-                            messageLength = SocketGetUInt32();
-                            SocketReceive(messageLength);
-                            message = SocketGetString(messageLength);
+                            usernameLength = SocketReceiveUInt32();
+                            username = SocketReceiveString(usernameLength);
+                            messageLength = SocketReceiveUInt32();
+                            message = SocketReceiveString(messageLength);
 
                             chatBox.Invoke(new MethodInvoker(delegate ()
                             {
