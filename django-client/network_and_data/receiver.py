@@ -15,26 +15,25 @@ class Receiver(threading.Thread):
     """Class responsible for receive data."""
 
     def __init__(self):
-        """Prepare socket, r_queue and flags."""
+        """Prepare socket and other resources."""
         threading.Thread.__init__(self)
-        self._s = network.prepare_socket(network.HOST, network.PORT)
+        self._s = network.prepare_client_socket(network.HOST, network.PORT)
         self.r_queue = queue.Queue(R_QUEUE_SIZE)
-        self._read_channel = [self._s]
+        self._read_sources = [self._s] # + pipe in the future
 
     def run(self):
         """Receive data and check if is_stopped is true."""
-        i = 0
         while True:
-            i += 1
-            print('before select ', i)
-            to_read, _, _ = select.select(self._read_channel, [], [], )
-            print('after select ', i)
-            for read in to_read:
-                if read is self._s:
+            avaible_read_sources, _, _ = select.select(self._read_sources,
+                                                       [],
+                                                       [])
+            for read_source in avaible_read_sources:
+                if read_source is self._s:
                     data = self._s.recv(R_QUEUE_ELEMENT_SIZE)
                     if data:
                         self.r_queue.put(data, block=True, timeout=None)
                     else:
-                        # no data, connection lost
-                        print('CLOSE RECEIVER')
-                        return
+                        raise Exception('Connection lost.')
+                else:
+                    # pipe - stop
+                    pass
