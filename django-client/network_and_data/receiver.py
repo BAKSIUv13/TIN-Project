@@ -1,5 +1,5 @@
 # TIN
-# Bartlomiej Kulik
+# Bartłomiej Kulik
 
 """Module responsible for receiving data."""
 

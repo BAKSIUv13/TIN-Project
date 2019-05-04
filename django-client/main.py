@@ -1,5 +1,5 @@
 # TIN
-# Bartlomiej Kulik
+# Bartłomiej Kulik
 
 """Main program module."""
 

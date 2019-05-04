@@ -1,2 +1,4 @@
 # TIN
-# Bartlomiej Kulik
+# Bartłomiej Kulik
+
+# TODO
