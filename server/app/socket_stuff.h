@@ -12,7 +12,7 @@
 namespace tin {
 
 struct SocketStuff {
-  static constexpr size_t BUF_SIZE = 256;
+  static constexpr size_t BUF_SIZE = 1024;
   static constexpr int MAX_SEGMENTS = 1024 * 1024;
   static constexpr bool END_ON_BAD_DATA = true;
   enum Error {
@@ -28,10 +28,12 @@ struct SocketStuff {
     buf[BUF_SIZE] = '\0';
   }
   char buf[BUF_SIZE + 1];
+  alignas(NQuad) char first_quads[3 * sizeof(NQuad)];
+  // int read_begin_place;
+  // int place_left() {return BUF_SIZE - read_begin_place;}
   bool marked_to_delete;
   bool shall_read;
   bool shall_write;
-  alignas(NQuad) char first_quads[3 * sizeof(NQuad)];
   NQuad &magic() {
     return reinterpret_cast<NQuad *>(first_quads)[0];
   }
