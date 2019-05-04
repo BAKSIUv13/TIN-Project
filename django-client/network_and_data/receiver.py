@@ -6,7 +6,6 @@
 import threading
 import queue
 import select
-from network_and_data import network
 
 R_QUEUE_ELEMENT_SIZE = 1
 R_QUEUE_SIZE = 1024
@@ -14,10 +13,10 @@ R_QUEUE_SIZE = 1024
 class Receiver(threading.Thread):
     """Class responsible for receive data."""
 
-    def __init__(self):
-        """Prepare socket and other resources."""
+    def __init__(self, socket):
+        """Prepare receiver resources."""
         threading.Thread.__init__(self)
-        self._s = network.prepare_client_socket(network.HOST, network.PORT)
+        self._s = socket
         self.r_queue = queue.Queue(R_QUEUE_SIZE)
         self._read_sources = [self._s] # + pipe in the future
 
@@ -33,7 +32,13 @@ class Receiver(threading.Thread):
                     if data:
                         self.r_queue.put(data, block=True, timeout=None)
                     else:
-                        raise Exception('Connection lost.')
+                        raise OSError('Connection lost.')
                 else:
                     # pipe - stop
                     pass
+
+    def close_socket(self):
+        """Close socket."""
+        self._s.close()
+
+    # def get_byte(self):

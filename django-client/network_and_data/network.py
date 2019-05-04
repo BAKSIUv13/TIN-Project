@@ -8,12 +8,9 @@ import socket
 HOST = 'localhost'
 PORT = 12345
 
-def prepare_client_socket(host, port):
+def prepare_client_socket(host=HOST, port=PORT):
     """Create socket and try to connect."""
-    client_socket = socket.socket(socket.AF_INET,
-                                  socket.SOCK_STREAM,
-                                  socket.IPPROTO_TCP)
-    # tuple because of AF_INET address format
-    client_socket.connect((host, port))
+    # create_connection = socket() + connect()
+    client_socket = socket.create_connection((host, port))
 
     return client_socket
