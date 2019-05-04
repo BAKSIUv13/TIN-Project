@@ -117,6 +117,9 @@ int Server::ReadMainFds_() {
       runs_ = false;
     } else if (std::cin.good()) {
       std::cerr << "Na stdin wpisano:\n" << in_buf << '\n';
+    } else if (std::cin.bad()) {
+      std::cerr << "Przyszło coś na stdin, ale coś było nie tak, jak trzeba, "
+        << " pomijam.\n";
     }
     std::cin.clear();
   }
@@ -132,7 +135,7 @@ int Server::WriteToSocks_() {
 }
 
 
-int Server::DealWithSocketsIncome_() {
+int Server::ReadClients_() {
   int sockets_read;
   for (auto it = client_socks_.begin(); it != client_socks_.end(); ++it) {
     if (!(it->second.second.shall_read)
@@ -147,165 +150,153 @@ int Server::DealWithSocketsIncome_() {
 
 int Server::ReadClientSocket_(int fd) {
   // SocketTCP4 &sock = client_socks_.at(fd).first;
-
-  //
   SocketStuff &stuff = client_socks_.at(fd).second;
 
-  ssize_t read_ret = read(fd, stuff.buf, stuff.BUF_SIZE);
+  ssize_t read_ret = read(fd, stuff.read_buf, stuff.BUF_SIZE);
   if (read_ret < 0) {
     std::cerr << "Błąd przy czytaniu socketu " << fd
       << "\n errno: " << std::strerror(errno) << "\n";
     return -1;
   } else if (read_ret == 0) {
-    std::cerr << "Na gniazdo przyszło zamknięcie, na razie kończymy.\n";
+    std::cerr << "Na gniazdo przyszło zamknięcie.\n";
     stuff.marked_to_delete = true;
     // ZAMKNIĘCIE
     return 1;
   }
-  stuff.buf[read_ret] = '\0';
+  stuff.read_buf[read_ret] = '\0';
+  stuff.read_len = read_ret;
+  stuff.read_processed = 0;
   std::cerr << "Na socket o numerze " << fd << " przyszło:\n"
-    << stuff.buf << "\n";
-  int deal_ret = DealWithReadBuf_(fd, read_ret);
+    << stuff.read_buf << "\n";
+  int deal_ret = DealWithReadBuf_(fd);
   return 0;
 }
 
-int Server::DealWithReadBuf_(int fd, int chars_read) {
-  static constexpr int NQS = sizeof(NQuad);
-  SocketTCP4 &sock = client_socks_.at(fd).first;
-  SocketStuff &stuff = client_socks_.at(fd).second;
-  int i = 0;  // przetworzone chary
-  auto load_to = [&](size_t x) -> bool {
-    int strc = chars_read - i;
-    if (stuff.chars_loaded > x) {
-      std::cerr << "Tutaj mamy chyba błąd, to później już :<\n";
-      std::terminate();
-    } else if (stuff.chars_loaded == x) {
-      return true;
-    } else {
-      if (strc > 0) {
-        size_t chars_to_copy = x - stuff.chars_loaded;
-        if (chars_to_copy > strc) {
-          memcpy(&s.buf[s.chars_loaded], &msg.c_str()[i], strc);
-          i += strc;
-          s.chars_loaded += strc;
-          return false;
-        } else {
-          memcpy(&s.buf[s.chars_loaded], &msg.c_str()[i], chars_to_copy);
-          i += chars_to_copy;
-          s.chars_loaded += chars_to_copy;
-          return true;
-        }
-      } else {
-        return false;
-      }
-    }
-  };
-  auto reset = [&]() -> void {
-    stuff.chars_loaded = 0;
-    stuff.which_segment = 0;
-  };
-  while (true) {
-    std::cerr << "Przed switchem:\nchary: " << stuff.chars_loaded
-      << "\ni: " << i
-      << "\nchars read: " << chars_read
+//int Server::RCLoadTo_(int fd, SocketTCP4 *sock, SocketStuff *stuff,
+//    int how_much) {
+//  int/
+//}
+
+int Server::RCResetCm_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
+  stuff->cm_processed = 0;
+}
+
+int Server::RCMagic_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
+  int chars_to_copy = stuff->read_len - stuff->read_processed;
+  if (chars_to_copy > NQS - stuff->cm_processed) {
+    chars_to_copy = NQS - stuff->cm_processed;
+  }
+  memcpy(&stuff->first_quads[stuff->cm_processed],
+    &stuff->read_buf[stuff->read_processed],
+    chars_to_copy);
+  stuff->read_processed += chars_to_copy;
+  stuff->cm_processed += chars_to_copy;
+  if (stuff->cm_processed < NQS)
+    return 1;  // 1 means that we didn't reach NQS yet
+  if (stuff->magic() != MQ::OWO) {
+    std::cerr << "Nie 'OwO!' :<\n";
+    stuff->errors.push(stuff->NOT_OWO);
+    return - 1 - 4096;  // Niech będzie że to na razie prawie przypadkowa
+                        // liczba.
+  }
+  return 0;
+}
+
+int Server::RCInstrLd_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
+  int chars_to_copy = stuff->read_len - stuff->read_processed;
+  if (chars_to_copy > 2 * NQS - stuff->cm_processed) {
+    chars_to_copy = 2 * NQS - stuff->cm_processed;
+  }
+  memcpy(&stuff->first_quads[stuff->cm_processed],
+    &stuff->read_buf[stuff->read_processed],
+    chars_to_copy);
+  stuff->read_processed += chars_to_copy;
+  stuff->cm_processed += chars_to_copy;
+  if (stuff->cm_processed < 2 * NQS)
+    return 1;  // 1 means that we didn't reach 2 * NQS yet
+  return 0;
+}
+
+int Server::RCInstr2Ld_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
+  int chars_to_copy = stuff->read_len - stuff->read_processed;
+  if (chars_to_copy > 3 * NQS - stuff->cm_processed) {
+    chars_to_copy = 3 * NQS - stuff->cm_processed;
+  }
+  memcpy(&stuff->first_quads[stuff->cm_processed],
+    &stuff->read_buf[stuff->read_processed],
+    chars_to_copy);
+  stuff->read_processed += chars_to_copy;
+  stuff->cm_processed += chars_to_copy;
+  if (stuff->cm_processed < 3 * NQS)
+    return 1;  // 1 means that we didn't reach 2 * NQS yet
+  return 0;
+}
+
+int Server::RCChoose_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
+  // To jest na razie tymczasowe tylko prawdopodobnie.
+  switch (stuff->instr()) {
+    case MQ::CAPTURE_SESSION:
+      std::cerr << "PLACEHOLDER xd CAPTURE_SESSION\n";
+      break;
+    case MQ::REQUEST_LOGIN:
+      std::cerr << "PLACEHOLDER xd REQUEST_LOGIN\n";
+      break;
+    case MQ::SEND_MESSAGE:
+      std::cerr << "PLACEHOLDER xd SEND_MESSAGE\n";
+      break;
+    default:
+      std::cerr << "Zła instrukcja :<";
+      return - 1;
+  }
+  RCResetCm_(fd, sock, stuff);
+  return 0;
+}
+
+int Server::DealWithReadBuf_(int fd) {
+  SocketTCP4 *sock = &client_socks_.at(fd).first;
+  SocketStuff *stuff = &client_socks_.at(fd).second;
+
+  std::cerr << "int Server::DealWithReadBuf_(int fd)\n";
+
+  int pom;
+  while (stuff->read_processed < stuff->read_len) {
+    std::cerr << ":\nchary w komunikacie: " << stuff->cm_processed
+      << "\nprzetworzone chary z gniazda: " << stuff->read_processed
+      << "\nchars read: " << stuff->read_len
       << '\n';
-    if (i >= chars_read) {
-      std::cerr << "No to ten koniec czytanuia\n";
+    if (stuff->cm_processed < 0) {
+      std::cerr << "Jakiś okropny błąd :<\n";
+      return - 100;
+    }
+    if (stuff->cm_processed < NQS) {
+      pom = RCMagic_(fd, sock, stuff);
+      if (pom > 0)
+        return 0;
+      if (pom < 0)
+        return pom;
+    }
+    if (stuff->cm_processed < 2 * NQS) {
+      pom = RCInstrLd_(fd, sock, stuff);
+      if (pom > 0)
+        return 0;
+      if (pom < 0)
+        return pom;
+    }
+    pom = RCChoose_(fd, sock, stuff);
+    if (pom > 0) {
+      std::cerr << "xd\n";
       return 0;
+    } else if (pom < 0) {
+      return pom;
     }
-    if (stuff.chars_loaded < NQS) {
-      int chars_to_copy = chars_read - i;
-      if (chars_to_copy > NQS - stuff.chars_loaded) {
-        chars_to_copy = NQS - stuff.chars_loaded;
-      }
-      memcpy(stuff.first_quads + stuff.chars_loaded, stuff.buf + i,
-        chars_to_copy);
-      i += chars_to_copy;
-      stuff.chars_loaded += chars_to_copy;
-      continue;
-    } else {
-      // Tutaj już wiemy, że mamy cały pierwszy quad.
-      if (stuff.magic() != MQ::OWO) {
-        std::cerr << "Pierwszy quadzik to nie \"OwO!\", więc jest źle xd\n";
-        stuff.errors.push(stuff.Error::NOT_OWO);
-        return 1;
-      }
-      if (stuff.chars_loaded < 2 * NQS) {
-        int chars_to_copy = chars_read - i;
-        if (chars_to_copy > 2 * NQS - stuff.chars_loaded) {
-          chars_to_copy = 2 * NQS - stuff.chars_loaded;
-        }
-        memcpy(stuff.first_quads + stuff.chars_loaded, stuff.buf + i,
-          chars_to_copy);
-        i += chars_to_copy;
-        stuff.chars_loaded += chars_to_copy;
-        continue;
-      } else {
-        switch (stuff.instr().Uint()) {
-          case MQ::CAPTURE_SESSION:
-            std::cerr << "Wchodzę sobie pod case MQ::CAPTURE_SESSION\n";
-            SessionId sid = s.qbuf[2];
-            sid <<= 32;
-            sid |= s.qbuf[3];
-            if (AssocSessWithSock(sid, fd) < 0) {
-              std::cerr << "meh :<\n";
-              s.errors.push(s.SESS_CAPTURE_FAILED);
-            } else {
-              std::cerr << "Podobno zajął sesję xd\n";
-              std::string name {sess_to_users_.at(sid)->GetName()};
-              std::string send_msg{"OwO!ueuo"};
-              std::string send_msg2{"Zalogowano jako <<"};
-              send_msg2 += name += ">>\n";
-              NQuad len {(uint32_t)send_msg2.size()};
-              send_msg += len.c[0] += len.c[1] += len.c[2] += len.c[3];
-              send_msg += send_msg2;
-              nws.AddMsgSend(fd, send_msg);
-            }
-            reset();
-            break;
-        }
-      }
-    }
-  }
+    std::cerr << "O, wygląda na to, że skończono czytać instrukcję.\n";
+  }  // while
+  std::cerr << "No to ten koniec czytanuia\n";
   return 0;
 }
 
-void Server::DoAllTheThings_() {
-  for (size_t i = 0; i < nws.new_sockets.size(); ++i) {
-    int fd = nws.new_sockets.at(i);
-    if (RegisterSock(fd) < 0) {
-      std::terminate();
-    }
-  }
-  nws.new_sockets.clear();
-  for (
-      auto it = nws.received_messages.begin();
-      it != nws.received_messages.end();
-      ++it) {
-    DealWithMsgs(it->fd, it->msg);
-  }
-  nws.received_messages.clear();
-  for (auto it = sss_.begin(); it != sss_.end(); ++it) {
-    UploadFromState(it->first);
-  }
-  for (size_t i = 0; i < nws.sockets_to_drop.size(); ++i) {
-    int fd = nws.sockets_to_drop.at(i);
-    if (DropSock(fd) < 0) {
-      std::terminate();
-    }
-  }
-  nws.sockets_to_close = std::move(nws.sockets_to_drop);
-}
 
-void Server::UploadFromState(int fd) {
-  SockStreamState &s = sss_.at(fd);
-  if (s.errors.size() > 0) {
-    std::cerr << "Błędy :<\n";
-    nws.AddMsgSend(fd, "OwO!jabłka xd źle cos\n");
-    nws.AddSockToDrop(fd);
-  }
-  return;
-}
+// "OwO!jabłka xd źle cos\n"
 
 
 
@@ -441,7 +432,7 @@ int Server::LoopTick_() {
   int do_sel_ret = DoSel_();
   int read_main_fds_ret = ReadMainFds_();
   int srite_to_socks_ret = WriteToSocks_();
-  int deal_with_sockets_income_ret = DealWithSocketsIncome_();
+  int read_clients_ret = ReadClients_();
   int delete_marked_socks_ret = DeleteMarkedSocks_();
 
   return 0;

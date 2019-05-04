@@ -12,39 +12,89 @@
 namespace tin {
 
 struct SocketStuff {
+<<<<<<< HEAD
   static constexpr size_t BUF_SIZE = 1024;
+=======
+  // Size of buffer used to read chars from socket.
+  static constexpr size_t BUF_SIZE = 2048;
+/*
+  // Maximum number of segments. Now probably useless.
+>>>>>>> b03540ed276999e4250cb85f55521652081736ae
   static constexpr int MAX_SEGMENTS = 1024 * 1024;
-  static constexpr bool END_ON_BAD_DATA = true;
+*/
+  // Yyyyyyy czy kończymy jak mamy źle co≥ś
+  static constexpr bool END_ON_BAD_DATA = true;  // to prawdopodobnie tymczasowe
+
+  // Error numbers pushed to queue.
   enum Error {
     OTHER = 1,
-    CLOSE,
     NOT_OWO,
     AUTH_FAILED,
     SESS_CAPTURE_FAILED,
   };
+
   SocketStuff()
       : marked_to_delete(false), shall_read(false), shall_write(false),
-        chars_loaded(0), which_segment(0) {
-    buf[BUF_SIZE] = '\0';
+        cm_processed(0), read_len(0), read_processed(0) {
+    read_buf[BUF_SIZE] = '\0';
   }
+<<<<<<< HEAD
   char buf[BUF_SIZE + 1];
   alignas(NQuad) char first_quads[3 * sizeof(NQuad)];
   // int read_begin_place;
   // int place_left() {return BUF_SIZE - read_begin_place;}
+=======
+
+  // Buffer which takes data from read directly from socket.
+  char read_buf[BUF_SIZE + 1];
+
+  // Buffer which contains copied bytes from read data that is beginning.
+  alignas(NQuad) char first_quads[3 * sizeof(NQuad)];
+
+  // Variable which tells if socket shall be closed at next 'close step'.
+>>>>>>> b03540ed276999e4250cb85f55521652081736ae
   bool marked_to_delete;
+
+  // This tells if socket is handled in 'read step'.
   bool shall_read;
+
+  // This tells if program shall write to this socket in next 'write step'.
   bool shall_write;
+<<<<<<< HEAD
+=======
+
+  // Reference to first quad in 'first_quads' buffer that has to be "OwO!".
+>>>>>>> b03540ed276999e4250cb85f55521652081736ae
   NQuad &magic() {
     return reinterpret_cast<NQuad *>(first_quads)[0];
   }
+
+  // Reference to quad containing instruction number.
   NQuad &instr() {
     return reinterpret_cast<NQuad *>(first_quads)[1];
   }
+
+  // Reference to additional quad used by some instructions.
   NQuad &instr2() {
     return reinterpret_cast<NQuad *>(first_quads)[2];
   }
-  int chars_loaded;  // of actual message
-  int which_segment;  // same
+
+  // Number of processed chars in actually handled 'command'.
+  int cm_processed;
+
+  // Number of chars that have been read with 'read' function last time.
+  int read_len;
+
+  // Number of processed chars from last read.
+  int read_processed;
+
+/*
+  // Number of 'segment' in which is the program. This is chyba useless
+  // variable now.
+  int which_segment;
+*/
+
+  // Queue of errors that shall be handled somehow.
   std::queue<Error> errors;
 };
 
