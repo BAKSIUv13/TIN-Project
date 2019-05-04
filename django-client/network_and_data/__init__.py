@@ -1,5 +1,5 @@
 # TIN
-# Bartomiej Kulik
+# Bartłomiej Kulik
 
 """Information about all modules in network_and_data package."""
 
