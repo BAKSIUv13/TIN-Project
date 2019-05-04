@@ -15,16 +15,29 @@ namespace SieciowyInkScape
 {
     public partial class MainForm : Form
     {
+
+
+
+       
         enum ErrorCodes
         {
             BAD_HEADER, PACKET_TOO_LONG, SEND_TIMEDOUT, RECEIVED_TOO_MUCH, RECEIVE_FAILURE, SEND_FAILURE
         }
-        struct Codes // po konwersji littleendian -> bigendian litery będą zamienione
+        class Codes // po konwersji littleendian -> bigendian litery będą zamienione
         {
-            public const UInt32 OwO = ('O' << 24 | 'w' << 16 | 'O' << 8 | '!' << 0); // OwO!
+            static UInt32 getCode(string text)
+            {
+                if (text.Length != 4) throw new Exception("header name must be 4 characters long");
 
-            public const UInt32 MessageOutbound = ('m' << 24 | 's' << 16 | 'g' << 8 | '0' << 0); // msg0
-            public const UInt32 MessageInbound = ('m' << 24 | 's' << 16 | 'g' << 8 | '1' << 0); // msg1
+                return ((UInt32)text[0] << 24 | (UInt32)text[1] << 16 | (UInt32)text[2] << 8 | (UInt32)text[3] << 0);
+            }
+            public static UInt32 OwO = getCode("OwO!"); // OwO!
+
+            public static UInt32 MessageOutbound = getCode("msg0"); // msg0
+            public static UInt32 MessageInbound = getCode("msg1"); // msg1
+            public static UInt32 MouseOutbound = getCode("mysz");
+            public static UInt32 MouseInbound = getCode("maus");
+
         }
 
         public class MessageCreator
@@ -52,6 +65,11 @@ namespace SieciowyInkScape
         Thread socketThread;
         MessageCreator messageCreator;
 
+        DrawingAreaState drawingArea;
+
+        int framesCounted = 0;
+        int FPS = 0;
+
         public MainForm()
         {
             InitializeComponent();
@@ -59,9 +77,27 @@ namespace SieciowyInkScape
             messageCreator = new MessageCreator(this);
         }
 
+        public static void SetDoubleBuffered(System.Windows.Forms.Control c)
+        {
+            //Taxes: Remote Desktop Connection and painting
+            //http://blogs.msdn.com/oldnewthing/archive/2006/01/03/508694.aspx
+            if (System.Windows.Forms.SystemInformation.TerminalServerSession)
+                return;
+
+            System.Reflection.PropertyInfo aProp =
+                  typeof(System.Windows.Forms.Control).GetProperty(
+                        "DoubleBuffered",
+                        System.Reflection.BindingFlags.NonPublic |
+                        System.Reflection.BindingFlags.Instance);
+
+            aProp.SetValue(c, true, null);
+        }
+
         private void MainForm_Load(object sender, EventArgs e)
         {
             Show();
+            SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+            SetDoubleBuffered(drawing);
 
             bool retry;
 
@@ -130,6 +166,10 @@ namespace SieciowyInkScape
                 //socket.ReceiveTimeout = 1000;
                 //socket.SendTimeout = 1000;
 
+                drawingArea = new DrawingAreaState(new Point(drawing.Width, drawing.Height));
+                drawingArea.mousePositions["nkpkiller"] = new DrawingAreaState.MousePosition(0.4f, 0.3f, "nkpkiller");
+                drawingArea.mousePositions["LubiePierogi"] = new DrawingAreaState.MousePosition(0.7f, 0.4f, "LubiePierogi");
+                drawingArea.mousePositions["Baksiu"] = new DrawingAreaState.MousePosition(0.1f, 0.8f, "Baksiu");
 
 
                 socketThread = new Thread(new ThreadStart(SocketThread));
@@ -243,25 +283,35 @@ namespace SieciowyInkScape
                 {
                     UInt32 messageType = SocketReceiveUInt32();
 
-                    switch(messageType)
+                    if(messageType == Codes.MessageInbound)
                     {
-                        case Codes.MessageInbound:
-                            UInt32 usernameLength;
-                            string username;
-                            UInt32 messageLength;
-                            string message;
+                        UInt32 usernameLength;
+                        string username;
+                        UInt32 messageLength;
+                        string message;
 
-                            usernameLength = SocketReceiveUInt32();
-                            username = SocketReceiveString(usernameLength);
-                            messageLength = SocketReceiveUInt32();
-                            message = SocketReceiveString(messageLength);
+                        usernameLength = SocketReceiveUInt32();
+                        username = SocketReceiveString(usernameLength);
+                        messageLength = SocketReceiveUInt32();
+                        message = SocketReceiveString(messageLength);
 
-                            chatBox.Invoke(new MethodInvoker(delegate ()
-                            {
-                                chatBox.AppendText(username + ": " + message + "\n");
-                            }));
+                        chatBox.Invoke(new MethodInvoker(delegate ()
+                        {
+                            chatBox.AppendText(username + ": " + message + "\n");
+                        }));
 
-                            break;
+                        break;
+                    }
+                    if(messageType == Codes.MouseInbound)
+                    {
+                        UInt32 xpos = SocketReceiveUInt32();
+                        UInt32 ypos = SocketReceiveUInt32();
+                        UInt32 usernameLength = SocketReceiveUInt32();
+                        string username = SocketReceiveString(usernameLength);
+
+                        drawingArea.Access();
+                        drawingArea.mousePositions[username] = new DrawingAreaState.MousePosition(xpos, ypos, username);
+                        drawingArea.Exit();
                     }
                 }
                 else
@@ -320,6 +370,173 @@ namespace SieciowyInkScape
                 chatBox.AppendText("Ja: " + messageBox.Text + "\n");
                 messageBox.Clear();
             }
+        }
+
+        void DrawObject(DrawingAreaState state, DrawingAreaState.DrawingObject obj, Graphics gr)
+        {
+            switch(obj.objectType)
+            {
+                case DrawingAreaState.DrawingObject.ObjectType.LINE:
+                    DrawingAreaState.LineObject line = (DrawingAreaState.LineObject)obj;
+                    gr.DrawLine(new Pen(new SolidBrush(line.color), line.thickness),
+                        line.xpos * state.areaSize.X, line.ypos * state.areaSize.Y,
+                        line.xpos2 * state.areaSize.X, line.ypos2 * state.areaSize.Y);
+                    break;
+                case DrawingAreaState.DrawingObject.ObjectType.RECTANGLE:
+                    DrawingAreaState.RectangleObject rect = (DrawingAreaState.RectangleObject)obj;
+                    gr.DrawRectangle(new Pen(new SolidBrush(rect.color), rect.thickness),
+                        ((rect.xpos2 - rect.xpos) > 0 ? (rect.xpos) : (rect.xpos2)) * state.areaSize.X,
+                        ((rect.ypos2 - rect.ypos) > 0 ? (rect.ypos) : (rect.ypos2)) * state.areaSize.Y,
+                        ((rect.xpos2 - rect.xpos) > 0 ? (rect.xpos2 - rect.xpos) : (rect.xpos - rect.xpos2)) * state.areaSize.X,
+                        ((rect.ypos2 - rect.ypos) > 0 ? (rect.ypos2 - rect.ypos) : (rect.ypos - rect.ypos2)) * state.areaSize.Y);
+                    break;
+            }
+        }
+
+        private void drawing_Paint(object sender, PaintEventArgs e)
+        {
+           
+            if(!(drawingArea is null))
+            {
+                framesCounted++;
+
+                drawingArea.Access();
+
+                Graphics graphics = e.Graphics;
+                graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                graphics.Clear(Color.White);
+                
+
+                foreach(DrawingAreaState.DrawingObject obj in drawingArea.objects)
+                {
+                    DrawObject(drawingArea, obj, graphics);
+                }
+
+                drawingArea.CheckPendingObjects();
+                foreach (DrawingAreaState.PendingObject pobj in drawingArea.pendingObjects)
+                {
+                    DrawObject(drawingArea, pobj.obj, graphics);
+                }
+
+                foreach (KeyValuePair<string, DrawingAreaState.MousePosition> entry in drawingArea.mousePositions)
+                {
+                    // do something with entry.Value or entry.Key
+                    DrawingAreaState.MousePosition pos = entry.Value;
+
+                    graphics.DrawLine(new Pen(Brushes.Black),
+                        pos.xpos * drawingArea.areaSize.X - 5, pos.ypos * drawingArea.areaSize.Y - 5,
+                        pos.xpos * drawingArea.areaSize.X + 5, pos.ypos * drawingArea.areaSize.Y + 5);
+                    graphics.DrawLine(new Pen(Brushes.Black),
+                        pos.xpos * drawingArea.areaSize.X + 5, pos.ypos * drawingArea.areaSize.Y - 5,
+                        pos.xpos * drawingArea.areaSize.X - 5, pos.ypos * drawingArea.areaSize.Y + 5);
+
+                    graphics.DrawString(pos.username, new Font("Courier New", 12.0f), Brushes.Black, pos.xpos * drawingArea.areaSize.X, pos.ypos * drawingArea.areaSize.Y - 25.0f);
+                }
+
+                if(!(drawingArea.tempObject is null))
+                {
+                    DrawObject(drawingArea, drawingArea.tempObject, graphics);
+                }
+
+                graphics.DrawString("FPS: " + FPS.ToString(), new Font("Courier New", 12.0f), Brushes.Black, 5, 5);
+
+
+                drawingArea.Exit();
+            }
+        }
+
+        private void drawing_MouseDown(object sender, MouseEventArgs e)
+        {
+            if(drawingArea.state == DrawingAreaState.State.IDLE)
+            {
+                drawingArea.state = DrawingAreaState.State.DRAWING;
+                switch (drawingArea.selectedTool)
+                {
+                    case DrawingAreaState.Tools.LINE:
+                        drawingArea.tempObject = new DrawingAreaState.LineObject(
+                        (float)(e.X) / (float)drawingArea.areaSize.X,
+                        (float)(e.Y) / (float)drawingArea.areaSize.Y,
+                        (float)(e.X) / (float)drawingArea.areaSize.X,
+                        (float)(e.Y) / (float)drawingArea.areaSize.Y, 1, Color.Black);
+                        break;
+                    case DrawingAreaState.Tools.RECTANGLE:
+                        drawingArea.tempObject = new DrawingAreaState.RectangleObject(
+                        (float)(e.X) / (float)drawingArea.areaSize.X,
+                        (float)(e.Y) / (float)drawingArea.areaSize.Y,
+                        (float)(e.X) / (float)drawingArea.areaSize.X,
+                        (float)(e.Y) / (float)drawingArea.areaSize.Y, 1, Color.Black);
+                        break;
+                }
+            }
+
+            drawing.Refresh();
+        }
+
+        private void drawing_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (drawingArea.state == DrawingAreaState.State.DRAWING)
+            {
+                DrawingAreaState.DrawingObject obj = drawingArea.tempObject;
+                switch (obj.objectType)
+                {
+                    case DrawingAreaState.DrawingObject.ObjectType.LINE:
+                        DrawingAreaState.LineObject line = (DrawingAreaState.LineObject)obj;
+                        line.xpos2 = (float)(e.X) / (float)drawingArea.areaSize.X;
+                        line.ypos2 = (float)(e.Y) / (float)drawingArea.areaSize.Y;
+
+                        break;
+                    case DrawingAreaState.DrawingObject.ObjectType.RECTANGLE:
+                        DrawingAreaState.RectangleObject rect = (DrawingAreaState.RectangleObject)obj;
+                        rect.xpos2 = (float)(e.X) / (float)drawingArea.areaSize.X;
+                        rect.ypos2 = (float)(e.Y) / (float)drawingArea.areaSize.Y;
+
+                        break;
+                }
+               
+            }
+
+            drawing.Refresh();
+        }
+
+        private void drawing_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (drawingArea.state == DrawingAreaState.State.DRAWING)
+            {
+                DrawingAreaState.DrawingObject obj = drawingArea.tempObject;
+               
+                drawingArea.FinalizeObject(this, drawingArea.tempObject);
+
+                drawingArea.tempObject = null;
+
+                drawingArea.state = DrawingAreaState.State.IDLE;
+            }
+
+            drawing.Refresh();
+        }
+
+        private void RefreshTimer_Tick(object sender, EventArgs e)
+        {
+            if (!(drawingArea is null))
+            {
+                drawingArea.CheckPendingObjects();
+            }
+            drawing.Refresh();
+        }
+
+        private void FPSTimer_Tick(object sender, EventArgs e)
+        {
+            FPS = framesCounted;
+            framesCounted = 0;
+        }
+
+        private void rectangleButton_Click(object sender, EventArgs e)
+        {
+            drawingArea.selectedTool = DrawingAreaState.Tools.RECTANGLE;
+        }
+
+        private void lineButton_Click(object sender, EventArgs e)
+        {
+            drawingArea.selectedTool = DrawingAreaState.Tools.LINE;
         }
     }
 }
