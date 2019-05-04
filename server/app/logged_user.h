@@ -1,4 +1,4 @@
-// Copyright 2019 ja
+// Copyright 2019 Piotrek
 
 #ifndef SERVER_APP_LOGGED_USER_H_
 #define SERVER_APP_LOGGED_USER_H_

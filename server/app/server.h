@@ -23,64 +23,104 @@ namespace tin {
 
 class Server {
  public:
-  // using LogUserTable = std::map<Username, LoggedUser>;
-  // using SessionToUserTable = std::map<SessionId, LoggedUser *>;
-  // using FdToUserTable = std::map<int, LoggedUser *>;
-  // using StatesTable = std::map<int, SockStreamState>;
-
-
-
   static constexpr uint16_t DEFAULT_PORT = 42000;
   static constexpr bool DEAL_WITH_STDIN = true;
   static constexpr int DEFAULT_LISTEN_QUEUE_LEN = 32;
-  static constexpr int BUF_SIZE = 256;
+  static constexpr int NQS = sizeof(NQuad);
+
+  // I don't remember which buffer is it xd
+  // static constexpr int BUF_SIZE = 256;
 
 
   Server();
   Server(const Server &) = delete;
   ~Server();
 
+  // Function which start the server and returns when it finishes work.
   void Run(uint16_t port = DEFAULT_PORT,
     int queue_size = DEFAULT_LISTEN_QUEUE_LEN);
 
+  // Nicee function which sets all necessary thigs in server xd
   void SpecialHardcodeInit();
 
   int AddSession(SessionId, const Username &);
   void DelSession(SessionId);
   int AssocSessWithSock(SessionId, int fd);
-  void DeassocSess(SessionId);
-  void DeassocSock(int fd);
 
-  // void DealWithMsgs(int fd, const std::string &msg);
-  // void UploadFromState(int fd);
-
-  /// From other thread?? This fn is blocking chyba.
+  // From other thread?? This fn is blocking chyba.
   int StopRun();
 
-  // void PrepareNws_();
-  // void UnprepareNws_();
-  // void DoAllTheThings_();
 
   World &GetWorld() {return world_;}
-  // NetworkManager &GetNetManager() {return nm_;}
   TheConfig &GetConf() {return conf_;}
   AccountManager &GetAccountManager() {return am_;}
 
  private:
+
+  void DeassocSess_(SessionId);
+  void DeassocSock_(int fd);
+  
+  // Reset state of server???
   int Reset_();
+
+  // Initializes listenig socket with given parameters.
   int InitializeListener_(uint16_t port, int queue_size);
+
+  // Function called in loop that do all the job that server has to.
   int LoopTick_();
+
+  // Moves given socket to map of sockets in server class.
   int RegisterSockFromAccept_(SocketTCP4 &&);
+
+  // Removes socket from the server.
   int DropSock_(int fd);
+
+  // Sets bitset of servers's 'select' object.
   int FeedSel_();
+
+  // Reads data from listening sock, standart input and closing pipe.
   int ReadMainFds_();
+
+  // Calls 'select' function.
   int DoSel_();
+
+  // Write data to client sockets.
   int WriteToSocks_();
-  int DealWithSocketsIncome_();
+
+  // Reads client sockets and deal with it.
+  int ReadClients_();
+
+  // Reads one client socket.
   int ReadClientSocket_(int fd);
-  int DealWithReadBuf_(int fd, int chars_read);
+
+  // Deals with read data from client socket.
+  int DealWithReadBuf_(int fd);
+
+  // Loads bytes expected as magic start word and checks if we have 'OwO!'.
+  // RC - Read Client
+  int RCMagic_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
+
+  // Loads instruction number.
+  int RCInstrLd_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
+
+  // Loads second instruction number.
+  int RCInstr2Ld_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
+
+  // Chooses and executes instruction.
+ ASDASDASDASDFASDF int RCExecInstr_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
+
+sdfsdfsdfsdf choose only z dwóch albo z jednego NQUadu
+
+  //// Tries to check if we have some number of bytes in buffer.
+  //int RCLoadFirst_(int fd, SocketTCP4 *sock, SocStuff *stuff, int how_much);
+
+  // Resets 'state of machine' that coś tam coś tam.
+  int RCResetCm_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
+
+  // Deletes sockets marked to delete.
   int DeleteMarkedSocks_();
 
+  // This variable tells if server is now running.
   bool runs_;
 
   World world_;
@@ -90,10 +130,10 @@ class Server {
   std::map<Username, LoggedUser> users_;
   std::map<SessionId, LoggedUser *> sess_to_users_;
   std::map<int, LoggedUser *> socks_to_users_;
-  // NetworkManager nm_;
   TheConfig conf_;
   AccountManager am_;
-  // Nws nws;
+
+  // Pipe that may be used to tell the server to stop.
   int end_pipe_[2];
 };  // class Server
 }  // namespace tin
