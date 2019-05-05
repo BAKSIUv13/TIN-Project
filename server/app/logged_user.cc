@@ -38,14 +38,12 @@ void LoggedUser::Clear_() {
   name_ = Username();
   session_id_ = 0;
   sock_fd_ = -1;
-  artist_id_ = 0;
 }
 
 void LoggedUser::Move_(LoggedUser *other) {
   name_ = other->name_;
   session_id_ = other->session_id_;
   sock_fd_ = other->sock_fd_;
-  artist_id_ = other->artist_id_;
   other->Clear_();
 }
 

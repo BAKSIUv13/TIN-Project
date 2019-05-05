@@ -39,7 +39,7 @@ class SocketTCP4 {
   int GetFD() {return fd_;}  // This shall be used for 'select'.
 
  private:
-  static const struct Accept_Flag_t {} Accept_Flag;
+  static const struct ACCEPT_t {} ACCEPT;
   //  explicit SocketTCP4(Accept);
 
   void Destroy_();

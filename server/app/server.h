@@ -16,6 +16,8 @@
 #include "app/socket_stuff.h"
 #include "core/socket_tcp4.h"
 #include "core/sel.h"
+#include "core/instr_id.h"
+#include "app/instr_supp.h"
 #include "network/nws.h"
 
 namespace tin {
@@ -31,6 +33,7 @@ class Server {
   // I don't remember which buffer is it xd
   // static constexpr int BUF_SIZE = 256;
 
+  static const std::map<InstrId, InstrSupp> instructions;
 
   Server();
   Server(const Server &) = delete;
@@ -56,10 +59,9 @@ class Server {
   AccountManager &GetAccountManager() {return am_;}
 
  private:
-
   void DeassocSess_(SessionId);
   void DeassocSock_(int fd);
-  
+
   // Reset state of server???
   int Reset_();
 
@@ -107,12 +109,12 @@ class Server {
   int RCInstr2Ld_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
 
   // Chooses and executes instruction.
- ASDASDASDASDFASDF int RCExecInstr_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
+  int RCExecInstr_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
 
-sdfsdfsdfsdf choose only z dwóch albo z jednego NQUadu
+  int RCChooseFn_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
 
   //// Tries to check if we have some number of bytes in buffer.
-  //int RCLoadFirst_(int fd, SocketTCP4 *sock, SocStuff *stuff, int how_much);
+  // int RCLoadFirst_(int fd, SocketTCP4 *sock, SocStuff *stuff, int how_much);
 
   // Resets 'state of machine' that coś tam coś tam.
   int RCResetCm_(int fd, SocketTCP4 *sock, SocketStuff *stuff);

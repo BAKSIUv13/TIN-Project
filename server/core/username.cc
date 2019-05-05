@@ -92,7 +92,7 @@ int Username::Check_() const {
   return condensed ? CONDENSED : GOOD;
 }
 
-Username::Username(const Username &model, Username::CondenseFlag_t) {
+Username::Username(const Username &model, Username::CONDENSE_t) {
   switch (model.state_) {
     case BLANK:
       state_ = BLANK;
@@ -141,7 +141,7 @@ int Username::Compare_(const Username &other) const {
   const Username *q[] = {this, &other};
   for (size_t i = 0; i < 2; ++i) {
     if (q[i]->state_ == GOOD) {
-      o[i] = Username(*q[i], CondenseFlag);
+      o[i] = Username(*q[i], CONDENSE);
       q[i] = &o[i];
     }
   }

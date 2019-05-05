@@ -11,9 +11,7 @@
 namespace tin {
 class LoggedUser{
  public:
-  constexpr static int MAX_ARTIST_ID = 1000;
-
-  constexpr LoggedUser() : session_id_(0), sock_fd_(-1), artist_id_(0) {}
+  constexpr LoggedUser() : session_id_(0), sock_fd_(-1) {}
   LoggedUser(const Username &, SessionId);
   LoggedUser(const LoggedUser &) = delete;
   LoggedUser(LoggedUser &&);
@@ -31,7 +29,6 @@ class LoggedUser{
   Username name_;  // nadmiar, bo będzie też wyszukiwanie po numerze sesji
   SessionId session_id_;  // nr sesji 0 to jej brak
   int sock_fd_;
-  int artist_id_;  // 0 - nie ma artysty
 };  // class LoggedUser
 }  // namespace tin
 

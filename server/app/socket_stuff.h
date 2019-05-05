@@ -5,21 +5,20 @@
 
 #include <string>
 #include <queue>
+#include <algorithm>
 
 #include "network/nws.h"
 #include "core/nquad.h"
+#include "core/instr_struct.h"
+#include "app/instr_supp.h"
 
 namespace tin {
 
 struct SocketStuff {
-<<<<<<< HEAD
-  static constexpr size_t BUF_SIZE = 1024;
-=======
   // Size of buffer used to read chars from socket.
   static constexpr size_t BUF_SIZE = 2048;
 /*
   // Maximum number of segments. Now probably useless.
->>>>>>> b03540ed276999e4250cb85f55521652081736ae
   static constexpr int MAX_SEGMENTS = 1024 * 1024;
 */
   // Yyyyyyy czy kończymy jak mamy źle co≥ś
@@ -35,15 +34,10 @@ struct SocketStuff {
 
   SocketStuff()
       : marked_to_delete(false), shall_read(false), shall_write(false),
-        cm_processed(0), read_len(0), read_processed(0) {
+        cm_processed(0), read_len(0), read_processed(0), strct(nullptr),
+        supp() {
     read_buf[BUF_SIZE] = '\0';
   }
-<<<<<<< HEAD
-  char buf[BUF_SIZE + 1];
-  alignas(NQuad) char first_quads[3 * sizeof(NQuad)];
-  // int read_begin_place;
-  // int place_left() {return BUF_SIZE - read_begin_place;}
-=======
 
   // Buffer which takes data from read directly from socket.
   char read_buf[BUF_SIZE + 1];
@@ -52,7 +46,6 @@ struct SocketStuff {
   alignas(NQuad) char first_quads[3 * sizeof(NQuad)];
 
   // Variable which tells if socket shall be closed at next 'close step'.
->>>>>>> b03540ed276999e4250cb85f55521652081736ae
   bool marked_to_delete;
 
   // This tells if socket is handled in 'read step'.
@@ -60,11 +53,8 @@ struct SocketStuff {
 
   // This tells if program shall write to this socket in next 'write step'.
   bool shall_write;
-<<<<<<< HEAD
-=======
 
   // Reference to first quad in 'first_quads' buffer that has to be "OwO!".
->>>>>>> b03540ed276999e4250cb85f55521652081736ae
   NQuad &magic() {
     return reinterpret_cast<NQuad *>(first_quads)[0];
   }
@@ -88,14 +78,30 @@ struct SocketStuff {
   // Number of processed chars from last read.
   int read_processed;
 
+  // Memory to store instruction helping information.
+  InstrStruct *strct;
+
+  // Info about actual instruction.
+  InstrSupp supp;
+
+  constexpr int CountCopy(int how_much) const {
+    return std::min(read_len - read_processed, how_much - cm_processed);
+  }
+
+  void Copy(void *dest, size_t how_much) {
+    memcpy(dest, &read_buf[read_processed], how_much);
+    read_processed += how_much;
+    cm_processed += how_much;
+  }
+
 /*
   // Number of 'segment' in which is the program. This is chyba useless
   // variable now.
   int which_segment;
 */
 
-  // Queue of errors that shall be handled somehow.
-  std::queue<Error> errors;
+  // // Queue of errors that shall be handled somehow.
+  // std::queue<Error> errors;
 };
 
 }  // namespace tin

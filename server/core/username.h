@@ -15,17 +15,14 @@ class Username {
     CONDENSED = 3,
     BAD = 4,
   };
-  static constexpr struct CondenseFlag_t {} CondenseFlag {};
+  static constexpr struct CONDENSE_t {} CONDENSE {};
   static constexpr int MAX_NAME_LEN = 16;
   constexpr Username() : state_(BLANK), c_{'\0'} {}
-  // Username();
   Username(const Username &);
-  // Username(Username &&);
   Username &operator=(const Username &);
-  // Username &operator=(Username &&);
   explicit Username(const std::string &);
   explicit Username(const char *);
-  explicit Username(const Username &, CondenseFlag_t);
+  explicit Username(const Username &, CONDENSE_t);
 
 
   int GetState() const {return state_;}

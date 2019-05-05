@@ -46,7 +46,7 @@ int main(int argc, char **argv, char **env) {
 
   Username x{"jabko"};
   Username c{"Mistrz Windowsa"};
-  Username v(c, Username::CondenseFlag);
+  Username v(c, Username::CONDENSE);
   Username q("666");
   Username gaben("Gaben");
   std::cerr << "[[" << x << "]] " << x.GetState() << "\n";
@@ -87,5 +87,5 @@ int main(int argc, char **argv, char **env) {
 
   tin::Server server;
   server.SpecialHardcodeInit();
-  server.Run2();
+  server.Run();
 }

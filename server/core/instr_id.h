@@ -9,13 +9,18 @@ namespace tin {
 class InstrId {
  public:
   // Default constructor which makes useless blank id.
-  InstrId() {}
+  constexpr InstrId() {}
 
   // Constructor of single instruction ID.
-  explicit InstrId(NQuad);
+  constexpr explicit InstrId(NQuad);
 
   // Double instruction ID.
-  explicit InstrId(NQuad, NQuad);
+  constexpr explicit InstrId(NQuad, NQuad);
+
+  constexpr bool operator<(const InstrId &other) const {
+    return first_ < other.first_
+      || (first_ == other.first_ && second_ < other.second_);
+  }
 
   NQuad GetFirst() {return first_;}
   NQuad Get() {return first_;}
@@ -25,10 +30,10 @@ class InstrId {
   NQuad second_;
 };
 
-InstrId::InstrId(NQuad f)
+constexpr InstrId::InstrId(NQuad f)
     : first_(f) {}
 
-InstrId::InstrId(NQuad f, NQuad s)
+constexpr InstrId::InstrId(NQuad f, NQuad s)
     : first_(f), second_(s) {}
 
 }  // namespace tin

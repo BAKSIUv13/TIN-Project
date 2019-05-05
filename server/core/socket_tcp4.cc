@@ -2,8 +2,6 @@
 
 #include "core/socket_tcp4.h"
 
-#define SOME_DEBUG
-
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -43,9 +41,7 @@ namespace tin {
     std::cerr << "SocketTCP4: open\n";
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd < 0) {
-#ifdef SOME_DEBUG
       std::cerr << "Could not create socket :<\n";
-#endif
       return -1;
     }
     fd_ = sock_fd;

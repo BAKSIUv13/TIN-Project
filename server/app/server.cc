@@ -15,6 +15,7 @@
 #include "core/nquad.h"
 #include "core/mquads.h"
 
+#include "instructions/capture_session.h"
 
 static constexpr int STDIN_FD = STDIN_FILENO;
 
@@ -34,6 +35,14 @@ Server::~Server() {
   close(end_pipe_[1]);
 }
 
+const std::map<InstrId, InstrSupp> Server::instructions {
+  {InstrId(MQ::CAPTURE_SESSION), InstrSupp(&CaptureSession::Fn,
+    sizeof(CaptureSession), &CaptureSession::Construct,
+    &CaptureSession::Destroy)},
+  {InstrId(MQ::REQUEST_LOGIN), InstrSupp()},
+  {InstrId(MQ::SEND_MESSAGE), InstrSupp(InstrSupp::EXPAND)}
+};
+
 int Server::InitializeListener_(uint16_t port, int queue_size) {
   int result = 0;
   result = listening_sock_.Open();
@@ -42,16 +51,12 @@ int Server::InitializeListener_(uint16_t port, int queue_size) {
   if (result < 0) return -2;
   result = listening_sock_.Listen(queue_size);
   if (result < 0) return -3;
+  std::cerr << "Numer gniazda słuchającego: " << listening_sock_.GetFD()
+    << '\n';
   return 0;
 }
 
 void Server::Run(uint16_t port, int queue_size) {
-  /* char buf[BUF_SIZE + 1];
-  buf[1] = 'x';
-  buf[2] = 'd';
-  buf[3] = ' ';
-  buf[4] = buf[1]; */
-  // int init_ret = nm_.Initialize(HARDCODED_NET);
   int init_ret = InitializeListener_(port, queue_size);
   if (init_ret < 0) {
     return;
@@ -78,7 +83,7 @@ int Server::FeedSel_() {
     if (sock_it->second.second.shall_read) {
       sel_.AddFD(sock_it->first, Sel::READ);
     }
-    if (sock_it->second.second.shall_write) {
+    if (0 && sock_it->second.second.shall_write) {
       sel_.AddFD(sock_it->first, Sel::WRITE);
     }
   }
@@ -108,7 +113,7 @@ int Server::ReadMainFds_() {
   if (Sel::READ & sel_.Get(end_pipe_[0])) {
     std::cerr << "Przyszło zamknięcie ze specjanego potoku.\n";
     runs_ = false;
-    return 0;
+    return 1;
   }
   if (DEAL_WITH_STDIN && (Sel::READ & sel_.Get(STDIN_FD))) {
     std::cin.getline(in_buf, IN_BUF_SIZE);
@@ -122,6 +127,17 @@ int Server::ReadMainFds_() {
         << " pomijam.\n";
     }
     std::cin.clear();
+    return 1;
+  }
+  if (Sel::READ & sel_.Get(listening_sock_.GetFD())) {
+    std::cerr << "Nowe połącznoko :>\n";
+    SocketTCP4 sock;
+    int acc_ret = listening_sock_.Accept(&sock);
+    if (acc_ret < 0) {
+      std::cerr << "Jakiś błąd przy accepcie :<\n";
+    } else {
+      RegisterSockFromAccept_(std::move(sock));
+    }
   }
   return 0;
 }
@@ -142,8 +158,9 @@ int Server::ReadClients_() {
         || !(Sel::READ & sel_.Get(it->first))) {
       continue;
     }
-    if (ReadClientSocket_(it->first) >= 0)
+    if (ReadClientSocket_(it->first) >= 0) {
       ++sockets_read;
+    }
   }
   return sockets_read;
 }
@@ -169,16 +186,30 @@ int Server::ReadClientSocket_(int fd) {
   std::cerr << "Na socket o numerze " << fd << " przyszło:\n"
     << stuff.read_buf << "\n";
   int deal_ret = DealWithReadBuf_(fd);
+  if (deal_ret < 0) {
+    std::cerr << "Był jakiś błąd przy ogarnianiu tego co przyszło z gniazda "
+      << fd << ", zamykanko go przy następnym tym tym.\n";
+    stuff.marked_to_delete = true;
+    return -1;
+  }
   return 0;
 }
 
-//int Server::RCLoadTo_(int fd, SocketTCP4 *sock, SocketStuff *stuff,
+// int Server::RCLoadTo_(int fd, SocketTCP4 *sock, SocketStuff *stuff,
 //    int how_much) {
 //  int/
-//}
+// }
 
 int Server::RCResetCm_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
   stuff->cm_processed = 0;
+  if (stuff->supp) {
+    DestroyFn fn = stuff->supp.GetDestructor();
+    if (fn) {
+      fn(stuff->strct);
+    }
+    free(stuff->strct);
+  }
+  return 0;
 }
 
 int Server::RCMagic_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
@@ -195,7 +226,7 @@ int Server::RCMagic_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
     return 1;  // 1 means that we didn't reach NQS yet
   if (stuff->magic() != MQ::OWO) {
     std::cerr << "Nie 'OwO!' :<\n";
-    stuff->errors.push(stuff->NOT_OWO);
+    // stuff->errors.push(stuff->NOT_OWO);
     return - 1 - 4096;  // Niech będzie że to na razie prawie przypadkowa
                         // liczba.
   }
@@ -231,24 +262,79 @@ int Server::RCInstr2Ld_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
     return 1;  // 1 means that we didn't reach 2 * NQS yet
   return 0;
 }
-
-int Server::RCChoose_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
-  // To jest na razie tymczasowe tylko prawdopodobnie.
-  switch (stuff->instr()) {
-    case MQ::CAPTURE_SESSION:
-      std::cerr << "PLACEHOLDER xd CAPTURE_SESSION\n";
-      break;
-    case MQ::REQUEST_LOGIN:
-      std::cerr << "PLACEHOLDER xd REQUEST_LOGIN\n";
-      break;
-    case MQ::SEND_MESSAGE:
-      std::cerr << "PLACEHOLDER xd SEND_MESSAGE\n";
-      break;
-    default:
-      std::cerr << "Zła instrukcja :<";
-      return - 1;
+int Server::RCExecInstr_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
+  int pom = 0;
+  if (stuff->supp.Blank()) {
+    std::cerr << "Nie mieliśmy insttukcji, a chcemy mieć, ok\n";
+    pom = RCChooseFn_(fd, sock, stuff);
+    if (pom > 0) {
+      // Nie doczytało :<
+      return 1;
+    } else if (pom < 0) {
+      return pom;
+    }
   }
+  int fn_ret = 0;
+  if (stuff->supp.GetFn()) {
+    fn_ret = stuff->supp.GetFn()(this, fd, sock, stuff);
+  } else {
+    std::cerr << "Nie ma funcksji w tym czymś, chociaż wybór się udał xd\n";
+  }
+  if (fn_ret < 0) {
+    std::cerr << "W funkcji od obsługi instrukcji wystąpił jakiś błąd :<\n";
+  } else if (fn_ret > 0) {
+    // Nie doczytało :<
+  }
+  std::cerr << "RCExecInstr_ - skończono instrukcję.\n";
   RCResetCm_(fd, sock, stuff);
+  return 0;
+}
+
+int Server::RCChooseFn_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
+  InstrId instr_id(stuff->instr());
+  if (instructions.count(instr_id) < 1) {
+    std::cerr << "Nie ma instrukcji " << stuff->instr() << " :< \n";
+    stuff->supp = InstrSupp();
+    return -1;
+  }
+  const InstrSupp *supp = &instructions.at(instr_id);
+  if (supp->Expands()) {
+    int pom = RCInstr2Ld_(fd, sock, stuff);
+    if (pom < 0) {
+      std::cerr << "Błąd przy doczytywaniu do wybieranka.\n";
+      return pom;
+    }
+    if (pom > 0) {
+      std::cerr << "nie doczytało \n";
+      return 1;
+    }
+    instr_id = InstrId(stuff->instr(), stuff->instr2());
+    if (instructions.count(instr_id) < 1) {
+      std::cerr << "Nie ma instrukcji " << stuff->instr() << ' '
+        << stuff->instr2() << " :< \n";
+      stuff->supp = InstrSupp();
+      return -1;
+    }
+    supp = &instructions.at(instr_id);
+  }
+  if (!supp->GetFn()) {
+    std::cerr << "Nie ma funkcji lel xd w instrukcji " << stuff->instr();
+    if (stuff->instr2()) {
+      std::cerr << ' ' << stuff->instr2() << "\n";
+    } else {
+      std::cerr << "\n";
+    }
+    stuff->supp = InstrSupp();
+    return -1;
+  } else {
+    stuff->supp = *supp;
+    stuff->strct
+      = reinterpret_cast<InstrStruct *>(malloc(stuff->supp.GetSize()));
+    ConstructFn fn = stuff->supp.GetConstructor();
+    if (fn) {
+      stuff->supp.GetConstructor()(stuff->strct);
+    }
+  }
   return 0;
 }
 
@@ -282,13 +368,14 @@ int Server::DealWithReadBuf_(int fd) {
       if (pom < 0)
         return pom;
     }
-    pom = RCChoose_(fd, sock, stuff);
+    pom = RCExecInstr_(fd, sock, stuff);
     if (pom > 0) {
       std::cerr << "xd\n";
       return 0;
     } else if (pom < 0) {
       return pom;
     }
+    // RCResetCm_(fd, sock, stuff);
     std::cerr << "O, wygląda na to, że skończono czytać instrukcję.\n";
   }  // while
   std::cerr << "No to ten koniec czytanuia\n";
@@ -300,23 +387,21 @@ int Server::DealWithReadBuf_(int fd) {
 
 
 
-int Server::DropSock(int fd) {
+int Server::DropSock_(int fd) {
   std::cerr << "Próba dropnięcioa socketu " << fd << "\n";
-  if (fds_to_users_.count(fd) > 0) {
-    DeassocSock(fd);
+  if (socks_to_users_.count(fd) > 0) {
+    DeassocSock_(fd);
   }
-  sss_.erase(fd);
-  // nm_.CloseSock(fd);
+  RCResetCm_(fd, &client_socks_.at(fd).first, &client_socks_.at(fd).second);
+  client_socks_.erase(fd);
   return 0;
 }
 
-void Server::PrepareNws_() {
-}
 
-void Server::DeassocSock(int fd) {
+void Server::DeassocSock_(int fd) {
   std::cerr << "Odłączanie sesji od socketu " << fd << '\n';
-  fds_to_users_.at(fd)->ClrSock();
-  fds_to_users_.erase(fd);
+  socks_to_users_.at(fd)->ClrSock();
+  socks_to_users_.erase(fd);
 }
 
 
@@ -392,7 +477,6 @@ int Server::AddSession(SessionId sid, const Username &name) {
 
 void Server::DelSession(SessionId) {
   std::cerr << "Jeszcze nie możńa usuwac sesji :<\n";
-  std::terminate();
 }
 
 int Server::AssocSessWithSock(SessionId sid, int fd) {
@@ -400,6 +484,7 @@ int Server::AssocSessWithSock(SessionId sid, int fd) {
   ios_state.copyfmt(std::cerr);
   std::cerr << "Łączę gniazdo " << fd << " z sesją " << std::hex << sid
     << ".\n";
+
   if (sess_to_users_.count(sid) < 1) {
     std::cerr << "Nie ma takiej sesji\n";
     std::cerr.copyfmt(ios_state);
@@ -416,7 +501,7 @@ int Server::AssocSessWithSock(SessionId sid, int fd) {
     return -2;
   }
   user.SetSock(fd);
-  auto emplace_ret = fds_to_users_.emplace(fd, &user);
+  auto emplace_ret = socks_to_users_.emplace(fd, &user);
   if (!emplace_ret.second) {
     std::cerr << "Coś jakoś nie dodało nie wiem czemu :/\n";
     std::terminate();
@@ -431,10 +516,32 @@ int Server::LoopTick_() {
   int feed_sel_ret = FeedSel_();
   int do_sel_ret = DoSel_();
   int read_main_fds_ret = ReadMainFds_();
-  int srite_to_socks_ret = WriteToSocks_();
+  if (read_main_fds_ret > 0)
+    return 0;
+  // int write_to_socks_ret = WriteToSocks_();
   int read_clients_ret = ReadClients_();
   int delete_marked_socks_ret = DeleteMarkedSocks_();
+  (void)feed_sel_ret;
+  (void)do_sel_ret;
+  (void)read_main_fds_ret;
+  // (void)write_to_socks_ret;
+  (void)read_clients_ret;
+  (void)delete_marked_socks_ret;
 
+  return 0;
+}
+
+int Server::DeleteMarkedSocks_() {
+  auto it = client_socks_.begin();
+  while (it != client_socks_.end()) {
+    if (it->second.second.marked_to_delete) {
+      int fd = it->second.first.GetFD();
+      ++it;
+      DropSock_(fd);
+    } else {
+      ++it;
+    }
+  }
   return 0;
 }
 }  // namespace tin

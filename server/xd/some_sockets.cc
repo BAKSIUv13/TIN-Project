@@ -9,11 +9,9 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <pthread.h>
 #include <cstring>
 #include <iostream>
-
-#include "core/thread.h"
+#include <thread>
 
 namespace tin {
   using std::size_t;
@@ -117,11 +115,11 @@ namespace tin {
   }
 
   int func(int argc, char **argv, char **env) {
-    Thread client_thr, serv_thr;
-    serv_thr = Thread(server_func, nullptr);
-    client_thr = Thread(client_func, nullptr);
-    serv_thr.Join();
-    client_thr.Join();
+    std::thread client_thr, serv_thr;
+    serv_thr = std::thread(server_func, nullptr);
+    client_thr = std::thread(client_func, nullptr);
+    serv_thr.join();
+    client_thr.join();
     return 0;
   }
 }  // namespace tin
