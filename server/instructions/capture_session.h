@@ -32,9 +32,9 @@ class CaptureSession : public InstrStruct {
     return reinterpret_cast<const NQuad *>(sess_id_)[1];
   }
   constexpr SessionId GetSid_() const {
-  return ((SessionId) 0 | first_())
+    return ((SessionId) 0 | first_())
     | (((SessionId) 0 | second_()) << (sizeof(NQuad) * 8));
-}
+  }
 
 
   alignas(NQuad) char sess_id_[2 * sizeof(NQuad)];

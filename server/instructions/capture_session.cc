@@ -22,6 +22,10 @@ int CaptureSession::Fn(Server *server, int fd, SocketTCP4 *sock,
     return 1;
   }
   std::cerr << "zajmowanko sesji " << s->GetSid_() << "\n";
+  int pom = server->AssocSessWithSock(s->GetSid_(), fd);
+  if (pom < 0) {
+    std::cerr << "hehe xd\n";
+  }
   std::cerr << "xd\n";
   return 0;
 }
@@ -31,8 +35,10 @@ void CaptureSession::Construct(InstrStruct *q) {
 }
 
 void CaptureSession::Destroy(InstrStruct *q) {
+  // reinterpret_cast<CaptureSession *>(q)->~CaptureSession();
   q->~InstrStruct();
+  std::cerr << "Capture  : destroyv " << q << '\n';
 }
 
 
-}
+}  // namespace tin

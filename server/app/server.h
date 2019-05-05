@@ -30,9 +30,6 @@ class Server {
   static constexpr int DEFAULT_LISTEN_QUEUE_LEN = 32;
   static constexpr int NQS = sizeof(NQuad);
 
-  // I don't remember which buffer is it xd
-  // static constexpr int BUF_SIZE = 256;
-
   static const std::map<InstrId, InstrSupp> instructions;
 
   Server();
@@ -47,6 +44,8 @@ class Server {
   void SpecialHardcodeInit();
 
   int AddSession(SessionId, const Username &);
+
+  // Delete session and deassocs it if necessary.
   void DelSession(SessionId);
   int AssocSessWithSock(SessionId, int fd);
 

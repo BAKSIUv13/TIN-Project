@@ -19,6 +19,22 @@
 
 static constexpr int STDIN_FD = STDIN_FILENO;
 
+namespace {
+
+class TempIO {
+ public:
+  explicit TempIO(std::ios *ios)
+    : ios_(ios), ios_state_(nullptr) {
+    ios_state_.copyfmt(*ios);
+  }
+  ~TempIO() {
+    ios_->copyfmt(ios_state_);
+  }
+ private:
+  std::ios *ios_;
+  std::ios ios_state_;
+};
+}
 
 namespace tin {
 Server::Server()
@@ -36,11 +52,22 @@ Server::~Server() {
 }
 
 const std::map<InstrId, InstrSupp> Server::instructions {
-  {InstrId(MQ::CAPTURE_SESSION), InstrSupp(&CaptureSession::Fn,
-    sizeof(CaptureSession), &CaptureSession::Construct,
-    &CaptureSession::Destroy)},
-  {InstrId(MQ::REQUEST_LOGIN), InstrSupp()},
-  {InstrId(MQ::SEND_MESSAGE), InstrSupp(InstrSupp::EXPAND)}
+  {InstrId(MQ::CAPTURE_SESSION),
+    InstrSupp(
+      &CaptureSession::Fn,
+      sizeof(CaptureSession),
+      &CaptureSession::Construct,
+      &CaptureSession::Destroy)},
+
+  {InstrId(MQ::REQUEST_LOGIN),
+    InstrSupp(
+      nullptr,
+      0,
+      nullptr,
+      nullptr)},
+
+  {InstrId(MQ::SEND_MESSAGE),
+    InstrSupp(InstrSupp::EXPAND)}
 };
 
 int Server::InitializeListener_(uint16_t port, int queue_size) {
@@ -152,7 +179,7 @@ int Server::WriteToSocks_() {
 
 
 int Server::ReadClients_() {
-  int sockets_read;
+  int sockets_read = 0;
   for (auto it = client_socks_.begin(); it != client_socks_.end(); ++it) {
     if (!(it->second.second.shall_read)
         || !(Sel::READ & sel_.Get(it->first))) {
@@ -202,12 +229,14 @@ int Server::ReadClientSocket_(int fd) {
 
 int Server::RCResetCm_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
   stuff->cm_processed = 0;
-  if (stuff->supp) {
+  if (stuff->supp && stuff->supp.GetFn()) {
     DestroyFn fn = stuff->supp.GetDestructor();
     if (fn) {
       fn(stuff->strct);
     }
     free(stuff->strct);
+    stuff->strct = nullptr;
+    stuff->supp = InstrSupp();
   }
   return 0;
 }
@@ -263,17 +292,6 @@ int Server::RCInstr2Ld_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
   return 0;
 }
 int Server::RCExecInstr_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
-  int pom = 0;
-  if (stuff->supp.Blank()) {
-    std::cerr << "Nie mieliśmy insttukcji, a chcemy mieć, ok\n";
-    pom = RCChooseFn_(fd, sock, stuff);
-    if (pom > 0) {
-      // Nie doczytało :<
-      return 1;
-    } else if (pom < 0) {
-      return pom;
-    }
-  }
   int fn_ret = 0;
   if (stuff->supp.GetFn()) {
     fn_ret = stuff->supp.GetFn()(this, fd, sock, stuff);
@@ -368,6 +386,16 @@ int Server::DealWithReadBuf_(int fd) {
       if (pom < 0)
         return pom;
     }
+    if (stuff->supp.Blank()) {
+      std::cerr << "Nie mieliśmy insttukcji, a chcemy mieć, ok\n";
+      pom = RCChooseFn_(fd, sock, stuff);
+      if (pom > 0) {
+        // Nie doczytało :<
+        return 1;
+      } else if (pom < 0) {
+        return pom;
+      }
+    }
     pom = RCExecInstr_(fd, sock, stuff);
     if (pom > 0) {
       std::cerr << "xd\n";
@@ -401,6 +429,16 @@ int Server::DropSock_(int fd) {
 void Server::DeassocSock_(int fd) {
   std::cerr << "Odłączanie sesji od socketu " << fd << '\n';
   socks_to_users_.at(fd)->ClrSock();
+  socks_to_users_.erase(fd);
+}
+
+
+void Server::DeassocSess_(SessionId sid) {
+  TempIO q(&std::cerr);
+  int fd = sess_to_users_.at(sid)->GetSock();
+  std::cerr << "Odłączanie sesji " << std::hex << sid << " od gniazda "
+    << std::dec << fd << ".\n";
+  sess_to_users_.at(sid)->ClrSock();
   socks_to_users_.erase(fd);
 }
 
@@ -475,40 +513,65 @@ int Server::AddSession(SessionId sid, const Username &name) {
   return 0;
 }
 
-void Server::DelSession(SessionId) {
-  std::cerr << "Jeszcze nie możńa usuwac sesji :<\n";
+void Server::DelSession(SessionId sid) {
+  TempIO q(&std::cerr);
+  std::cerr << "Próba usunięcia sesji " << std::hex << sid << '\n';
+  if (sess_to_users_.count(sid) < 1) {
+    std::cerr << "Nie ma takiej sesji :<\n";
+    return;
+  }
+  LoggedUser &user = *sess_to_users_.at(sid);
+  int sock_fd = user.GetSock();
+  const Username &name = user.GetName();
+  if (sock_fd >= 0) {
+    socks_to_users_.erase(sock_fd);
+  }
+  sess_to_users_.erase(sid);
+  users_.erase(name);
 }
 
 int Server::AssocSessWithSock(SessionId sid, int fd) {
-  std::ios ios_state(nullptr);
-  ios_state.copyfmt(std::cerr);
-  std::cerr << "Łączę gniazdo " << fd << " z sesją " << std::hex << sid
-    << ".\n";
+  TempIO q(&std::cerr);
+  std::cerr << "Próbuję łączyć gniazdo " << std::dec << fd << " z sesją "
+    << std::hex << sid << ".\n";
 
+  // Sprawdźmy, czy sesja, do której chcemy się połączyć, istnieje.
   if (sess_to_users_.count(sid) < 1) {
     std::cerr << "Nie ma takiej sesji\n";
-    std::cerr.copyfmt(ios_state);
     return -1;
   }
   LoggedUser &user = *sess_to_users_.at(sid);
   const Username &name = user.GetName();
+
+  // Sprawdźmy, czy ten fd nie ma już jakiejś sesji.
+  if (socks_to_users_.count(fd) > 0) {
+    SessionId sid2 = socks_to_users_.at(fd)->GetSession();
+    Username un = socks_to_users_.at(fd)->GetName();
+    std::cerr << "Socket ma już zajętą sesję: " << sid2 << " : " << un << '\n';
+    return -2;
+  }
+
+  // Tutaj sprawdzimy, czy sesja, którą chcemy zająć nie jest już zajęta.
   int old_fd = user.GetSock();
   if (old_fd >= 0) {
     std::cerr << "Użytkownik \"" << name << "\" ta sesja jest już zajęta\n"
       << "przez gniazdo " << std::dec << old_fd << ", ale "
       << "na razie nic z tym nie robię :(\n";
-    std::cerr.copyfmt(ios_state);
-    return -2;
+    return -3;
   }
-  user.SetSock(fd);
+
+  // Wszystko dobrze, zajmujemy.
   auto emplace_ret = socks_to_users_.emplace(fd, &user);
   if (!emplace_ret.second) {
     std::cerr << "Coś jakoś nie dodało nie wiem czemu :/\n";
     std::terminate();
-    std::cerr.copyfmt(ios_state);
-    return -3;
+    return -4;
   }
-  std::cerr.copyfmt(ios_state);
+  user.SetSock(fd);
+
+  // ok
+  std::cerr << "Gniazdo " << std::dec << fd << " zajęło sesję [ " << std::hex
+    << sid << " ; '" << name << "' ]\n";
   return 0;
 }
 
