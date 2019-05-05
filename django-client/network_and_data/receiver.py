@@ -21,7 +21,7 @@ class Receiver(threading.Thread):
         self._r_bytes_queue = queue.Queue(_R_QUEUE_SIZE)
         self._read_sources = [self._s, error_read_pipe]
     def run(self):
-        """Receive data and check if is_stopped is true."""
+        """Receive data and check if given pipe is not available."""
         while True:
             avaible_read_sources, _, _ = select.select(self._read_sources,
                                                        [],
