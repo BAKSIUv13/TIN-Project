@@ -13,11 +13,13 @@ constexpr NQuad
   OWO {"OwO!"},
   CAPTURE_SESSION {"sess"},
   REQUEST_LOGIN {"logi"},
-  SEND_MESSAGE {"msg0"},
+  SAY {"msg0"},
+  SAY2 {"sayy"},  // ??
   SERVER_DELIVER_MSG {"msg1"},
+  SERVER_DELIVER_MSG2 {"said"},  // ??
   SERVER_DISCONNECT {"disc"},
   SERVER_ANNOUNCEMENT {"hejo"},
-  SERVER_INFO {"ueuo"};
+  SERVER_NOTICE {"ueuo"};
 }  // namespace MQ
 }  // namespace tin
 

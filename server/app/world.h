@@ -1,24 +1,26 @@
-// Copyright 2077 jabka
+// Copyright 2019 Piotrek
 
 #ifndef SERVER_APP_WORLD_H_
 #define SERVER_APP_WORLD_H_
 
 #include <map>
+#include <vector>
 
 #include "app/artist.h"
 #include "image/image.h"
+#include "app/out_message.h"
 
 namespace tin {
-class World{
+class World {
  public:
-  using ArtistTable = std::map<int, Artist>;
-  using ImageTable = std::map<int, Image>;
-
-  int AddArtist();
-  void RemoveArtist();
+  int AddArtist(const Username&);
+  int RemoveArtist();
+  int PushMsg(OutMessage *);
+  OutMessage *FirstMsg();
+  int PopMsg();
  private:
-  ImageTable images_;
-  ArtistTable artists_;
+  std::map<Username, Artist> artists_;
+  std::vector<OutMessage> messages_to_send_;
 };  // class World
 }  // namespace tin
 

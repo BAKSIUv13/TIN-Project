@@ -184,24 +184,31 @@ int Server::StopRun() {
 }
 
 int Server::WriteToSocks_() {
-  return 0;
-}
-
-int Server::DoWork_() {
-  OutMessage *msg = nullptr;
-  while (997) {
-    msg = world_.FirstMsg();
-    if (!msg)
-      break;
-    world_.PopMsg();
-    if (msg->GetType() == msg->USER_MESSAGE) {
-      std::string str;
-      str.append(MQ::OWO.CStr(), NQS);
-      str.append(MQ::SERVER_DELIVER_MSG, NQS);
-
+  static constexpr int WRT_BUF = 2871;
+  char buf[WRT_BUF];
+  int sockets_written = 0;
+  for (auto it = client_socks_.begin(); it != client_socks_.end(); ++it) {
+    if (!(it->second.second.ShallWrite())
+        || !(Sel::WRITE & sel_.Get(it->first))) {
+      continue;
     }
+    WriteBuf &swb = it->second.second.write_buf;
+    int pom = swb.Get(buf, WRT_BUF);
+    if (pom < 0) {
+      // źle hehe
+      it->second.second.marked_to_delete = true;
+      continue;
+    }
+    int pom2 = write(it->first, buf, pom);
+    if (pom2 < 0) std::terminate();
+    if (pom2 == 0) {
+      // chyba zamknięte
+      std::cerr << "zamknięte??\n";
+    }
+    swb.Pop(pom2);
+    ++sockets_written;
   }
-  return 0;
+  return sockets_written;
 }
 
 

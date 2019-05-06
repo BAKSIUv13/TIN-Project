@@ -11,9 +11,6 @@
 #include "app/server.h"
 
 namespace tin {
-class Server;
-class SocketTCP4;
-struct SocketStuff;
 class CaptureSession : public InstrStruct {
  public:
   static constexpr int START = 2 * sizeof(NQuad);
@@ -21,7 +18,7 @@ class CaptureSession : public InstrStruct {
 
   CaptureSession() {}
   virtual ~CaptureSession() {}
-  static int Fn(Server *, int, SocketTCP4 *, SocketStuff *);
+  static int Fn(Server *, int, SocketTCP4 *, SocketStuff *, World *);
   static void Construct(InstrStruct *);
   static void Destroy(InstrStruct *);
  private:

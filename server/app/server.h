@@ -52,8 +52,10 @@ class Server {
   // From other thread?? This fn is blocking chyba.
   int StopRun();
 
+  // Returns username assigned to fd. Blank if fd does not have session.
+  Username SockToUn(int fd);
 
-  World &GetWorld() {return world_;}
+  // World &GetWorld() {return world_;}
   TheConfig &GetConf() {return conf_;}
   AccountManager &GetAccountManager() {return am_;}
 
@@ -91,11 +93,17 @@ class Server {
   // Reads client sockets and deal with it.
   int ReadClients_();
 
+  // Do some work with all received stuff.
+  int DoWork_();
+
   // Reads one client socket.
   int ReadClientSocket_(int fd);
 
   // Deals with read data from client socket.
   int DealWithReadBuf_(int fd);
+
+  // Ahenles stdin 'scripts'.
+  int DealWithStdinBuf_(const char *);
 
   // Loads bytes expected as magic start word and checks if we have 'OwO!'.
   // RC - Read Client

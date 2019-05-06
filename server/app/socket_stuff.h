@@ -11,6 +11,7 @@
 #include "core/nquad.h"
 #include "core/instr_struct.h"
 #include "app/instr_supp.h"
+#include "core/write_buf.h"
 
 namespace tin {
 
@@ -45,6 +46,9 @@ struct SocketStuff {
   // Buffer which contains copied bytes from read data that is beginning.
   alignas(NQuad) char first_quads[3 * sizeof(NQuad)];
 
+  // Buffer to send.
+  WriteBuf write_buf;
+
   // Variable which tells if socket shall be closed at next 'close step'.
   bool marked_to_delete;
 
@@ -53,6 +57,10 @@ struct SocketStuff {
 
   // This tells if program shall write to this socket in next 'write step'.
   bool shall_write;
+
+  constexpr bool ShallWrite() {
+    return write_buf.Chars() > 0;
+  }
 
   // Reference to first quad in 'first_quads' buffer that has to be "OwO!".
   NQuad &magic() {
@@ -90,6 +98,12 @@ struct SocketStuff {
 
   void Copy(void *dest, size_t how_much) {
     memcpy(dest, &read_buf[read_processed], how_much);
+    read_processed += how_much;
+    cm_processed += how_much;
+  }
+
+  void CopyToCpp11String(std::string *dest, std::string::size_type how_much) {
+    dest->append(&read_buf[read_processed], how_much);
     read_processed += how_much;
     cm_processed += how_much;
   }

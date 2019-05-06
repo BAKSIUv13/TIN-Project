@@ -40,10 +40,12 @@ Username::Username(const char *c) {
 }
 
 int Username::RawCompare_(const Username &other) const {
-  if (state_ == BAD || other.state_ == BAD) {
-    return false;
+  static constexpr int DIFF = CONDENSED & (~GOOD);
+  int cmp = (state_ | DIFF) - (other.state_ | DIFF);
+  if (cmp == 0 && state_ & GOOD) {
+    return strncmp(c_, other.c_, MAX_NAME_LEN + 1);
   }
-  return strncmp(c_, other.c_, MAX_NAME_LEN + 1);
+  return cmp;
 }
 
 int Username::Check_() const {

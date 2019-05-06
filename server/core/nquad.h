@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
+#include <array>
 
 namespace tin {
 
@@ -70,6 +71,12 @@ struct NQuad {
   }
   constexpr operator uint32_t() const {return Uint();}
   constexpr explicit operator int32_t() const {return Int();}
+
+  std::array<char, 4> CharArray() const {
+    return *reinterpret_cast<const std::array<char, 4> *>(&raw_uint);
+  }
+
+  const char *CStr() const {return reinterpret_cast<const char *>(&raw_uint);}
 };
 
 }  // namespace tin

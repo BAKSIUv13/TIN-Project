@@ -1,4 +1,4 @@
-// Copyright 2019 ja
+// Copyright 2019 Piotrek
 
 #include "app/logged_user.h"
 

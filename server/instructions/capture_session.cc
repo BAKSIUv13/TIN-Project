@@ -14,7 +14,7 @@ namespace tin {
 
 
 int CaptureSession::Fn(Server *server, int fd, SocketTCP4 *sock,
-    SocketStuff *stuff) {
+    SocketStuff *stuff, World *) {
   CaptureSession *s = reinterpret_cast<CaptureSession *>(stuff->strct);
   int chars_to_copy = stuff->CountCopy(END);
   stuff->Copy(&s->sess_id_[stuff->cm_processed - START], chars_to_copy);

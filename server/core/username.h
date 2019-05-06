@@ -4,16 +4,17 @@
 #define SERVER_CORE_USERNAME_H_
 
 #include <string>
+#include <array>
 
 namespace tin {
 
 class Username {
  public:
   enum : int {
-    BLANK = 0,
-    GOOD = 1,
-    CONDENSED = 3,
-    BAD = 4,
+    BLANK = 0b000,
+    GOOD = 0b001,
+    CONDENSED = 0b011,
+    BAD = 0b100,
   };
   static constexpr struct CONDENSE_t {} CONDENSE {};
   static constexpr int MAX_NAME_LEN = 16;
@@ -36,8 +37,10 @@ class Username {
   bool RawEqual(const Username &o) const {return RawCompare_(o) == 0;}
   bool RawLess(const Username &o) const {return RawCompare_(o) < 0;}
 
+  bool Good() const {return state_ & CONDENSED;}
+
   operator const char *() const {return c_;}
-  //  explicit operator std::string() const {return std::string(c_);}
+  explicit operator std::string() const {return std::string(c_);}
 
 
  private:
