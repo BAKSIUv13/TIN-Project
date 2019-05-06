@@ -3,10 +3,9 @@
 
 """Main program module."""
 
-import queue
-
 from network_and_data import network
 from network_and_data import receiver
+from network_and_data import sender
 
 # interface to sockets
 
@@ -14,23 +13,33 @@ CLIENT_SOCKET = network.prepare_socket()
 
 READ_PIPE, WRITE_PIPE = network.prepare_error_network_pipe()
 
-RECEIVER = receiver.Receiver(CLIENT_SOCKET, READ_PIPE)
+RECEIVER = receiver.Receiver(CLIENT_SOCKET, READ_PIPE, WRITE_PIPE)
 RECEIVER.start()
 
+SENDER = sender.Sender(CLIENT_SOCKET, READ_PIPE)
+SENDER.start()
+
+IS_RECV = False
+
 while True:
-    try:
-        BYTE = RECEIVER.get_byte()
-    except queue.Empty:
-        print('Empty :D')
-        break
-    if BYTE == 48:
-        WRITE_PIPE.write('dupa')
-        WRITE_PIPE.close()
+
+    if IS_RECV:
+        RECV = chr(RECEIVER.get_byte())
+
+        print(RECV)
     else:
-        print(BYTE)
+        SEND = input()
+        if SEND == '0':
+            WRITE_PIPE.close()
+            break
+        for _, CHARACTER in enumerate(SEND):
+            SENDER.put_byte(CHARACTER.encode())
+
 
 
 RECEIVER.join()
+SENDER.join()
+
 CLIENT_SOCKET.close()
 
 print("the end!")
