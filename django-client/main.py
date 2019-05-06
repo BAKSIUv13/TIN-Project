@@ -26,6 +26,7 @@ while True:
     if IS_RECV:
         RECV = chr(RECEIVER.get_byte())
 
+
         print(RECV)
     else:
         SEND = input()
