@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <string>
+#include <algorithm>
 
 #include "core/instr_struct.h"
 #include "core/nquad.h"
@@ -25,6 +26,7 @@ class Say : public InstrStruct {
  private:
   constexpr int32_t Len_() const {
     return reinterpret_cast<const NQuad *>(len_buf_)[0].Int();
+    // return std::min(reinterpret_cast<const NQuad *>(len_buf_)[0].Int(), 12);
   }
 
   alignas(NQuad) char len_buf_[sizeof(NQuad)];

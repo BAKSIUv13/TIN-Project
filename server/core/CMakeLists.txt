@@ -13,4 +13,6 @@ set(SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/construct_fn.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/destroy_fn.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/instr_struct.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/write_buf.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/write_buf.cc"
 )

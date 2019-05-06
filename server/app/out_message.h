@@ -24,7 +24,7 @@ class OutMessage {
 
   Type GetType() {return type_;}
   Username GetUsername() {return username_;}
-  const std::string &GetDontent() {return content_;}
+  const std::string &GetContent() {return content_;}
  private:
   Type type_;
   Username username_;

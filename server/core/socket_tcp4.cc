@@ -142,7 +142,7 @@ namespace tin {
     int accept_ret = accept(fd_, &saddr_l, &addrlen);
     if (accept_ret >= 0) {
       if (addrlen != sizeof(saddr)) {
-        std::cerr << "xd\n";
+        std::cerr << "jakiś mocny błąd w accepcie xd\n";
         std::terminate();
       }
       new_sock->status_ = CONNECTED;

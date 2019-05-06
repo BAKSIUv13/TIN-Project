@@ -27,14 +27,15 @@ int WriteBuf::Add(const char *s) {
 int WriteBuf::Add(const std::string &str) {
   if (Bad()) {
     return -1;
-  } else if (str.size() > Place()) {
+  } else if (str.size() > static_cast<size_t>(Place())) {
     // Przepełniony
     start_ = -1;
     return -1;
   }
   int i = 0;
-  while (i < str.size()) {
+  while (static_cast<size_t>(i) < str.size()) {
     buf_[GetAt_(i)] = str[i];
+    ++i;
   }
   len_ += i;
   return i;
@@ -45,7 +46,7 @@ int WriteBuf::Get(char *s, int n) {
     return -1;
   }
   int i = 0;
-  while (i < n && s[i] && i < len_) {
+  while (i < n && i < len_) {
     s[i] = buf_[GetAt_(i)];
     ++i;
   }

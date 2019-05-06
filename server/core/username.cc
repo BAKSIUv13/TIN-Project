@@ -27,14 +27,16 @@ Username::Username(const std::string &str) {
   if (str.size() > MAX_NAME_LEN) {
     state_ = BAD;
   } else {
-    strncpy(c_, str.c_str(), MAX_NAME_LEN + 1);
+    strncpy(c_, str.c_str(), MAX_NAME_LEN);
+    c_[MAX_NAME_LEN] = '\0';
     state_ = Check_();
   }
   ZeroBad_();
 }
 
 Username::Username(const char *c) {
-  strncpy(c_, c, MAX_NAME_LEN + 1);
+  strncpy(c_, c, MAX_NAME_LEN);
+  c_[MAX_NAME_LEN] = '\0';
   state_ = Check_();
   ZeroBad_();
 }

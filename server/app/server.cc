@@ -67,6 +67,7 @@ int Server::InitializeListener_(uint16_t port, int queue_size) {
 void Server::Run(uint16_t port, int queue_size) {
   int init_ret = InitializeListener_(port, queue_size);
   if (init_ret < 0) {
+    std::cerr << "Nie udało się zainicjalizować listenera.\n";
     return;
   }
   bool not_exit = true;
@@ -91,7 +92,7 @@ int Server::FeedSel_() {
     if (sock_it->second.second.shall_read) {
       sel_.AddFD(sock_it->first, Sel::READ);
     }
-    if (0 && sock_it->second.second.shall_write) {
+    if (sock_it->second.second.ShallWrite()) {
       sel_.AddFD(sock_it->first, Sel::WRITE);
     }
   }
@@ -184,7 +185,32 @@ int Server::StopRun() {
 }
 
 int Server::WriteToSocks_() {
-  return 0;
+  static constexpr int WRT_BUF = 30;
+  char buf[WRT_BUF];
+  int sockets_written = 0;
+  for (auto it = client_socks_.begin(); it != client_socks_.end(); ++it) {
+    if (!(it->second.second.ShallWrite())
+        || !(Sel::WRITE & sel_.Get(it->first))) {
+      continue;
+    }
+    WriteBuf &swb = it->second.second.write_buf;
+    int pom = swb.Get(buf, WRT_BUF);
+    if (pom < 0) {
+      // źle hehe
+      it->second.second.marked_to_delete = true;
+      continue;
+    }
+    int pom2 = write(it->first, buf, pom);
+    if (pom2 < 0) std::terminate();
+    if (pom2 == 0) {
+      // chyba zamknięte
+      std::cerr << "zamknięte??\n";
+      it->second.second.marked_to_delete = true;
+    }
+    swb.Pop(pom2);
+    ++sockets_written;
+  }
+  return sockets_written;
 }
 
 int Server::DoWork_() {
@@ -193,12 +219,22 @@ int Server::DoWork_() {
     msg = world_.FirstMsg();
     if (!msg)
       break;
+    OutMessage m = *msg;
     world_.PopMsg();
-    if (msg->GetType() == msg->USER_MESSAGE) {
+    if (m.GetType() == m.USER_MESSAGE) {
       std::string str;
       str.append(MQ::OWO.CStr(), NQS);
-      str.append(MQ::SERVER_DELIVER_MSG, NQS);
-
+      str.append(MQ::SERVER_DELIVER_MSG.CStr(), NQS);
+      const char *xd = m.GetUsername();
+      str.append(xd, 16);
+      uint32_t content_size = m.GetContent().size();
+      str.append(NQuad(content_size).CStr(), NQS);
+      str.append(m.GetContent());
+      for (auto &x : socks_to_users_) {
+        if (client_socks_.at(x.first).second.write_buf.Add(str) < 0) {
+          client_socks_.at(x.first).second.marked_to_delete = true;
+        }
+      }
     }
   }
   return 0;
@@ -428,7 +464,7 @@ int Server::DealWithReadBuf_(int fd) {
     }
     pom = RCExecInstr_(fd, sock, stuff);
     if (pom > 0) {
-      std::cerr << "xd\n";
+      std::cerr << "RCExecInstr_ zwróciło >0 xd\n";
       return 0;
     } else if (pom < 0) {
       return pom;
@@ -611,10 +647,10 @@ int Server::LoopTick_() {
   int read_main_fds_ret = ReadMainFds_();
   if (read_main_fds_ret > 0)
     return 0;
-  int do_work_ret = DoWork_();
   int write_to_socks_ret = WriteToSocks_();
   int delete_marked_socks_ret = DeleteMarkedSocks_();
   int read_clients_ret = ReadClients_();
+  int do_work_ret = DoWork_();
   {
     (void)feed_sel_ret;
     (void)do_sel_ret;

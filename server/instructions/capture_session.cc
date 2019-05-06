@@ -26,7 +26,7 @@ int CaptureSession::Fn(Server *server, int fd, SocketTCP4 *sock,
   if (pom < 0) {
     std::cerr << "hehe xd\n";
   }
-  std::cerr << "xd\n";
+  std::cerr << "zajęło xd\n";
   return 0;
 }
 
