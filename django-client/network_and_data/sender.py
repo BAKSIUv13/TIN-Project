@@ -54,7 +54,7 @@ class Sender(threading.Thread):
             if self._send_read_pipe in avaible_read_sources:
                 # pipe - interrupt
                 print('Sender: pipe - interrupt.')
-                #self._recv_write_pipe.close()
+                self._recv_write_pipe.close()
                 return
 
     def put_byte(self, byte):
