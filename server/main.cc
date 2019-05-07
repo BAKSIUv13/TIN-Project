@@ -5,24 +5,14 @@
 #include <iostream>
 #include <array>
 #include <string>
+#include <cstdint>
+#include <cinttypes>
 
 #include "xd/some_sockets.h"
 #include "app/server.h"
 #include "core/username.h"
 #include "core/nquad.h"
 #include "core/mquads.h"
-
-/*
-static std::array<char, 16> fgfg(uint32_t x) {
-  // nie chciało mi się szukać tyhc funkcji więc napisałem sam na rzaie
-  std::array<char, 16> xc;
-  char *gd = xc.data();
-  for (uint32_t i = 0; i < 32; i += 8) {
-    gd += snprintf(gd, 16 * sizeof(char), "%d.", (x >> i) & 255);
-  }
-  *(gd - 1) = '\0';
-  return xc;
-}*/
 
 
 void haha(tin::NQuad nq) {
@@ -38,6 +28,9 @@ void haha(tin::NQuad nq) {
 
 int main(int argc, char **argv, char **env) {
   //  return tin::func(argc, argv, env);
+
+  /*
+
   using tin::NQuad;
   using tin::Username;
   using tin::LoggedUser;
@@ -69,6 +62,8 @@ int main(int argc, char **argv, char **env) {
   haha(tin::MQ::REQUEST_LOGIN);
   haha(tin::MQ::SERVER_DISCONNECT);
 
+  */
+
   // Username gaben2 = gaben;
 
 
@@ -85,7 +80,14 @@ int main(int argc, char **argv, char **env) {
   //  return 0;
   //  return 0;
 
+  uint16_t port = 0;
+  bool arg_port = false;
+  if (argc > 1) {
+    std::sscanf(argv[1], "%" SCNd16, &port);
+    arg_port = true;
+  }
+
   tin::Server server;
   server.SpecialHardcodeInit();
-  server.Run();
+  arg_port ? server.Run(port) : server.Run();
 }
