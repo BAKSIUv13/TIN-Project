@@ -7,7 +7,6 @@
 #include <queue>
 #include <algorithm>
 
-#include "network/nws.h"
 #include "core/nquad.h"
 #include "core/instr_struct.h"
 #include "app/instr_supp.h"
@@ -15,28 +14,20 @@
 
 namespace tin {
 
-struct SocketStuff {
+class SocketStuff {
+ public:
   // Size of buffer used to read chars from socket.
   static constexpr size_t BUF_SIZE = 2048;
-/*
-  // Maximum number of segments. Now probably useless.
-  static constexpr int MAX_SEGMENTS = 1024 * 1024;
-*/
+
   // Yyyyyyy czy kończymy jak mamy źle co≥ś
   static constexpr bool END_ON_BAD_DATA = true;  // to prawdopodobnie tymczasowe
 
-  // Error numbers pushed to queue.
-  enum Error {
-    OTHER = 1,
-    NOT_OWO,
-    AUTH_FAILED,
-    SESS_CAPTURE_FAILED,
-  };
 
   SocketStuff()
-      : marked_to_delete(false), shall_read(false), shall_write(false),
-        cm_processed(0), read_len(0), read_processed(0), strct(nullptr),
-        supp() {
+      : cm_processed(0), read_len(0), read_processed(0), strct(nullptr),
+        supp(),
+        shall_read_var_(false),
+        shall_be_removed_(RemoveEnum::NO) {
     read_buf[BUF_SIZE] = '\0';
   }
 
@@ -50,16 +41,37 @@ struct SocketStuff {
   WriteBuf write_buf;
 
   // Variable which tells if socket shall be closed at next 'close step'.
-  bool marked_to_delete;
+  enum class RemoveEnum {
+    NO = 0,
+    YES,
+    FORCE
+  };
+
+  // xd
+  void Remove() {
+    shall_be_removed_ = std::max(shall_be_removed_, RemoveEnum::YES);
+  }
+
+  void SetReading(bool x) {
+    shall_read_var_ = x;
+  }
+
+  void ForceRemove() {
+    shall_be_removed_ = RemoveEnum::FORCE;
+  }
+
+  constexpr bool ShallBeRemoved() const {
+    return shall_be_removed_ >= RemoveEnum::YES && !ShallWrite();
+  }
 
   // This tells if socket is handled in 'read step'.
-  bool shall_read;
+  constexpr bool ShallRead() const {
+    return shall_read_var_ && !ShallWrite() && !ShallBeRemoved();
+  }
 
   // This tells if program shall write to this socket in next 'write step'.
-  bool shall_write;
-
-  constexpr bool ShallWrite() {
-    return write_buf.Chars() > 0;
+  constexpr bool ShallWrite() const {
+    return write_buf.Chars() > 0 && shall_be_removed_ < RemoveEnum::FORCE;
   }
 
   // Reference to first quad in 'first_quads' buffer that has to be "OwO!".
@@ -108,14 +120,10 @@ struct SocketStuff {
     cm_processed += how_much;
   }
 
-/*
-  // Number of 'segment' in which is the program. This is chyba useless
-  // variable now.
-  int which_segment;
-*/
-
-  // // Queue of errors that shall be handled somehow.
-  // std::queue<Error> errors;
+ private:
+  // This variable tells if socket can be read.
+  bool shall_read_var_;
+  RemoveEnum shall_be_removed_;
 };
 
 }  // namespace tin

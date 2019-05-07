@@ -37,7 +37,8 @@ class Username {
   bool RawEqual(const Username &o) const {return RawCompare_(o) == 0;}
   bool RawLess(const Username &o) const {return RawCompare_(o) < 0;}
 
-  bool Good() const {return state_ & CONDENSED;}
+  bool Good() const {return state_ & GOOD;}
+  explicit operator bool() const {return Good();}
 
   operator const char *() const {return c_;}
   explicit operator std::string() const {return std::string(c_);}

@@ -15,4 +15,6 @@ set(SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/instr_struct.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/write_buf.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/write_buf.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/out_message.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/out_message.cc"
 )

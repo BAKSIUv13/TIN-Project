@@ -74,7 +74,6 @@ void Server::Run(uint16_t port, int queue_size) {
   runs_ = true;
   while (not_exit && runs_) {
     LoopTick_();
-    continue;
   }
 }
 
@@ -89,7 +88,7 @@ int Server::FeedSel_() {
   for (auto sock_it = client_socks_.begin();
       sock_it != client_socks_.end();
       ++sock_it) {
-    if (sock_it->second.second.shall_read) {
+    if (sock_it->second.second.ShallRead()) {
       sel_.AddFD(sock_it->first, Sel::READ);
     }
     if (sock_it->second.second.ShallWrite()) {
@@ -108,7 +107,7 @@ int Server::RegisterSockFromAccept_(SocketTCP4 &&sock) {
       << "trzeba coś z tym zrobić.\n";
     return -1;
   }
-  emplace_ret.first->second.second.shall_read = true;
+  emplace_ret.first->second.second.SetReading(true);
   return 0;
 }
 
@@ -160,6 +159,14 @@ Username Server::SockToUn(int fd) {
   }
 }
 
+Username Server::SidToUn(SessionId sid) {
+  try {
+    return sess_to_users_.at(sid)->GetName();
+  } catch(std::out_of_range &e) {
+    return Username();
+  }
+}
+
 int Server::DealWithStdinBuf_(const char *s) {
   if (strncmp(s, "stop", 4) == 0 && (s[4] == '\n' || s[4] == ' ')) {
     StopRun();
@@ -185,7 +192,7 @@ int Server::StopRun() {
 }
 
 int Server::WriteToSocks_() {
-  static constexpr int WRT_BUF = 30;
+  static constexpr int WRT_BUF = WriteBuf::SIZE;
   char buf[WRT_BUF];
   int sockets_written = 0;
   for (auto it = client_socks_.begin(); it != client_socks_.end(); ++it) {
@@ -197,7 +204,7 @@ int Server::WriteToSocks_() {
     int pom = swb.Get(buf, WRT_BUF);
     if (pom < 0) {
       // źle hehe
-      it->second.second.marked_to_delete = true;
+      it->second.second.Remove();
       continue;
     }
     int pom2 = write(it->first, buf, pom);
@@ -205,7 +212,7 @@ int Server::WriteToSocks_() {
     if (pom2 == 0) {
       // chyba zamknięte
       std::cerr << "zamknięte??\n";
-      it->second.second.marked_to_delete = true;
+      it->second.second.Remove();
     }
     swb.Pop(pom2);
     ++sockets_written;
@@ -215,27 +222,35 @@ int Server::WriteToSocks_() {
 
 int Server::DoWork_() {
   OutMessage *msg = nullptr;
-  while (997) {
-    msg = world_.FirstMsg();
-    if (!msg)
-      break;
-    OutMessage m = *msg;
-    world_.PopMsg();
-    if (m.GetType() == m.USER_MESSAGE) {
-      std::string str;
-      str.append(MQ::OWO.CStr(), NQS);
-      str.append(MQ::SERVER_DELIVER_MSG.CStr(), NQS);
-      const char *xd = m.GetUsername();
-      str.append(xd, 16);
-      uint32_t content_size = m.GetContent().size();
-      str.append(NQuad(content_size).CStr(), NQS);
-      str.append(m.GetContent());
-      for (auto &x : socks_to_users_) {
-        if (client_socks_.at(x.first).second.write_buf.Add(str) < 0) {
-          client_socks_.at(x.first).second.marked_to_delete = true;
+  int pom;
+  while ((msg = FirstMsg_())) {
+    if (msg->Broadcast()) {
+      for (auto &x : client_socks_) {
+        // Jeszcze pomińmy niezalogowane gniazda:
+        if (socks_to_users_.count(x.first) < 1) {
+          continue;
+        }
+        pom = msg->AddToBuf(&x.second.second.write_buf);
+        if (pom < 0) {
+          std::cerr << "Błąd przy dodawaniu wiadom,ości do bufora. :<\n";
+          x.second.second.Remove();
+        }
+      }
+    } else {
+      for (const Username& un : msg->Users()) {
+        if (users_.count(un) < 1) {
+          std::cerr << "Lel, nie ma takiego kogoś teraz xd\n";
+          continue;
+        }
+        auto &stuff = client_socks_.at(users_.at(un).GetSock()).second;
+        pom = msg->AddToBuf(&stuff.write_buf);
+        if (pom < 0) {
+          std::cerr << "Błedzik [[" << un << "]]. :<\n";
+          stuff.Remove();
         }
       }
     }
+    PopMsg_();
   }
   return 0;
 }
@@ -244,7 +259,7 @@ int Server::DoWork_() {
 int Server::ReadClients_() {
   int sockets_read = 0;
   for (auto it = client_socks_.begin(); it != client_socks_.end(); ++it) {
-    if (!(it->second.second.shall_read)
+    if (!(it->second.second.ShallRead())
         || !(Sel::READ & sel_.Get(it->first))) {
       continue;
     }
@@ -266,7 +281,7 @@ int Server::ReadClientSocket_(int fd) {
     return -1;
   } else if (read_ret == 0) {
     std::cerr << "Na gniazdo przyszło zamknięcie.\n";
-    stuff.marked_to_delete = true;
+    stuff.Remove();
     // ZAMKNIĘCIE
     return 1;
   }
@@ -279,7 +294,7 @@ int Server::ReadClientSocket_(int fd) {
   if (deal_ret < 0) {
     std::cerr << "Był jakiś błąd przy ogarnianiu tego co przyszło z gniazda "
       << fd << ", zamykanko go przy następnym tym tym.\n";
-    stuff.marked_to_delete = true;
+    stuff.Remove();
     return -1;
   }
   return 0;
@@ -357,7 +372,7 @@ int Server::RCInstr2Ld_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
 int Server::RCExecInstr_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
   int fn_ret = 0;
   if (stuff->supp.GetFn()) {
-    fn_ret = stuff->supp.GetFn()(this, fd, sock, stuff, &world_);
+    fn_ret = stuff->supp.GetFn()(this, fd, stuff, &world_, &Server::PushMsg_);
   } else {
     std::cerr << "Nie ma funcksji w tym czymś, chociaż wybór się udał xd\n";
     return -1;
@@ -648,9 +663,9 @@ int Server::LoopTick_() {
   if (read_main_fds_ret > 0)
     return 0;
   int write_to_socks_ret = WriteToSocks_();
-  int delete_marked_socks_ret = DeleteMarkedSocks_();
   int read_clients_ret = ReadClients_();
   int do_work_ret = DoWork_();
+  int delete_marked_socks_ret = DeleteMarkedSocks_();
   {
     (void)feed_sel_ret;
     (void)do_sel_ret;
@@ -667,7 +682,7 @@ int Server::LoopTick_() {
 int Server::DeleteMarkedSocks_() {
   auto it = client_socks_.begin();
   while (it != client_socks_.end()) {
-    if (it->second.second.marked_to_delete) {
+    if (it->second.second.ShallBeRemoved()) {
       int fd = it->second.first.GetFD();
       ++it;
       DropSock_(fd);
@@ -677,4 +692,23 @@ int Server::DeleteMarkedSocks_() {
   }
   return 0;
 }
+
+
+int Server::PushMsg_(std::unique_ptr<OutMessage> msg) {
+  messages_to_send_.emplace_back(std::move(msg));
+  return 0;
+}
+
+
+OutMessage *Server::FirstMsg_() {
+  if (messages_to_send_.size() < 1) return nullptr;
+  return &*messages_to_send_.front();
+}
+
+int Server::PopMsg_() {
+  messages_to_send_.erase(messages_to_send_.begin());
+  return 0;
+}
+
+
 }  // namespace tin
