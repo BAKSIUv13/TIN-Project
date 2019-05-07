@@ -1,4 +1,4 @@
-// Copyright 0 0
+// Copyright 2019 Piotrek
 
 #ifndef SERVER_CORE_SOCKET_TCP4_H_
 #define SERVER_CORE_SOCKET_TCP4_H_
@@ -39,7 +39,7 @@ class SocketTCP4 {
   int GetFD() {return fd_;}  // This shall be used for 'select'.
 
  private:
-  static const struct Accept_Flag_t {} Accept_Flag;
+  static const struct ACCEPT_t {} ACCEPT;
   //  explicit SocketTCP4(Accept);
 
   void Destroy_();

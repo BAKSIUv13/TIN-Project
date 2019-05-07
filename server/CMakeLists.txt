@@ -49,6 +49,11 @@ get_directory_property(
   SOURCES_app DIRECTORY app DEFINITION SOURCES
 )
 
+add_subdirectory(instructions)
+get_directory_property(
+  SOURCES_instructions DIRECTORY instructions DEFINITION SOURCES
+)
+
 add_executable(server
   main.cc
   "${SOURCES_core}"
@@ -58,6 +63,7 @@ add_executable(server
   "${SOURCES_configurator}"
   "${SOURCES_network}"
   "${SOURCES_app}"
+  "${SOURCES_instructions}"
 )
 
 target_link_libraries(server
