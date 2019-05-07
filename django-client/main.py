@@ -7,40 +7,33 @@ from network_and_data import network
 from network_and_data import receiver
 from network_and_data import sender
 
+HOST = 'localhost'
+PORT = 12345
+
 # interface to sockets
 
-CLIENT_SOCKET = network.prepare_socket()
+CLIENT_SOCKET = network.prepare_socket(HOST, PORT)
 
-READ_PIPE, WRITE_PIPE = network.prepare_error_network_pipe()
+RECV_READ_PIPE, RECV_WRITE_PIPE = network.prepare_error_pipe()
+SEND_READ_PIPE, SEND_WRITE_PIPE = network.prepare_error_pipe()
 
-RECEIVER = receiver.Receiver(CLIENT_SOCKET, READ_PIPE, WRITE_PIPE)
+RECEIVER = receiver.Receiver(CLIENT_SOCKET, RECV_READ_PIPE, SEND_WRITE_PIPE)
+SENDER = sender.Sender(CLIENT_SOCKET, SEND_READ_PIPE, RECV_WRITE_PIPE)
+
 RECEIVER.start()
-
-SENDER = sender.Sender(CLIENT_SOCKET, READ_PIPE)
 SENDER.start()
 
-IS_RECV = False
+POLECENIE = input()
 
-while True:
-
-    if IS_RECV:
-        RECV = chr(RECEIVER.get_byte())
-
-
-        print(RECV)
-    else:
-        SEND = input()
-        if SEND == '0':
-            WRITE_PIPE.close()
-            break
-        for _, CHARACTER in enumerate(SEND):
-            SENDER.put_byte(CHARACTER.encode())
-
-
+if POLECENIE == 'recv':
+    RECV_WRITE_PIPE.write('cos')
+    RECV_WRITE_PIPE.close()
+else:
+    SEND_WRITE_PIPE.close()
 
 RECEIVER.join()
 SENDER.join()
 
 CLIENT_SOCKET.close()
 
-print("the end!")
+print("The end!")

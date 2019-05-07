@@ -16,17 +16,19 @@ PUT_BYTE_TIMEOUT_SEC = 1
 class Sender(threading.Thread):
     """Class responsible for sending data."""
 
-    def __init__(self, socket, error_read_pipe):
+    def __init__(self, socket, send_read_pipe, recv_write_pipe):
         """Prepare sender resources."""
         threading.Thread.__init__(self)
         self._s = socket
         self._w_bytes_queue = queue.Queue(_W_QUEUE_SIZE)
-        self._error_read_pipe = error_read_pipe
+        self._send_read_pipe = send_read_pipe
+        self._recv_write_pipe = recv_write_pipe
+
     def run(self):
         """Send data and check if given pipe is not available."""
         while True:
             avaible_read_sources, avaible_write_sources, _ = select.select(
-                [self._error_read_pipe],
+                [self._send_read_pipe],
                 [self._s],
                 [])
             if self._s in avaible_write_sources:
@@ -46,14 +48,13 @@ class Sender(threading.Thread):
                             self._s.sendall(byte)
                         except OSError:
                             # Connection has been lost!
-                            # TODO
                             print('Sender: Connection has been lost!')
+                            self._recv_write_pipe.close()
                             return
-
-            if self._error_read_pipe in avaible_read_sources:
+            if self._send_read_pipe in avaible_read_sources:
                 # pipe - interrupt
-                # TODO
-                print('Sender: pipe - interrupt')
+                print('Sender: pipe - interrupt.')
+                #self._recv_write_pipe.close()
                 return
 
     def put_byte(self, byte):
