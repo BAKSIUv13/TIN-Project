@@ -8,7 +8,7 @@ from network_and_data import receiver
 from network_and_data import sender
 
 HOST = 'localhost'
-PORT = 12345
+PORT = 22345
 
 # interface to sockets
 
@@ -23,21 +23,29 @@ SENDER = sender.Sender(CLIENT_SOCKET, SEND_READ_PIPE, RECV_WRITE_PIPE)
 RECEIVER.start()
 SENDER.start()
 
-SENDER.put_byte('a'[0].encode())
+"""
+
+SENDER.put_byte_array(network.string_to_byte_array('OwO!sesskkkkkkkk'))
+SENDER.put_byte_array(network.string_to_byte_array('OwO!msg0'))
+SENDER.put_byte_array(network.string_to_byte_array('1234'))
+SENDER.put_byte_array(network.string_to_byte_array('tekstwiadotekstwiadotekstwiado'))
+
+
+ARRAY = RECEIVER.get_byte_array(8 + 8 + 16 + 4 + 30)
+
+for byte in ARRAY:
+    print(chr(byte))
 
 """
-LICZBA = 13
 
-BAJTY = LICZBA.to_bytes(4, byteorder='big', signed=True)
+"""
+ARRAY = network.int_to_byte_array_4(13)
 
+for byte in ARRAY:
+    string = chr(byte)
+    byte_array = network.string_to_byte_array(string)
+    SENDER.put_byte_array(byte_array)
 
-
-ODEBRANE_BAJTY = []
-for bajt in BAJTY:
-    ODEBRANE_BAJTY.append(bajt)
-
-ODEBRANA_LICZBA = int.from_bytes(ODEBRANE_BAJTY, byteorder='big', signed=True)
-print(ODEBRANA_LICZBA)
 """
 
 RECEIVER.join()

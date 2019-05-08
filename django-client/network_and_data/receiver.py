@@ -70,3 +70,16 @@ class Receiver(threading.Thread):
         """
         return self._r_bytes_queue.get(block=True,
                                        timeout=GET_BYTE_TIMEOUT_SEC)
+
+    def get_byte_array(self, size):
+        """
+        Return byte array from receiver.
+
+        It blocks at most GET_BYTE_TIMEOUT_SEC and raises the Empty exception
+        if no item was available within that time.
+
+        """
+        byte_array = []
+        for _ in range(size):
+            byte_array.append(self.get_byte())
+        return byte_array
