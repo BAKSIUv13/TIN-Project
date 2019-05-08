@@ -64,3 +64,8 @@ class Sender(threading.Thread):
         return self._w_bytes_queue.put(byte,
                                        block=True,
                                        timeout=PUT_BYTE_TIMEOUT_SEC)
+
+    def put_byte_array(self, byte_array):
+        """Put byte_array to sender. Blocks until free space is available."""
+        for byte in byte_array:
+            self.put_byte(byte)
