@@ -23,6 +23,8 @@ SENDER = sender.Sender(CLIENT_SOCKET, SEND_READ_PIPE, RECV_WRITE_PIPE)
 RECEIVER.start()
 SENDER.start()
 
+SENDER.put_byte('a'[0].encode())
+
 """
 LICZBA = 13
 

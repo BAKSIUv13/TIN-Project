@@ -13,7 +13,7 @@ _RECV_QUEUE_SIZE = 32 * 1024
 
 # seconds
 GET_BYTE_TIMEOUT_SEC = 15
-RECV_PUT_BYTE_TIMEOUT_SEC = 0.5
+RECV_PUT_BYTE_TIMEOUT_SEC = 1
 
 class Receiver(threading.Thread):
     """Class responsible for receiving data."""
@@ -25,6 +25,7 @@ class Receiver(threading.Thread):
         self._r_bytes_queue = queue.Queue(_RECV_QUEUE_SIZE)
         self._recv_read_pipe = recv_read_pipe
         self._send_write_pipe = send_write_pipe
+
     def run(self):
         """Receive data and check if given pipe is not available."""
         while True:
@@ -33,6 +34,11 @@ class Receiver(threading.Thread):
                 [],
                 [])
 
+            if self._recv_read_pipe in avaible_read_sources:
+                # pipe - interrupt
+                print('Receiver: pipe - interrupt.')
+                self._send_write_pipe.close()
+                return
             if self._s in avaible_read_sources:
                 data = self._s.recv(_RECV_PORTION_SIZE)
                 if data:
@@ -52,11 +58,7 @@ class Receiver(threading.Thread):
                     print('Receiver: Connection has been lost!')
                     self._send_write_pipe.close()
                     return
-            if self._recv_read_pipe in avaible_read_sources:
-                # pipe - interrupt
-                print('Receiver: pipe - interrupt.')
-                self._send_write_pipe.close()
-                return
+
 
     def get_byte(self):
         """

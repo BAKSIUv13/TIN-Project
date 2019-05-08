@@ -7,11 +7,13 @@ import threading
 import queue
 import select
 
-_SEND_PORTION_SIZE = 4 # 4 B
-_W_QUEUE_SIZE = 32 * 1024 # 32 kB
-SEND_GET_BYTE_TIMEOUT_SEC = 1
-PUT_BYTE_TIMEOUT_SEC = 1
+# bytes
+_SEND_PORTION_SIZE = 4
+_W_QUEUE_SIZE = 32 * 1024
 
+# seconds
+SEND_GET_BYTE_TIMEOUT_SEC = 1
+PUT_BYTE_TIMEOUT_SEC = 15
 
 class Sender(threading.Thread):
     """Class responsible for sending data."""
@@ -31,6 +33,11 @@ class Sender(threading.Thread):
                 [self._send_read_pipe],
                 [self._s],
                 [])
+            if self._send_read_pipe in avaible_read_sources:
+                # pipe - interrupt
+                print('Sender: pipe - interrupt.')
+                self._recv_write_pipe.close()
+                return
             if self._s in avaible_write_sources:
                 data = []
                 for _ in range(_SEND_PORTION_SIZE):
@@ -51,11 +58,6 @@ class Sender(threading.Thread):
                             print('Sender: Connection has been lost!')
                             self._recv_write_pipe.close()
                             return
-            if self._send_read_pipe in avaible_read_sources:
-                # pipe - interrupt
-                print('Sender: pipe - interrupt.')
-                self._recv_write_pipe.close()
-                return
 
     def put_byte(self, byte):
         """Put one byte to sender. Blocks until free space is available."""
