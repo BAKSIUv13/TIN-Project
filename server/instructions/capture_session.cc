@@ -1,8 +1,12 @@
 // Copyright 2019 Piotrek
 
 #include <iostream>
+#include <memory>
+#include <utility>
 
 #include "instructions/capture_session.h"
+
+#include "send_msgs/sess_capt_ok.h"
 
 namespace tin {
 /*int CaptureSession::Fn(Server *server, int fd, SocketTCP4 *sock,
@@ -13,8 +17,8 @@ namespace tin {
 
 
 
-int CaptureSession::Fn(Server *server, int fd, SocketTCP4 *sock,
-    SocketStuff *stuff, World *) {
+int CaptureSession::Fn(Server *server, int fd,
+    SocketStuff *stuff, World *, MsgPushFn push_fn) {
   CaptureSession *s = reinterpret_cast<CaptureSession *>(stuff->strct);
   int chars_to_copy = stuff->CountCopy(END);
   stuff->Copy(&s->sess_id_[stuff->cm_processed - START], chars_to_copy);
@@ -25,8 +29,17 @@ int CaptureSession::Fn(Server *server, int fd, SocketTCP4 *sock,
   int pom = server->AssocSessWithSock(s->GetSid_(), fd);
   if (pom < 0) {
     std::cerr << "hehe xd\n";
+    return -1;
   }
   std::cerr << "zajęło xd\n";
+  Username un = server->SidToUn(s->GetSid_());
+  if (!un) {
+    std::cerr << "Heh, mam potwierdzić, że zalogował się ktoś, kogo nie ma, ok "
+      << "xd\n";
+      return -1;
+  }
+  std::unique_ptr<OutMessage> msg {new SessCaptOk(un)};
+  (server->*push_fn)(std::move(msg));
   return 0;
 }
 

@@ -10,14 +10,16 @@ int WriteBuf::Add(const char *s) {
   if (Bad()) return -1;
   const char *x = s;
   int i = 0;
+  int j = i + len_;
   while (*x) {
-    if (GetAt_(i) == start_) {
+    if (GetAt_(j) == start_) {
       // Przepełniony
       start_ = -1;
       return -1;
     }
-    buf_[GetAt_(i)] = *x;
+    buf_[GetAt_(j)] = *x;
     ++i;
+    ++j;
     ++x;
     ++len_;
   }
@@ -33,9 +35,11 @@ int WriteBuf::Add(const std::string &str) {
     return -1;
   }
   int i = 0;
+  int j = i + len_;
   while (static_cast<size_t>(i) < str.size()) {
-    buf_[GetAt_(i)] = str[i];
+    buf_[GetAt_(j)] = str[i];
     ++i;
+    ++j;
   }
   len_ += i;
   return i;

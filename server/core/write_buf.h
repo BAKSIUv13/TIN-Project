@@ -12,7 +12,7 @@ namespace tin {
 
 class WriteBuf {
  public:
-  static constexpr int SIZE = 2048 * sizeof(NQuad);
+  static constexpr int 2 * 2048 * sizeof(NQuad);
   constexpr WriteBuf() : buf_(), start_(0), len_(0) {}
   ~WriteBuf() {}
 
@@ -29,7 +29,7 @@ class WriteBuf {
 
  private:
   constexpr int GetAt_(int x) {
-    return (x % SIZE) + start_;
+    return (x + start_) % SIZE;
   }
 
   std::array<char, SIZE> buf_;

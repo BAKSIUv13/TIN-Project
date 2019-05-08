@@ -1,7 +1,7 @@
 // Copyright 2019 Piotrek
 
-#ifndef SERVER_INSTRUCTIONS_CAPTURE_SESSION_H_
-#define SERVER_INSTRUCTIONS_CAPTURE_SESSION_H_
+#ifndef SERVER_INSTRUCTIONS_MOVE_MOUSE_H_
+#define SERVER_INSTRUCTIONS_MOVE_MOUSE_H_
 
 #include <iostream>
 
@@ -11,33 +11,36 @@
 #include "app/server.h"
 
 namespace tin {
-class CaptureSession : public InstrStruct {
+class MoveMouse : public InstrStruct {
  public:
   static constexpr int START = 2 * sizeof(NQuad);
   static constexpr int END = 4 * sizeof(NQuad);
 
-  CaptureSession() {}
-  virtual ~CaptureSession() {}
+  MoveMouse() {}
+  virtual ~MoveMouse() {}
   static int Fn(Server *, int, SocketStuff *, World *, MsgPushFn);
   static void Construct(InstrStruct *);
   static void Destroy(InstrStruct *);
+
  private:
   constexpr const NQuad &first_() const {
-    return reinterpret_cast<const NQuad *>(sess_id_)[0];
+    return reinterpret_cast<const NQuad *>(coords_)[0];
   }
   constexpr const NQuad &second_() const {
-    return reinterpret_cast<const NQuad *>(sess_id_)[1];
+    return reinterpret_cast<const NQuad *>(coords_)[1];
   }
-  constexpr SessionId GetSid_() const {
-    return ((SessionId) 0 | first_())
-    | (((SessionId) 0 | second_()) << (sizeof(NQuad) * 8));
+  constexpr int32_t x() const {
+    return first_().Int();
+  }
+  constexpr int32_t y() const {
+    return second_().Int();
   }
 
-
-  alignas(NQuad) char sess_id_[2 * sizeof(NQuad)];
+  Username un_;
+  alignas(NQuad) char coords_[2 * sizeof(NQuad)];
 };
 
 
 }  // namespace tin
 
-#endif  // SERVER_INSTRUCTIONS_CAPTURE_SESSION_H_
+#endif  // SERVER_INSTRUCTIONS_MOVE_MOUSE_H_

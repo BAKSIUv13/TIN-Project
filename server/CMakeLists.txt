@@ -39,11 +39,6 @@ get_directory_property(
   SOURCES_configurator DIRECTORY configurator DEFINITION SOURCES
 )
 
-add_subdirectory(network)
-get_directory_property(
-  SOURCES_network DIRECTORY network DEFINITION SOURCES
-)
-
 add_subdirectory(app)
 get_directory_property(
   SOURCES_app DIRECTORY app DEFINITION SOURCES
@@ -54,6 +49,11 @@ get_directory_property(
   SOURCES_instructions DIRECTORY instructions DEFINITION SOURCES
 )
 
+add_subdirectory(send_msgs)
+get_directory_property(
+  SOURCES_send_msgs DIRECTORY send_msgs DEFINITION SOURCES
+)
+
 add_executable(server
   main.cc
   "${SOURCES_core}"
@@ -61,9 +61,9 @@ add_executable(server
   "${SOURCES_image}"
   "${SOURCES_account_manager}"
   "${SOURCES_configurator}"
-  "${SOURCES_network}"
   "${SOURCES_app}"
   "${SOURCES_instructions}"
+  "${SOURCES_send_msgs}"
 )
 
 target_link_libraries(server

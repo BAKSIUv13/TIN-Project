@@ -6,6 +6,9 @@
 #include <string>
 #include <map>
 #include <utility>
+#include <vector>
+#include <list>
+#include <memory>
 
 #include "account_manager/account_manager.h"
 #include "app/logged_user.h"
@@ -18,7 +21,6 @@
 #include "core/sel.h"
 #include "core/instr_id.h"
 #include "app/instr_supp.h"
-#include "network/nws.h"
 
 namespace tin {
 
@@ -55,11 +57,19 @@ class Server {
   // Returns username assigned to fd. Blank if fd does not have session.
   Username SockToUn(int fd);
 
+  Username SidToUn(SessionId);
+
   // World &GetWorld() {return world_;}
   TheConfig &GetConf() {return conf_;}
   AccountManager &GetAccountManager() {return am_;}
 
+
+
+
  private:
+  int PushMsg_(std::unique_ptr<OutMessage> msg);
+  OutMessage *FirstMsg_();
+  int PopMsg_();
   void DeassocSess_(SessionId);
   void DeassocSock_(int fd);
 
@@ -141,6 +151,7 @@ class Server {
   std::map<int, LoggedUser *> socks_to_users_;
   TheConfig conf_;
   AccountManager am_;
+  std::list<std::unique_ptr<OutMessage> > messages_to_send_;
 
   // Pipe that may be used to tell the server to stop.
   int end_pipe_[2];

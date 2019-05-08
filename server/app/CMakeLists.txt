@@ -12,6 +12,4 @@ set(SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/world.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/world.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/artist.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/out_message.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/out_message.cc"
 )

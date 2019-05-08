@@ -12,7 +12,7 @@
 namespace tin {
 class Server;
 class SocketTCP4;
-struct SocketStuff;
+class SocketStuff;
 class InstrSupp {
  public:
   static constexpr struct EXPAND_t {} EXPAND {};

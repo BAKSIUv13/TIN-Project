@@ -2,13 +2,16 @@
 
 #include <iostream>
 #include <utility>
+#include <memory>
 
 #include "instructions/say.h"
 
+#include "send_msgs/user_msg.h"
+
 namespace tin {
 
-int Say::Fn(Server *server, int fd, SocketTCP4 *sock,
-    SocketStuff *stuff, World *world) {
+int Say::Fn(Server *server, int fd, SocketStuff *stuff, World *world,
+    MsgPushFn push_fn) {
   Say *s = reinterpret_cast<Say *>(stuff->strct);
   int chars_to_copy;
   if (stuff->cm_processed < LEN_END) {
@@ -18,8 +21,9 @@ int Say::Fn(Server *server, int fd, SocketTCP4 *sock,
       return 1;
     }
   }
-  if (stuff->cm_processed <= LEN_END) {
-    std::cerr << "Ok, mam wiadomość o długości" << s->Len_() << "\n";
+  if (!s->len_is_read_) {
+    s->len_is_read_ = true;
+    std::cerr << "Ok, mam wiadomość o długości " << s->Len_() << "\n";
     s->un_ = server->SockToUn(fd);
     if (s->un_.Good()) {
       std::cerr << "Od użytkownika [[" << s->un_ << "]]\n";
@@ -36,8 +40,8 @@ int Say::Fn(Server *server, int fd, SocketTCP4 *sock,
     return 1;
   }
   std::cerr << "Ok, ogarnianie wiadomości skończone, więc możemy ją dodać.\n";
-  OutMessage msg(s->un_, s->message_);
-  world->PushMsg(&msg);
+  std::unique_ptr<OutMessage> msg {new UserMsg(s->un_, s->message_)};
+  (server->*push_fn)(std::move(msg));
   return 0;
 }
 
@@ -51,5 +55,7 @@ void Say::Destroy(InstrStruct *q) {
   std::cerr << "say  : destroyv " << q << '\n';
 }
 
+const int Say::START, Say::LEN_END;
+const int32_t Say::LEN_CUT;
 
 }  // namespace tin

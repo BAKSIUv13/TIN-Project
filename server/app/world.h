@@ -8,19 +8,15 @@
 
 #include "app/artist.h"
 #include "image/image.h"
-#include "app/out_message.h"
+#include "core/out_message.h"
 
 namespace tin {
 class World {
  public:
   int AddArtist(const Username&);
   int RemoveArtist();
-  int PushMsg(OutMessage *);
-  OutMessage *FirstMsg();
-  int PopMsg();
  private:
   std::map<Username, Artist> artists_;
-  std::vector<OutMessage> messages_to_send_;
 };  // class World
 }  // namespace tin
 
