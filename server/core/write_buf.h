@@ -12,7 +12,7 @@ namespace tin {
 
 class WriteBuf {
  public:
-  static constexpr int SIZE = 100;  // 2 * 2048 * sizeof(NQuad);
+  static constexpr int 2 * 2048 * sizeof(NQuad);
   constexpr WriteBuf() : buf_(), start_(0), len_(0) {}
   ~WriteBuf() {}
 
