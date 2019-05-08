@@ -82,3 +82,4 @@ class Receiver(threading.Thread):
         byte_array = []
         for _ in range(size):
             byte_array.append(self.get_byte())
+        return byte_array
