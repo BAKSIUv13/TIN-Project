@@ -1,14 +1,14 @@
 class Message():
 
     def __init__(self, type=0, name=0, param=""):
-        self.typ e = type
-        self.nam e = name
-        self.para m = param
+        self.type = type
+        self.name = name
+        self.param = param
 
     def set(self, type, name, param=""):
-        self.typ e = type
-        self.nam e = name
-        self.para m = param
+        self.type = type
+        self.name = name
+        self.param = param
 
     def get_type(self):
         return self.type
