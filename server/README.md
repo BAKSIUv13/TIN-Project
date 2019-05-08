@@ -56,3 +56,19 @@ Serwer wyśle ewszystkim
 ```
 OwO!maus<nazwa><int32 x><int32 y>
 ```
+
+## Kompilacja
+
+Projekt jest na CMake'u. Nie ma żadnych konfiguracji, więc się normalnie to
+robi, tak jak wszystko na CMake'u.
+
+### Jak ktoś nie wie jak
+
+Z katalogu z serwerem
+
+```bash
+mkdir build
+cd build
+cmake ..
+make
+```
