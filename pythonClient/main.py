@@ -13,20 +13,22 @@ client_socket = network.prepare_socket(HOST, PORT)
 receiver = receiver.Receiver(client_socket)
 sender = sender.Sender(client_socket)
 parser = parser.Parser(receiver)
+messenger = messenger.Messenger(sender)
 
 receiver.start()
 sender.start()
 parser.start()
-
-root = tk.Tk()
-root.geometry("800x600")
-app = Application(parser, master=root)
-app.mainloop()
+messenger.start()
 
 client_socket.send('ip login haslo'.encode())
+client_socket.send('yyyyyyyyyyyyyyyyyy'.encode())
 
-time.sleep(10)
+root = tk.Tk()
+root.geometry("1200x800")
+app = Application(parser, messenger, master=root)
+app.mainloop()
 
+messenger.join()
 parser.join()
 receiver.join()
 sender.join()

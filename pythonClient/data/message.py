@@ -1,6 +1,6 @@
 class Message():
 
-    def __init__(self, type=0, name=0, param=""):
+    def __init__(self, type=0, name="", param=""):
         self.type = type
         self.name = name
         self.param = param

@@ -30,7 +30,7 @@ class Sender(threading.Thread):
                     pass
             if data:
                 for byte in data:
-                    self._s.sendall(byte)
+                    self._s.sendall(byte.to_bytes(4,byteorder='big'))
 
     def join(self, timeout=None):
         self.stop_request.set()
