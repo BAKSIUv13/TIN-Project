@@ -1,2 +1,5 @@
 build
 .vscode/
+VENV-django-client/
+.DS_Store
+__pycache__/
