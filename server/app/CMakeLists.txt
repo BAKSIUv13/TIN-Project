@@ -1,0 +1,15 @@
+set(SOURCES
+  "${CMAKE_CURRENT_SOURCE_DIR}/server.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/server.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/server_instructions.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/logged_user.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/socket_stuff.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/server.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/logged_user.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/socket_stuff.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/instr_supp.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/session.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/world.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/world.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/artist.h"
+)
