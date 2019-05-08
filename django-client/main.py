@@ -25,20 +25,6 @@ SENDER.start()
 
 SENDER.put_byte('a'[0].encode())
 
-"""
-LICZBA = 13
-
-BAJTY = LICZBA.to_bytes(4, byteorder='big', signed=True)
-
-
-
-ODEBRANE_BAJTY = []
-for bajt in BAJTY:
-    ODEBRANE_BAJTY.append(bajt)
-
-ODEBRANA_LICZBA = int.from_bytes(ODEBRANE_BAJTY, byteorder='big', signed=True)
-print(ODEBRANA_LICZBA)
-"""
 
 RECEIVER.join()
 SENDER.join()
