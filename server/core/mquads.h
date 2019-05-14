@@ -22,7 +22,19 @@ constexpr NQuad
   SERVER_DELIVER_MSG2 {"said"},  // ??
   SERVER_DISCONNECT {"disc"},
   SERVER_ANNOUNCEMENT {"hejo"},
-  SERVER_NOTICE {"ueuo"};
+  SERVER_NOTICE {"ueuo"},
+
+  RECTANGLE {"rect"},
+  ELLIPSE {"elip"},
+  POLYGONAL_CHAIN {"path"},
+
+  EDIT {"edit"},
+  ADD_PARAMS {"addd"},
+  GRAB {"grab"},
+  DONE {"done"},
+  NOPE {"NOPE"},
+  OBJECT_DELETED {"puff"};
+
 }  // namespace MQ
 }  // namespace tin
 
