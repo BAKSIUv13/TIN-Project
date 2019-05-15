@@ -7,6 +7,8 @@ import threading
 import queue
 import select
 
+from network_and_data import network
+
 # bytes
 _SEND_PORTION_SIZE = 4
 _W_QUEUE_SIZE = 32 * 1024
@@ -60,12 +62,31 @@ class Sender(threading.Thread):
                             return
 
     def put_byte(self, byte):
-        """Put one byte to sender. Blocks until free space is available."""
+        """
+        Put one byte to sender.
+
+        It blocks at most PUT_BYTE_TIMEOUT_SEC and raises the queue.Empty
+        exception if no item was available within that time.
+        """
         return self._w_bytes_queue.put(byte,
                                        block=True,
                                        timeout=PUT_BYTE_TIMEOUT_SEC)
 
     def put_byte_array(self, byte_array):
-        """Put byte_array to sender. Blocks until free space is available."""
+        """
+        Put byte_array to sender.
+
+        It blocks at most PUT_BYTE_TIMEOUT_SEC and raises the queue.Empty
+        exception if no item was available within that time.
+        """
         for byte in byte_array:
             self.put_byte(byte)
+
+    def put_string_value(self, string_value):
+        """
+        Put string_value to sender.
+
+        It blocks at most PUT_BYTE_TIMEOUT_SEC and raises the queue.Empty
+        exception if no item was available within that time.
+        """
+        self.put_byte_array(network.string_to_byte_array(string_value))

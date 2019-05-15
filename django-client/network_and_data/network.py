@@ -19,6 +19,8 @@ def prepare_error_pipe():
 
     return (os.fdopen(r_fd), os.fdopen(w_fd, 'w'))
 
+# conversion
+
 def int_to_byte_array_4(int_value):
     """Convert int_value to 4 element byte array in big endian order."""
     return int_value.to_bytes(length=4, byteorder='big', signed=True)

@@ -7,6 +7,8 @@ from network_and_data import network
 from network_and_data import receiver
 from network_and_data import sender
 
+import struct
+
 HOST = 'localhost'
 PORT = 22345
 
@@ -23,30 +25,18 @@ SENDER = sender.Sender(CLIENT_SOCKET, SEND_READ_PIPE, RECV_WRITE_PIPE)
 RECEIVER.start()
 SENDER.start()
 
-"""
+# my code
 
-SENDER.put_byte_array(network.string_to_byte_array('OwO!sesskkkkkkkk'))
-SENDER.put_byte_array(network.string_to_byte_array('OwO!msg0'))
-SENDER.put_byte_array(network.string_to_byte_array('1234'))
-SENDER.put_byte_array(network.string_to_byte_array('tekstwiadotekstwiadotekstwiado'))
+#SENDER.put_string_value('mamusia\n')
+#SENDER.put_string_value('tatusia')
+#print(RECEIVER.get_string_value(8))
 
+PACZKA_BAJTOW = struct.pack('i', 13)
 
-ARRAY = RECEIVER.get_byte_array(8 + 8 + 16 + 4 + 30)
-
-for byte in ARRAY:
-    print(chr(byte))
-
-"""
-
-"""
-ARRAY = network.int_to_byte_array_4(13)
-
-for byte in ARRAY:
-    string = chr(byte)
-    byte_array = network.string_to_byte_array(string)
-    SENDER.put_byte_array(byte_array)
-
-"""
+i = 1
+for byte in PACZKA_BAJTOW:
+    print(i)
+    i += 1
 
 RECEIVER.join()
 SENDER.join()

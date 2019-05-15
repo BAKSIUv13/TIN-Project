@@ -64,9 +64,8 @@ class Receiver(threading.Thread):
         """
         Return one byte from receiver.
 
-        It blocks at most GET_BYTE_TIMEOUT_SEC and raises the Empty exception
-        if no item was available within that time.
-
+        It blocks at most GET_BYTE_TIMEOUT_SEC and raises the queue.Empty
+        exception if no item was available within that time.
         """
         return self._r_bytes_queue.get(block=True,
                                        timeout=GET_BYTE_TIMEOUT_SEC)
@@ -75,11 +74,24 @@ class Receiver(threading.Thread):
         """
         Return byte array from receiver.
 
-        It blocks at most GET_BYTE_TIMEOUT_SEC and raises the Empty exception
-        if no item was available within that time.
-
+        It blocks at most GET_BYTE_TIMEOUT_SEC and raises the queue.Empty
+        exception if no item was available within that time.
         """
         byte_array = []
         for _ in range(size):
             byte_array.append(self.get_byte())
         return byte_array
+
+    def get_string_value(self, size):
+        """
+        Return string_value from receiver.
+
+        It blocks at most GET_BYTE_TIMEOUT_SEC and raises the queue.Empty
+        exception if no item was available within that time.
+        """
+        byte_array = self.get_byte_array(size)
+        string_value = ''
+        for byte in byte_array:
+            string_value += chr(byte)
+
+        return string_value
