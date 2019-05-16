@@ -17,6 +17,8 @@ namespace SieciowyInkScape
         public string hostname;
         public int port;
 
+        public string sessID = "";
+
         public LoginForm()
         {
             InitializeComponent();
@@ -46,5 +48,6 @@ namespace SieciowyInkScape
 
             DialogResult = DialogResult.OK;
         }
+        
     }
 }

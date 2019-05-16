@@ -171,8 +171,6 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.TextBox chatBox;
         private System.Windows.Forms.Panel chatPanel;
         private System.Windows.Forms.TextBox messageBox;
         private System.Windows.Forms.Label label2;
@@ -184,6 +182,7 @@
         private System.Windows.Forms.Timer RefreshTimer;
         private System.Windows.Forms.Timer FPSTimer;
         private System.Windows.Forms.Button rectangleButton;
+        public System.Windows.Forms.TextBox chatBox;
     }
 }
 
