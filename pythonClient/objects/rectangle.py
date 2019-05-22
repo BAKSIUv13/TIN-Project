@@ -13,7 +13,6 @@ class Rectangle:
         self.b = b
         self.canvas = canvas
         self.rect = self.canvas.create_rectangle(x, y, x, y, fill="#%02x%02x%02x" % (self.r, self.g, self.b))  # TODO
-        # self.rect=self.canvas.create_rectangle(x, y, x, y, fill='', outline="green")
 
     def set1(self, x, y):
         self.x1 = x
@@ -30,3 +29,6 @@ class Rectangle:
         self.g = g
         self.b = b
         self.canvas.itemconfig(self.rect, fill="#%02x%02x%02x" % (self.r, self.g, self.b))
+
+    def delete(self):
+        self.canvas.delete(self.rect)

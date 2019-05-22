@@ -33,3 +33,7 @@ class Path:
         self.g = g
         self.b = b
         self.canvas.itemconfig(self.oval, fill="#%02x%02x%02x" % (self.r, self.g, self.b))
+
+    def delete(self):
+        for item in self.segments:
+            self.canvas.delete(item)
