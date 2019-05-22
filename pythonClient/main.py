@@ -2,11 +2,31 @@ import time
 import tkinter as tk
 
 from application import Application
+from login import Login
 from network import *
 from data import *
 
 HOST = '127.0.0.1'
 PORT = 12345
+NAME = ""
+
+def set(name,host,port):
+    print("hej")
+    global HOST
+    global PORT
+    global NAME
+    HOST = host
+    PORT = port
+    NAME = name
+
+#TODO autoryzacja danych wejsciowych
+"""while True:
+    login_screen = tk.Tk()
+    login_screen.geometry("600x200")
+    login = Login(set,master=login_screen)
+    login.mainloop()
+    break"""
+
 
 client_socket = network.prepare_socket(HOST, PORT)
 
