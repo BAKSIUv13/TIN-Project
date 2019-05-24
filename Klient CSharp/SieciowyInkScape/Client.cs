@@ -315,7 +315,50 @@ namespace SieciowyInkScape
             }
         }
 
+        byte[] SocketSetInt64(Int32 value)
+        {
+            byte[] toRet = System.BitConverter.GetBytes(value);
+            if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
+
+            return toRet;
+        }
+        byte[] SocketSetUInt64(UInt32 value)
+        {
+            byte[] toRet = System.BitConverter.GetBytes(value);
+            if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
+
+            return toRet;
+        }
+        byte[] SocketSetInt32(Int32 value)
+        {
+            byte[] toRet = System.BitConverter.GetBytes(value);
+            if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
+
+            return toRet;
+        }
         byte[] SocketSetUInt32(UInt32 value)
+        {
+            byte[] toRet = System.BitConverter.GetBytes(value);
+            if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
+
+            return toRet;
+        }
+        byte[] SocketSetInt16(Int32 value)
+        {
+            byte[] toRet = System.BitConverter.GetBytes(value);
+            if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
+
+            return toRet;
+        }
+        byte[] SocketSetUInt16(UInt32 value)
+        {
+            byte[] toRet = System.BitConverter.GetBytes(value);
+            if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
+
+            return toRet;
+        }
+
+        byte[] SocketSetDouble(double value)
         {
             byte[] toRet = System.BitConverter.GetBytes(value);
             if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
@@ -329,11 +372,47 @@ namespace SieciowyInkScape
             return toRet;
         }
 
+        Int64 SocketReceiveInt64()
+        {
+            SocketReceive(8);
+            if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 8);
+            return System.BitConverter.ToInt64(buf, 0);
+        }
+        UInt64 SocketReceiveUInt64()
+        {
+            SocketReceive(8);
+            if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 8);
+            return System.BitConverter.ToUInt64(buf, 0);
+        }
+        Int32 SocketReceiveInt32()
+        {
+            SocketReceive(4);
+            if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 4);
+            return System.BitConverter.ToInt32(buf, 0);
+        }
         UInt32 SocketReceiveUInt32()
         {
             SocketReceive(4);
             if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 4);
             return System.BitConverter.ToUInt32(buf, 0);
+        }
+        Int16 SocketReceiveInt16()
+        {
+            SocketReceive(2);
+            if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 2);
+            return System.BitConverter.ToInt16(buf, 0);
+        }
+        UInt16 SocketReceiveUInt16()
+        {
+            SocketReceive(2);
+            if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 2);
+            return System.BitConverter.ToUInt16(buf, 0);
+        }
+        double SocketReceiveDouble()
+        {
+            SocketReceive(8);
+            if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 8);
+            return System.BitConverter.ToDouble(buf, 0);
         }
         string SocketReceiveString(UInt32 size)
         {
