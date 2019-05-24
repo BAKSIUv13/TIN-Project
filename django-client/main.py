@@ -3,44 +3,39 @@
 
 """Main program module."""
 
-from network_and_data import network
-from network_and_data import receiver
-from network_and_data import sender
+from network_and_data import network, receiver, sender
 
-import struct
+def main():
+    """Pydocstyle is annoying."""
+    host = 'localhost'
+    port = 22345
 
-HOST = 'localhost'
-PORT = 22345
+    # interface to sockets
 
-# interface to sockets
+    client_socket = network.prepare_socket(host, port)
 
-CLIENT_SOCKET = network.prepare_socket(HOST, PORT)
+    recv_read_pipe, recv_write_pipe = network.prepare_error_pipe()
+    send_read_pipe, send_write_pipe = network.prepare_error_pipe()
 
-RECV_READ_PIPE, RECV_WRITE_PIPE = network.prepare_error_pipe()
-SEND_READ_PIPE, SEND_WRITE_PIPE = network.prepare_error_pipe()
+    my_receiver = receiver.Receiver(client_socket, recv_read_pipe, send_write_pipe)
+    my_sender = sender.Sender(client_socket, send_read_pipe, recv_write_pipe)
 
-RECEIVER = receiver.Receiver(CLIENT_SOCKET, RECV_READ_PIPE, SEND_WRITE_PIPE)
-SENDER = sender.Sender(CLIENT_SOCKET, SEND_READ_PIPE, RECV_WRITE_PIPE)
+    my_receiver.start()
+    my_sender.start()
 
-RECEIVER.start()
-SENDER.start()
+    # my code
 
-# my code
+    my_sender.put_int32_value(589505316)
 
-#SENDER.put_string_value('mamusia\n')
-#SENDER.put_string_value('tatusia')
-#print(RECEIVER.get_string_value(8))
+    print(my_receiver.get_int32_value())
 
-PACZKA_BAJTOW = struct.pack('i', 13)
 
-i = 1
-for byte in PACZKA_BAJTOW:
-    print(i)
-    i += 1
+    # end my code
 
-RECEIVER.join()
-SENDER.join()
+    my_receiver.join()
+    my_sender.join()
 
-CLIENT_SOCKET.close()
+    client_socket.close()
 
-print("The end!")
+if __name__ == '__main__':
+    main()
