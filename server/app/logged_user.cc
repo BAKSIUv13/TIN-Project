@@ -15,10 +15,9 @@
 
 namespace tin {
 
-LoggedUser::LoggedUser(const Username &name, SessionId sid)
-    : LoggedUser() {
+LoggedUser::LoggedUser(const Username &name, SockId sid)
+    : sock_id_(sid) {
   if (Username::GOOD & name.GetState()) {
-    session_id_ = sid;
     name_ = name;
   }
 }
@@ -36,14 +35,12 @@ LoggedUser &LoggedUser::operator=(LoggedUser &&other) {
 
 void LoggedUser::Clear_() {
   name_ = Username();
-  session_id_ = 0;
-  sock_fd_ = -1;
+  sock_id_ = -1;
 }
 
 void LoggedUser::Move_(LoggedUser *other) {
   name_ = other->name_;
-  session_id_ = other->session_id_;
-  sock_fd_ = other->sock_fd_;
+  sock_id_ = other->sock_id_;
   other->Clear_();
 }
 

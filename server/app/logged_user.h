@@ -7,28 +7,27 @@
 
 #include "app/session.h"
 #include "core/username.h"
+#include "core/sock_id.h"
 
 namespace tin {
 class LoggedUser{
  public:
-  constexpr LoggedUser() : session_id_(0), sock_fd_(-1) {}
-  LoggedUser(const Username &, SessionId);
+  constexpr LoggedUser() : sock_id_(0) {}
+  explicit LoggedUser(const Username &, SockId);
   LoggedUser(const LoggedUser &) = delete;
   LoggedUser(LoggedUser &&);
   LoggedUser &operator=(LoggedUser &&);
 
-  SessionId GetSession() const {return session_id_;}
   const Username &GetName() const {return name_;}
-  int GetSock() const {return sock_fd_;}
-  void SetSock(int fd) {sock_fd_ = fd;}
-  void ClrSock() {sock_fd_ = -1;}
+  int GetSockId() const {return sock_id_;}
+  void SetSockId(int id) {sock_id_ = id;}
+  void ClrSock() {sock_id_ = 0;}
  private:
   void Move_(LoggedUser *);
   void Clear_();
 
   Username name_;  // nadmiar, bo będzie też wyszukiwanie po numerze sesji
-  SessionId session_id_;  // nr sesji 0 to jej brak
-  int sock_fd_;
+  SockId sock_id_;
 };  // class LoggedUser
 }  // namespace tin
 

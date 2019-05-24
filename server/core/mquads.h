@@ -11,9 +11,19 @@ namespace MQ {
 constexpr NQuad
   ZERO {},
   OWO {"OwO!"},
-  CAPTURE_SESSION {"sess"},
-  SESSION_ACCEPTED {"okej"},
-  REQUEST_LOGIN {"logi"},
+  // CAPTURE_SESSION {"sess"},
+  // SESSION_ACCEPTED {"okej"},
+
+  ERR_BAG_LOG {"badl"},
+  ERR_BANNED {"band"},
+  ERR_WAS_LOGGED {"wasl"},
+  ERR_OTHER {"loer"},
+
+  CLI_LOGIN {"logo"},
+  CLI_MOUSE {"maus"},
+  CLI_MESG {"mesg"},
+
+
   MOVE_MOUSE {"mysz"},
   SAY {"msg0"},
   SAY2 {"sayy"},  // ??
@@ -23,6 +33,13 @@ constexpr NQuad
   SERVER_DISCONNECT {"disc"},
   SERVER_ANNOUNCEMENT {"hejo"},
   SERVER_NOTICE {"ueuo"},
+
+  SERV_LOGIN_OK {"LGOK"},
+  SERV_MOUSE {"MAUS"},
+  SERV_MESG {"MESG"},
+
+  SERV_SIGL {"SIGL"},
+  SERV_SIGH {"SIGH"},
 
   RECTANGLE {"rect"},
   ELLIPSE {"elip"},

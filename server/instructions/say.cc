@@ -9,7 +9,7 @@
 #include "send_msgs/user_msg.h"
 
 namespace tin {
-
+/*
 int Say::Fn(Server *server, int fd, SocketStuff *stuff, World *world,
     MsgPushFn push_fn) {
   Say *s = reinterpret_cast<Say *>(stuff->strct);
@@ -57,5 +57,5 @@ void Say::Destroy(InstrStruct *q) {
 
 const int Say::START, Say::LEN_END;
 const int32_t Say::LEN_CUT;
-
+*/
 }  // namespace tin

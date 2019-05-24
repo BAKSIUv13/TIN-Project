@@ -3,19 +3,19 @@
 #include "core/nquad.h"
 #include "core/mquads.h"
 
-#include "instructions/capture_session.h"
+#include "instructions/log_in.h"
 #include "instructions/say.h"
 #include "instructions/move_mouse.h"
 
 namespace tin {
 
 const std::map<InstrId, InstrSupp> Server::instructions {
-  {InstrId(MQ::CAPTURE_SESSION),
+  {InstrId(MQ::CLI_LOGIN),
     InstrSupp(
-      &CaptureSession::Fn,
-      sizeof(CaptureSession),
-      &CaptureSession::Construct,
-      &CaptureSession::Destroy)},
+      &LogIn::Fn,
+      sizeof(LogIn),
+      &LogIn::Construct,
+      &LogIn::Destroy)},
 /*
   {InstrId(MQ::REQUEST_LOGIN),
     InstrSupp(
@@ -24,6 +24,8 @@ const std::map<InstrId, InstrSupp> Server::instructions {
       nullptr,
       nullptr)},
 */
+
+/*
   {InstrId(MQ::SAY),
     InstrSupp(
       &Say::Fn,
@@ -36,7 +38,8 @@ const std::map<InstrId, InstrSupp> Server::instructions {
       &MoveMouse::Fn,
       sizeof(MoveMouse),
       &MoveMouse::Construct,
-      &MoveMouse::Destroy)},
+      &MoveMouse::Destroy)},  
+      */
 /*
   {InstrId(NQuad(10)),
     InstrSupp(InstrSupp::EXPAND)},

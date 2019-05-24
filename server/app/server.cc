@@ -15,6 +15,7 @@
 #include "core/nquad.h"
 #include "core/mquads.h"
 
+#include "send_msgs/sig.h"
 
 static constexpr int STDIN_FD = STDIN_FILENO;
 
@@ -37,7 +38,7 @@ class TempIO {
 
 namespace tin {
 Server::Server()
-    : runs_(false) {
+    : runs_(false), next_sock_id_(1) {
   if (pipe(end_pipe_)) {
     std::cerr << "Serwer się nie zrobił bo potok się nie otworzył :< "
       << std::strerror(errno) << '\n';
@@ -88,10 +89,10 @@ int Server::FeedSel_() {
   for (auto sock_it = client_socks_.begin();
       sock_it != client_socks_.end();
       ++sock_it) {
-    if (sock_it->second.second.ShallRead()) {
+    if (sock_it->second.ShallRead()) {
       sel_.AddFD(sock_it->first, Sel::READ);
     }
-    if (sock_it->second.second.ShallWrite()) {
+    if (sock_it->second.ShallWrite()) {
       sel_.AddFD(sock_it->first, Sel::WRITE);
     }
   }
@@ -99,15 +100,16 @@ int Server::FeedSel_() {
 }
 
 int Server::RegisterSockFromAccept_(SocketTCP4 &&sock) {
-  int fd = sock.GetFD();
-  auto emplace_ret = client_socks_.emplace(fd,
-    std::make_pair(std::move(sock), SocketStuff {}));
+  SockId id = NextSockId_();
+  auto emplace_ret = client_socks_.emplace(id,
+    SocketStuff {this, id});
   if (!emplace_ret.second) {
-    std::cerr << "Nie udało się dodać socketu do mapy z socketami :< " << fd
-      << "trzeba coś z tym zrobić.\n";
+    std::cerr << "Nie udało się dodać socketu do mapy z socketami :<\n"
+      "id: " << id
+      << " trzeba coś z tym zrobić.\n";
     return -1;
   }
-  emplace_ret.first->second.second.SetReading(true);
+  emplace_ret.first->second.SetReading(true);
   return 0;
 }
 
@@ -159,18 +161,11 @@ Username Server::SockToUn(int fd) {
   }
 }
 
-Username Server::SidToUn(SessionId sid) {
-  try {
-    return sess_to_users_.at(sid)->GetName();
-  } catch(std::out_of_range &e) {
-    return Username();
-  }
-}
-
 int Server::DealWithStdinBuf_(const char *s) {
   if (strncmp(s, "stop", 4) == 0 && (s[4] == '\n' || s[4] == ' ')) {
     StopRun();
-  } else if (strncmp(s, "l ", 2) == 0) {
+  }
+  /*else if (strncmp(s, "l ", 2) == 0) {
     Username name(&s[2]);
     std::cerr << "Nazwa: [[" << name << "]] - [["
       << Username(name, Username::CONDENSE) << "]]\n";
@@ -183,7 +178,7 @@ int Server::DealWithStdinBuf_(const char *s) {
       return 0;
     }
     DelSession(sid);
-  }
+  }*/
   return 0;
 }
 
@@ -196,15 +191,15 @@ int Server::WriteToSocks_() {
   char buf[WRT_BUF];
   int sockets_written = 0;
   for (auto it = client_socks_.begin(); it != client_socks_.end(); ++it) {
-    if (!(it->second.second.ShallWrite())
+    if (!(it->second.ShallWrite())
         || !(Sel::WRITE & sel_.Get(it->first))) {
       continue;
     }
-    WriteBuf &swb = it->second.second.write_buf;
+    WriteBuf &swb = it->second.WrBuf();
     int pom = swb.Get(buf, WRT_BUF);
     if (pom < 0) {
       // źle hehe
-      it->second.second.Remove();
+      it->second.Remove();
       continue;
     }
     int pom2 = write(it->first, buf, pom);
@@ -212,7 +207,7 @@ int Server::WriteToSocks_() {
     if (pom2 == 0) {
       // chyba zamknięte
       std::cerr << "zamknięte??\n";
-      it->second.second.Remove();
+      it->second.Remove();
     }
     swb.Pop(pom2);
     ++sockets_written;
@@ -230,10 +225,10 @@ int Server::DoWork_() {
         if (socks_to_users_.count(x.first) < 1) {
           continue;
         }
-        pom = msg->AddToBuf(&x.second.second.write_buf);
+        pom = msg->AddToBuf(&x.second.WrBuf());
         if (pom < 0) {
           std::cerr << "Błąd przy dodawaniu wiadom,ości do bufora. :<\n";
-          x.second.second.Remove();
+          x.second.Remove();
         }
       }
     } else {
@@ -242,8 +237,8 @@ int Server::DoWork_() {
           std::cerr << "Lel, nie ma takiego kogoś teraz xd\n";
           continue;
         }
-        auto &stuff = client_socks_.at(users_.at(un).GetSock()).second;
-        pom = msg->AddToBuf(&stuff.write_buf);
+        auto &stuff = client_socks_.at(users_.at(un).GetSockId());
+        pom = msg->AddToBuf(&stuff.WrBuf());
         if (pom < 0) {
           std::cerr << "Błedzik [[" << un << "]]. :<\n";
           stuff.Remove();
@@ -259,217 +254,50 @@ int Server::DoWork_() {
 int Server::ReadClients_() {
   int sockets_read = 0;
   for (auto it = client_socks_.begin(); it != client_socks_.end(); ++it) {
-    if (!(it->second.second.ShallRead())
+    if (!(it->second.ShallRead())
         || !(Sel::READ & sel_.Get(it->first))) {
       continue;
     }
-    if (ReadClientSocket_(it->first) >= 0) {
+    // if (ReadClientSocket_(it->first) >= 0) {
+    if (client_socks_.at(it->first).ReadCharsFromSocket() >= 0) {
       ++sockets_read;
     }
   }
   return sockets_read;
 }
 
-int Server::ReadClientSocket_(int fd) {
-  // SocketTCP4 &sock = client_socks_.at(fd).first;
-  SocketStuff &stuff = client_socks_.at(fd).second;
-
-  ssize_t read_ret = read(fd, stuff.read_buf, stuff.BUF_SIZE);
-  if (read_ret < 0) {
-    std::cerr << "Błąd przy czytaniu socketu " << fd
-      << "\n errno: " << std::strerror(errno) << "\n";
-    return -1;
-  } else if (read_ret == 0) {
-    std::cerr << "Na gniazdo przyszło zamknięcie.\n";
-    stuff.Remove();
-    // ZAMKNIĘCIE
-    return 1;
-  }
-  stuff.read_buf[read_ret] = '\0';
-  stuff.read_len = read_ret;
-  stuff.read_processed = 0;
-  std::cerr << "Na socket o numerze " << fd << " przyszło:\n"
-    << stuff.read_buf << "\n";
-  int deal_ret = DealWithReadBuf_(fd);
-  if (deal_ret < 0) {
-    std::cerr << "Był jakiś błąd przy ogarnianiu tego co przyszło z gniazda "
-      << fd << ", zamykanko go przy następnym tym tym.\n";
-    stuff.Remove();
-    return -1;
-  }
-  return 0;
-}
-
-// int Server::RCLoadTo_(int fd, SocketTCP4 *sock, SocketStuff *stuff,
-//    int how_much) {
-//  int/
-// }
-
-int Server::RCResetCm_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
-  stuff->cm_processed = 0;
-  if (stuff->supp && stuff->supp.GetFn()) {
-    DestroyFn fn = stuff->supp.GetDestructor();
-    if (fn) {
-      fn(stuff->strct);
-    }
-    free(stuff->strct);
-    stuff->strct = nullptr;
-    stuff->supp = InstrSupp();
-  }
-  return 0;
-}
-
-int Server::RCMagic_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
-  int chars_to_copy = stuff->read_len - stuff->read_processed;
-  if (chars_to_copy > NQS - stuff->cm_processed) {
-    chars_to_copy = NQS - stuff->cm_processed;
-  }
-  memcpy(&stuff->first_quads[stuff->cm_processed],
-    &stuff->read_buf[stuff->read_processed],
-    chars_to_copy);
-  stuff->read_processed += chars_to_copy;
-  stuff->cm_processed += chars_to_copy;
-  if (stuff->cm_processed < NQS)
-    return 1;  // 1 means that we didn't reach NQS yet
-  if (stuff->magic() != MQ::OWO) {
-    std::cerr << "Nie 'OwO!' :<\n";
-    // stuff->errors.push(stuff->NOT_OWO);
-    return - 1 - 4096;  // Niech będzie że to na razie prawie przypadkowa
-                        // liczba.
-  }
-  return 0;
-}
-
-int Server::RCInstrLd_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
-  int chars_to_copy = stuff->read_len - stuff->read_processed;
-  if (chars_to_copy > 2 * NQS - stuff->cm_processed) {
-    chars_to_copy = 2 * NQS - stuff->cm_processed;
-  }
-  memcpy(&stuff->first_quads[stuff->cm_processed],
-    &stuff->read_buf[stuff->read_processed],
-    chars_to_copy);
-  stuff->read_processed += chars_to_copy;
-  stuff->cm_processed += chars_to_copy;
-  if (stuff->cm_processed < 2 * NQS)
-    return 1;  // 1 means that we didn't reach 2 * NQS yet
-  return 0;
-}
-
-int Server::RCInstr2Ld_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
-  int chars_to_copy = stuff->read_len - stuff->read_processed;
-  if (chars_to_copy > 3 * NQS - stuff->cm_processed) {
-    chars_to_copy = 3 * NQS - stuff->cm_processed;
-  }
-  memcpy(&stuff->first_quads[stuff->cm_processed],
-    &stuff->read_buf[stuff->read_processed],
-    chars_to_copy);
-  stuff->read_processed += chars_to_copy;
-  stuff->cm_processed += chars_to_copy;
-  if (stuff->cm_processed < 3 * NQS)
-    return 1;  // 1 means that we didn't reach 2 * NQS yet
-  return 0;
-}
-int Server::RCExecInstr_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
-  int fn_ret = 0;
-  if (stuff->supp.GetFn()) {
-    fn_ret = stuff->supp.GetFn()(this, fd, stuff, &world_, &Server::PushMsg_);
-  } else {
-    std::cerr << "Nie ma funcksji w tym czymś, chociaż wybór się udał xd\n";
-    return -1;
-  }
-  if (fn_ret < 0) {
-    std::cerr << "W funkcji od obsługi instrukcji wystąpił jakiś błąd :<\n";
-    return fn_ret;
-  } else if (fn_ret > 0) {
-    // Nie doczytało :<
-    return 1;
-  }
-  std::cerr << "RCExecInstr_ - skończono instrukcję.\n";
-  RCResetCm_(fd, sock, stuff);
-  return 0;
-}
-
-int Server::RCChooseFn_(int fd, SocketTCP4 *sock, SocketStuff *stuff) {
-  InstrId instr_id(stuff->instr());
-  if (instructions.count(instr_id) < 1) {
-    std::cerr << "Nie ma instrukcji " << stuff->instr() << " :< \n";
-    stuff->supp = InstrSupp();
-    return -1;
-  }
-  const InstrSupp *supp = &instructions.at(instr_id);
-  if (supp->Expands()) {
-    int pom = RCInstr2Ld_(fd, sock, stuff);
-    if (pom < 0) {
-      std::cerr << "Błąd przy doczytywaniu do wybieranka.\n";
-      return pom;
-    }
-    if (pom > 0) {
-      std::cerr << "nie doczytało \n";
-      return 1;
-    }
-    instr_id = InstrId(stuff->instr(), stuff->instr2());
-    if (instructions.count(instr_id) < 1) {
-      std::cerr << "Nie ma instrukcji " << stuff->instr() << ' '
-        << stuff->instr2() << " :< \n";
-      stuff->supp = InstrSupp();
-      return -1;
-    }
-    supp = &instructions.at(instr_id);
-  }
-  if (!supp->GetFn()) {
-    std::cerr << "Nie ma funkcji lel xd w instrukcji " << stuff->instr();
-    if (stuff->instr2()) {
-      std::cerr << ' ' << stuff->instr2() << "\n";
-    } else {
-      std::cerr << "\n";
-    }
-    stuff->supp = InstrSupp();
-    return -1;
-  } else {
-    stuff->supp = *supp;
-    stuff->strct
-      = reinterpret_cast<InstrStruct *>(malloc(stuff->supp.GetSize()));
-    ConstructFn fn = stuff->supp.GetConstructor();
-    if (fn) {
-      stuff->supp.GetConstructor()(stuff->strct);
-    }
-  }
-  return 0;
-}
-
 int Server::DealWithReadBuf_(int fd) {
-  SocketTCP4 *sock = &client_socks_.at(fd).first;
-  SocketStuff *stuff = &client_socks_.at(fd).second;
+  SocketStuff *stuff = &client_socks_.at(fd);
 
   std::cerr << "int Server::DealWithReadBuf_(int fd)\n";
 
   int pom;
-  while (stuff->read_processed < stuff->read_len) {
-    std::cerr << ":\nchary w komunikacie: " << stuff->cm_processed
-      << "\nprzetworzone chary z gniazda: " << stuff->read_processed
-      << "\nchars read: " << stuff->read_len
+  while (stuff->CharsLeft() > 0) {
+    std::cerr << ":\nchary w komunikacie: " << stuff->CmProcessed()
+      // << "\nprzetworzone chary z gniazda: " << stuff->read_processed_
+      // << "\nchars read: " << stuff->read_len_
       << '\n';
-    if (stuff->cm_processed < 0) {
+    if (stuff->CmProcessed() < 0) {
       std::cerr << "Jakiś okropny błąd :<\n";
       return - 100;
     }
-    if (stuff->cm_processed < NQS) {
-      pom = RCMagic_(fd, sock, stuff);
+    if (stuff->CmProcessed() < NQS) {
+      pom = stuff->ReadMagic();
       if (pom > 0)
         return 0;
       if (pom < 0)
         return pom;
     }
-    if (stuff->cm_processed < 2 * NQS) {
-      pom = RCInstrLd_(fd, sock, stuff);
+    if (stuff->CmProcessed() < 2 * NQS) {
+      pom = stuff->ReadInstr();
       if (pom > 0)
         return 0;
       if (pom < 0)
         return pom;
     }
-    if (stuff->supp.Blank()) {
+    if (stuff->HasInstr()) {
       std::cerr << "Nie mieliśmy insttukcji, a chcemy mieć, ok\n";
-      pom = RCChooseFn_(fd, sock, stuff);
+      pom = stuff->ChooseInstr();
       if (pom > 0) {
         // Nie doczytało :<
         return 1;
@@ -477,15 +305,16 @@ int Server::DealWithReadBuf_(int fd) {
         return pom;
       }
     }
-    pom = RCExecInstr_(fd, sock, stuff);
+    InstrFn fn = stuff->GetInstrFn();
+    pom = fn(this, stuff, &world_, &Server::PushMsg_);
     if (pom > 0) {
-      std::cerr << "RCExecInstr_ zwróciło >0 xd\n";
+      std::cerr << "ExecInstr nieee fn zwróciło >0 xd\n";
       return 0;
     } else if (pom < 0) {
       return pom;
     }
-    // RCResetCm_(fd, sock, stuff);
     std::cerr << "O, wygląda na to, że skończono czytać instrukcję.\n";
+    stuff->ResetCommand();
   }  // while
   std::cerr << "No to ten koniec czytanuia\n";
   return 0;
@@ -498,162 +327,18 @@ int Server::DealWithReadBuf_(int fd) {
 
 int Server::DropSock_(int fd) {
   std::cerr << "Próba dropnięcioa socketu " << fd << "\n";
-  if (socks_to_users_.count(fd) > 0) {
-    DeassocSock_(fd);
-  }
-  RCResetCm_(fd, &client_socks_.at(fd).first, &client_socks_.at(fd).second);
+  // if (socks_to_users_.count(fd) > 0) {
+  // }
   client_socks_.erase(fd);
   return 0;
 }
 
 
-void Server::DeassocSock_(int fd) {
-  std::cerr << "Odłączanie sesji od socketu " << fd << '\n';
-  socks_to_users_.at(fd)->ClrSock();
-  socks_to_users_.erase(fd);
-}
 
-
-void Server::DeassocSess_(SessionId sid) {
-  TempIO q(&std::cerr);
-  int fd = sess_to_users_.at(sid)->GetSock();
-  std::cerr << "Odłączanie sesji " << std::hex << sid << " od gniazda "
-    << std::dec << fd << ".\n";
-  sess_to_users_.at(sid)->ClrSock();
-  socks_to_users_.erase(fd);
-}
 
 
 void Server::SpecialHardcodeInit() {
-  AddSession(0x3131313131313131, Username("fajny ziom"));  // '1'
-  AddSession(0x3232323232323232, Username("Maciek69"));  // '2'
-  AddSession(0x3333333333333333, Username("twoja stara"));  // '3'
-  AddSession(0x6e6e6e6e6e6e6e6e, Username("norbs"));  // 'n'
-  AddSession(0x5757575757575757, Username("Wiedzmin 997"));  // 'W'
-  AddSession(0x6565656565656565, Username("eiti pw"));  // 'e'
-  AddSession(0x6b6b6b6b6b6b6b6b, Username("konfident"));  // 'k'
-  AddSession(0x5f5f5f5f5f5f5f5f, Username("___ __ _ xd"));  // '_'
-  AddSession(0x7070707070707070, Username("paulincia"));  // 'p'
-  AddSession(0x6d6d6d6d6d6d6d6d, Username("marcinPL"));  // 'm'
-  AddSession(0x4242424242424242, Username("BAKSIUv13"));  // 'B'
-  AddSession(0x7373737373737373, Username("smog"));  // 's'
-  AddSession(0x7272727272727272, Username("repozytorium1"));  // 'r'
-  AddSession(0x4c4c4c4c4c4c4c4c, Username("LubiePierogi"));  // 'L'
-  AddSession(0x5454545454545454, Username("Teemo"));  // 'T'
-  AddSession(0x7777777777777777, Username("Mistrz Windowsa"));  // 'w'
-  AddSession(0x4747474747474747, Username("Gaben"));  // 'G'
-  AddSession(0x4747474747474747, Username("pomaranczka"));  // 'G'
-  AddSession(0x7878787878787878, Username("Teemo"));  // 'x'
-  AddSession(0x3535353535353535, Username("mrrrauuu  hehe"));  // '5'
-  AddSession(0x6161616161616161, Username("ZabujcaZla"));  // 'a'
-  AddSession(0x3939393939393939, Username("djiwd9qwdk"));  // '9'
-  AddSession(0x4b4b4b4b4b4b4b4b, Username("jestem kotem"));  // 'K'
-  AddSession(0x2020202020202020, Username("1 2 3"));  // ' '
-  AddSession(0x3030303030303030, Username("1_1"));  // '0'
-  AddSession(0x4a4a4a4a4a4a4a4a, Username("Samurai Jack"));  // 'J'
-}
 
-int Server::AddSession(SessionId sid, const Username &name) {
-  std::ios ios_state(nullptr);
-  ios_state.copyfmt(std::cerr);
-  std::cerr << "Dodawanie sesji: \"" << name << "\" : " << std::hex
-    << sid << "\n";
-  if (sid == 0) {
-    std::cerr << "Nie można dodać takiej sesji, bo 0 nie może być :<\n";
-    std::cerr.copyfmt(ios_state);
-    return -3;
-  }
-  if (!(Username::GOOD & name.GetState())) {
-    std::cerr << "Nie można dodać takiej sesji, bo nazwa jest zła: "
-      << name.GetState() << '\n';
-    std::cerr.copyfmt(ios_state);
-    return -4;
-  }
-  if (users_.count(name) > 0) {
-    std::cerr << "Użytkownik o takiej nazwie jest już zalogowany na sesji "
-      << std::hex << users_.at(name).GetSession() << ".\n";
-    std::cerr.copyfmt(ios_state);
-    return -1;
-  } else if (sess_to_users_.count(sid) > 0) {
-    std::cerr << "Ta sesja jest już zajęta przez użytkownika o nazwie \""
-      << sess_to_users_.at(sid)->GetName() << "\".\n";
-    std::cerr.copyfmt(ios_state);
-    return -2;
-  } else {
-    auto emplace_ret
-      = users_.emplace(name, LoggedUser(name, sid));
-    if (!emplace_ret.second) {
-      std::cerr << "Yyyy, czemu???\n";
-      std::terminate();
-    }
-    LoggedUser *ptr = &emplace_ret.first->second;
-    sess_to_users_.emplace(sid, ptr);
-    std::cerr << "Udało się dodać :>\n";
-  }
-  std::cerr.copyfmt(ios_state);
-  return 0;
-}
-
-void Server::DelSession(SessionId sid) {
-  TempIO q(&std::cerr);
-  std::cerr << "Próba usunięcia sesji " << std::hex << sid << '\n';
-  if (sess_to_users_.count(sid) < 1) {
-    std::cerr << "Nie ma takiej sesji :<\n";
-    return;
-  }
-  LoggedUser &user = *sess_to_users_.at(sid);
-  int sock_fd = user.GetSock();
-  const Username &name = user.GetName();
-  if (sock_fd >= 0) {
-    socks_to_users_.erase(sock_fd);
-  }
-  sess_to_users_.erase(sid);
-  users_.erase(name);
-}
-
-int Server::AssocSessWithSock(SessionId sid, int fd) {
-  TempIO q(&std::cerr);
-  std::cerr << "Próbuję łączyć gniazdo " << std::dec << fd << " z sesją "
-    << std::hex << sid << ".\n";
-
-  // Sprawdźmy, czy sesja, do której chcemy się połączyć, istnieje.
-  if (sess_to_users_.count(sid) < 1) {
-    std::cerr << "Nie ma takiej sesji\n";
-    return -1;
-  }
-  LoggedUser &user = *sess_to_users_.at(sid);
-  const Username &name = user.GetName();
-
-  // Sprawdźmy, czy ten fd nie ma już jakiejś sesji.
-  if (socks_to_users_.count(fd) > 0) {
-    SessionId sid2 = socks_to_users_.at(fd)->GetSession();
-    Username un = socks_to_users_.at(fd)->GetName();
-    std::cerr << "Socket ma już zajętą sesję: " << sid2 << " : " << un << '\n';
-    return -2;
-  }
-
-  // Tutaj sprawdzimy, czy sesja, którą chcemy zająć nie jest już zajęta.
-  int old_fd = user.GetSock();
-  if (old_fd >= 0) {
-    std::cerr << "Użytkownik \"" << name << "\" ta sesja jest już zajęta\n"
-      << "przez gniazdo " << std::dec << old_fd << ", ale "
-      << "na razie nic z tym nie robię :(\n";
-    return -3;
-  }
-
-  // Wszystko dobrze, zajmujemy.
-  auto emplace_ret = socks_to_users_.emplace(fd, &user);
-  if (!emplace_ret.second) {
-    std::cerr << "Coś jakoś nie dodało nie wiem czemu :/\n";
-    std::terminate();
-    return -4;
-  }
-  user.SetSock(fd);
-
-  // ok
-  std::cerr << "Gniazdo " << std::dec << fd << " zajęło sesję [ " << std::hex
-    << sid << " ; '" << name << "' ]\n";
-  return 0;
 }
 
 int Server::LoopTick_() {
@@ -679,11 +364,28 @@ int Server::LoopTick_() {
   return 0;
 }
 
+int Server::LogInUser(const Username &un, const std::string &pw,
+    SockId sock_id, bool generate_response) {
+  if (!un.Good()) {
+    std::cerr << "Podana nazwaw jest niepoprawna!!!\n";
+    PushMsg_(new Sig(un, MQ::ERR_BAG_LOG, false));
+    return -1;
+  }
+  if (IsLogged_(un)) {
+    std::cerr << "user [[" << un << "]] jest zalogowany już\n";
+    return -1;
+  }
+  auto emplace_ret = users_.emplace(un, std::move(LoggedUser(un, sock_id)));
+  LoggedUser *lu = &emplace_ret.first->second;
+  socks_to_users_.emplace(sock_id, lu);
+  return 0;
+}
+
 int Server::DeleteMarkedSocks_() {
   auto it = client_socks_.begin();
   while (it != client_socks_.end()) {
-    if (it->second.second.ShallBeRemoved()) {
-      int fd = it->second.first.GetFD();
+    if (it->second.ShallBeRemoved()) {
+      int fd = it->first;
       ++it;
       DropSock_(fd);
     } else {

@@ -1,7 +1,7 @@
 // Copyright 2019 Piotrek
 
-#ifndef SERVER_SEND_MSGS_SESS_CAPT_OK_H_
-#define SERVER_SEND_MSGS_SESS_CAPT_OK_H_
+#ifndef SERVER_SEND_MSGS_LOG_OK_H_
+#define SERVER_SEND_MSGS_LOG_OK_H_
 
 #include <string>
 #include <list>
@@ -11,17 +11,17 @@
 
 namespace tin {
 
-class SessCaptOk : public OutMessage {
+class LogOk : public OutMessage {
  public:
-  SessCaptOk() {}
-  explicit SessCaptOk(const Username &un)
+  LogOk() {}
+  explicit LogOk(const Username &un)
       : username_(un) {}
 
-  virtual ~SessCaptOk() {}
+  virtual ~LogOk() {}
 
   Username GetUsername() {return username_;}
 
-  virtual std::string GetTypeName() {return "SessCaptOk";}
+  virtual std::string GetTypeName() {return "LogOk";}
   virtual bool Broadcast() {return false;}
   virtual std::list<Username> Users() {
     return username_.Good() ?
@@ -30,7 +30,7 @@ class SessCaptOk : public OutMessage {
   virtual int AddToBuf(WriteBuf *buf);
  private:
   Username username_;
-};  // class UserMsg
+};  // class LogOk
 }  // namespace tin
 
-#endif  // SERVER_SEND_MSGS_SESS_CAPT_OK_H_
+#endif  // SERVER_SEND_MSGS_LOG_OK_H_
