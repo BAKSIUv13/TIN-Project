@@ -68,6 +68,8 @@ class Server {
   int LogInUser(const Username &un, const std::string &pw, SockId,
     bool generate_response);
 
+  int LogOutUser(SockId, bool generate_response);
+
  private:
   int PushMsg_(std::unique_ptr<OutMessage> msg);
   OutMessage *FirstMsg_();

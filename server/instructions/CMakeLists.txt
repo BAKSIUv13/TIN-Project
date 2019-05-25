@@ -1,6 +1,8 @@
 set(SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/log_in.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/log_in.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/log_out.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/log_out.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/say.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/say.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/move_mouse.cc"

@@ -6,7 +6,7 @@
 
 #include "instructions/log_in.h"
 
-#include "send_msgs/log_ok.h"
+#include "send_msgs/sig.h"
 
 namespace tin {
 
@@ -19,6 +19,11 @@ int LogIn::Fn(Server *server, SocketStuff *stuff, World *, MsgPushFn push_fn) {
       return pom;
     }
   }
+  if (s->un_len_ > Username::MAX_NAME_LEN) {
+    (server->*push_fn)(std::unique_ptr<OutMessage>(
+      new Sig(stuff->GetId(), MQ::ERRR_LONG_UN, true)));
+    return -1;
+  }
   if (stuff->CmProcessed() < s->PwLen_()) {
     pom = stuff->ReadCpp11String(s->Un_(), s->un_len_, &s->un_);
     if (pom != 0) {
@@ -30,6 +35,11 @@ int LogIn::Fn(Server *server, SocketStuff *stuff, World *, MsgPushFn push_fn) {
     if (pom != 0) {
       return pom;
     }
+  }
+  if (s->pw_len_ > 32) {
+    (server->*push_fn)(std::unique_ptr<OutMessage>(
+      new Sig(stuff->GetId(), MQ::ERRR_LONG_PW, true)));
+    return -1;
   }
   if (stuff->CmProcessed() < s->End_()) {
     pom = stuff->ReadCpp11String(s->Pw_(), s->pw_len_, &s->pw_);

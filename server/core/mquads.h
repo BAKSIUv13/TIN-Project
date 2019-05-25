@@ -14,12 +14,18 @@ constexpr NQuad
   // CAPTURE_SESSION {"sess"},
   // SESSION_ACCEPTED {"okej"},
 
-  ERR_BAG_LOG {"badl"},
+  ERR_BAD_LOG {"badl"},
   ERR_BANNED {"band"},
   ERR_WAS_LOGGED {"wasl"},
+  ERR_ACC_OCCUPIED {"acoc"},
+  ERR_NOT_LOGGED {"nlog"},
   ERR_OTHER {"loer"},
 
+  ERRR_LONG_UN {"LNun"},
+  ERRR_LONG_PW {"LNpw"},
+
   CLI_LOGIN {"logo"},
+  CLI_LOGOUT {"lout"},
   CLI_MOUSE {"maus"},
   CLI_MESG {"mesg"},
 
@@ -35,6 +41,7 @@ constexpr NQuad
   SERVER_NOTICE {"ueuo"},
 
   SERV_LOGIN_OK {"LGOK"},
+  SERV_LOG_OUT {"LOFF"},
   SERV_MOUSE {"MAUS"},
   SERV_MESG {"MESG"},
 

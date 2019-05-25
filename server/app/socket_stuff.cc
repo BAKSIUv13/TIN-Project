@@ -56,29 +56,4 @@ int SocketStuff::ChooseInstr() {
   return 0;
 }
 
-/*
-int SocketStuff::ExecInstr() {
-  int fn_ret = 0;
-  auto fn = supp_.GetFn();
-  if (fn) {
-    // fn_ret = fn(this, socket_.GetFC(), this, &world_, &Server::PushMsg_);
-    fn_ret = fn(serv_, this, &serv_->GetWorld(), );
-    // poxzniej dpisze
-    std::cerr << "o nieeeeeeeeeeeeeeeeeeeeeeee\n";
-  } else {
-    std::cerr << "Nie ma funcksji w tym czymś, chociaż wybór się udał xd\n";
-    return -1;
-  }
-  if (fn_ret < 0) {
-    std::cerr << "W funkcji od obsługi instrukcji wystąpił jakiś błąd :<\n";
-    return fn_ret;
-  } else if (fn_ret > 0) {
-    // Nie doczytało :<
-    return 1;
-  }
-  std::cerr << "ExecInstr - skończono instrukcję.\n";
-  return 0;
-}
-*/
-
 }  // namespace tin

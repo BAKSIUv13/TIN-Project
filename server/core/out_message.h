@@ -47,6 +47,10 @@ class OutMessage {
 
   virtual int AddToBuf(WriteBuf *) = 0;
 };
+
+// template<typename T>
+// std::unique_ptr<OutMessage> OMsg
+
 }  // namespace tin
 
 #endif  // SERVER_CORE_OUT_MESSAGE_H_

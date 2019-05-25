@@ -17,6 +17,7 @@
 
 #include "send_msgs/sig.h"
 #include "send_msgs/log_ok.h"
+#include "send_msgs/log_off.h"
 
 static constexpr int STDIN_FD = STDIN_FILENO;
 
@@ -387,29 +388,35 @@ int Server::LogInUser(const Username &un, const std::string &pw,
   if (socks_to_users_.count(sock_id) > 0) {
     std::cerr << "gniazdo o id " << sock_id << " i fd " <<
       client_socks_.at(sock_id).GetSocket().GetFD() << " jest już zalogowane\n";
-    PushMsg_(std::unique_ptr<OutMessage>(
-      new Sig(sock_id, MQ::ERR_OTHER, false, "no już sie zalogowałes no")));
+    if (generate_response)
+      PushMsg_(std::unique_ptr<OutMessage>(
+        new Sig(sock_id, MQ::ERR_WAS_LOGGED, false,
+        "no już sie zalogowałes no")));
     return -1;
   }
   if (!un.Good()) {
     std::cerr << "Podana nazwaw jest niepoprawna!!!\n";
-    PushMsg_(std::unique_ptr<OutMessage>(
-      new Sig(sock_id, MQ::ERR_BAG_LOG, false)));
+    if (generate_response)
+      PushMsg_(std::unique_ptr<OutMessage>(
+        new Sig(sock_id, MQ::ERR_BAD_LOG, false,
+        "nie można mieć takiej nazwy")));
     return -1;
   }
   auto it = users_.find(un);
   if (it != users_.end()) {
     std::cerr << "user [[" << un << "]] jest zalogowany już\n"
       << "[[" << it->first << "]]\n";
-    PushMsg_(std::unique_ptr<OutMessage>(
-      new Sig(sock_id, MQ::ERR_WAS_LOGGED, false)));
+    if (generate_response)
+      PushMsg_(std::unique_ptr<OutMessage>(
+        new Sig(sock_id, MQ::ERR_ACC_OCCUPIED, false)));
     return -1;
   }
   auto emplace_ret = users_.emplace(un, std::move(LoggedUser(un, sock_id)));
   if (emplace_ret.second == false) {
     std::cerr << "ojej, nie udało się dodać usera do mapy :\n";
-    PushMsg_(std::unique_ptr<OutMessage>(
-      new Sig(sock_id, MQ::ERR_OTHER, false)));
+    if (generate_response)
+      PushMsg_(std::unique_ptr<OutMessage>(
+        new Sig(sock_id, MQ::ERR_OTHER, false)));
     return -1;
   }
   LoggedUser *lu = &emplace_ret.first->second;
@@ -418,15 +425,41 @@ int Server::LogInUser(const Username &un, const std::string &pw,
     std::cerr << "nie udało się uzupełnić mapy z id socketa na userów nowym "
       "userem :<\n";
     auto rm = users_.erase(un);
-    PushMsg_(std::unique_ptr<OutMessage>(
-      new Sig(sock_id, MQ::ERR_OTHER, false)));
+    if (generate_response)
+      PushMsg_(std::unique_ptr<OutMessage>(
+        new Sig(sock_id, MQ::ERR_OTHER, false)));
     assert(rm == 1);
     return -1;
   }
   std::cerr << "zalogowano [[" << un << "]]\n";
-  PushMsg_(std::unique_ptr<OutMessage>(new LogOk(sock_id)));
+  if (generate_response)
+    PushMsg_(std::unique_ptr<OutMessage>(new LogOk(sock_id)));
   return 0;
 }
+
+int Server::LogOutUser(SockId id, bool generate_response) {
+  std::cerr << "Próba wylogowania socketu " << id << '\n';
+  if (socks_to_users_.count(id) < 1) {
+    std::cerr << "Ten socket nie jest zalogowany.\n";
+    if (client_socks_.count(id) < 1) {
+      std::cerr << "Nawet go nie ma xd\n";
+    }
+    if (generate_response)
+      PushMsg_(std::unique_ptr<OutMessage>(
+        new Sig(id, MQ::ERR_NOT_LOGGED, false)));
+    return -1;
+  }
+  Username un = socks_to_users_.at(id)->GetName();
+  int rm = users_.erase(un);
+  assert(rm == 1);
+  rm = socks_to_users_.erase(id);
+  assert(rm == 1);
+  std::cerr << "Na tym sockecie był zalogowany [[" << un << "]]\n";
+  if (generate_response)
+    PushMsg_(std::unique_ptr<OutMessage>(new LogOff(id)));
+  return 0;
+}
+
 
 int Server::DeleteMarkedSocks_() {
   auto it = client_socks_.begin();

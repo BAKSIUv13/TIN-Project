@@ -4,6 +4,7 @@
 #include "core/mquads.h"
 
 #include "instructions/log_in.h"
+#include "instructions/log_out.h"
 #include "instructions/say.h"
 #include "instructions/move_mouse.h"
 
@@ -16,6 +17,13 @@ const std::map<InstrId, InstrSupp> Server::instructions {
       sizeof(LogIn),
       &LogIn::Construct,
       &LogIn::Destroy)},
+
+  {InstrId(MQ::CLI_LOGOUT),
+    InstrSupp(
+      &LogOut::Fn,
+      sizeof(LogOut),
+      &LogOut::Construct,
+      &LogOut::Destroy)}
 /*
   {InstrId(MQ::REQUEST_LOGIN),
     InstrSupp(

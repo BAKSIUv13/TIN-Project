@@ -35,7 +35,7 @@ LoggedUser &LoggedUser::operator=(LoggedUser &&other) {
 
 void LoggedUser::Clear_() {
   name_ = Username();
-  sock_id_ = -1;
+  sock_id_ = 0;
 }
 
 void LoggedUser::Move_(LoggedUser *other) {
