@@ -3,54 +3,39 @@
 
 """Main program module."""
 
-from network_and_data import network
-from network_and_data import receiver
-from network_and_data import sender
+from network_and_data import network, receiver, sender
 
-HOST = 'localhost'
-PORT = 22345
+def main():
+    """Pydocstyle is annoying."""
+    host = 'localhost'
+    port = 22345
 
-# interface to sockets
+    # interface to sockets
 
-CLIENT_SOCKET = network.prepare_socket(HOST, PORT)
+    client_socket = network.prepare_socket(host, port)
 
-RECV_READ_PIPE, RECV_WRITE_PIPE = network.prepare_error_pipe()
-SEND_READ_PIPE, SEND_WRITE_PIPE = network.prepare_error_pipe()
+    recv_read_pipe, recv_write_pipe = network.prepare_error_pipe()
+    send_read_pipe, send_write_pipe = network.prepare_error_pipe()
 
-RECEIVER = receiver.Receiver(CLIENT_SOCKET, RECV_READ_PIPE, SEND_WRITE_PIPE)
-SENDER = sender.Sender(CLIENT_SOCKET, SEND_READ_PIPE, RECV_WRITE_PIPE)
+    my_receiver = receiver.Receiver(client_socket, recv_read_pipe, send_write_pipe)
+    my_sender = sender.Sender(client_socket, send_read_pipe, recv_write_pipe)
 
-RECEIVER.start()
-SENDER.start()
+    my_receiver.start()
+    my_sender.start()
 
-"""
+    # my code
 
-SENDER.put_byte_array(network.string_to_byte_array('OwO!sesskkkkkkkk'))
-SENDER.put_byte_array(network.string_to_byte_array('OwO!msg0'))
-SENDER.put_byte_array(network.string_to_byte_array('1234'))
-SENDER.put_byte_array(network.string_to_byte_array('tekstwiadotekstwiadotekstwiado'))
+    my_sender.put_int32_value(589505316)
+
+    print(my_receiver.get_int32_value())
 
 
-ARRAY = RECEIVER.get_byte_array(8 + 8 + 16 + 4 + 30)
+    # end my code
 
-for byte in ARRAY:
-    print(chr(byte))
+    my_receiver.join()
+    my_sender.join()
 
-"""
+    client_socket.close()
 
-"""
-ARRAY = network.int_to_byte_array_4(13)
-
-for byte in ARRAY:
-    string = chr(byte)
-    byte_array = network.string_to_byte_array(string)
-    SENDER.put_byte_array(byte_array)
-
-"""
-
-RECEIVER.join()
-SENDER.join()
-
-CLIENT_SOCKET.close()
-
-print("The end!")
+if __name__ == '__main__':
+    main()
