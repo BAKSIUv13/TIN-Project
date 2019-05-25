@@ -1,4 +1,4 @@
-// Copyright 2019 piotrek
+// Copyright 2019 Piotrek
 
 #ifndef SERVER_APP_SERVER_H_
 #define SERVER_APP_SERVER_H_
@@ -21,6 +21,7 @@
 #include "core/sel.h"
 #include "core/instr_id.h"
 #include "app/instr_supp.h"
+#include "core/sock_id.h"
 
 namespace tin {
 
@@ -45,33 +46,38 @@ class Server {
   // Nicee function which sets all necessary thigs in server xd
   void SpecialHardcodeInit();
 
-  int AddSession(SessionId, const Username &);
-
-  // Delete session and deassocs it if necessary.
-  void DelSession(SessionId);
-  int AssocSessWithSock(SessionId, int fd);
-
   // From other thread?? This fn is blocking chyba.
   int StopRun();
 
   // Returns username assigned to fd. Blank if fd does not have session.
   Username SockToUn(int fd);
 
-  Username SidToUn(SessionId);
+  // TheConfig &GetConf() {return conf_;}
+  // AccountManager &GetAccountManager() {return am_;}
 
   // World &GetWorld() {return world_;}
-  TheConfig &GetConf() {return conf_;}
-  AccountManager &GetAccountManager() {return am_;}
 
+  // xd
+  const InstrSupp *GetInstr(const InstrId &id) {
+    if (instructions.count(id) < 1) {
+      return nullptr;
+    }
+    return &instructions.at(id);
+  }
 
+  int LogInUser(const Username &un, const std::string &pw, SockId,
+    bool generate_response);
 
+  int LogOutUser(SockId, bool generate_response);
 
  private:
   int PushMsg_(std::unique_ptr<OutMessage> msg);
   OutMessage *FirstMsg_();
   int PopMsg_();
-  void DeassocSess_(SessionId);
-  void DeassocSock_(int fd);
+
+  bool IsLogged_(const Username &un) {
+    return users_.count(un) > 0;
+  }
 
   // Reset state of server???
   int Reset_();
@@ -86,7 +92,7 @@ class Server {
   int RegisterSockFromAccept_(SocketTCP4 &&);
 
   // Removes socket from the server.
-  int DropSock_(int fd);
+  int DropSock_(SockId id);
 
   // Sets bitset of servers's 'select' object.
   int FeedSel_();
@@ -103,11 +109,8 @@ class Server {
   // Reads client sockets and deal with it.
   int ReadClients_();
 
-  // Do some work with all received stuff.
-  int DoWork_();
-
-  // Reads one client socket.
-  int ReadClientSocket_(int fd);
+  // Write messages to buffers to send.
+  int MsgsToBufs_();
 
   // Deals with read data from client socket.
   int DealWithReadBuf_(int fd);
@@ -115,29 +118,12 @@ class Server {
   // Ahenles stdin 'scripts'.
   int DealWithStdinBuf_(const char *);
 
-  // Loads bytes expected as magic start word and checks if we have 'OwO!'.
-  // RC - Read Client
-  int RCMagic_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
-
-  // Loads instruction number.
-  int RCInstrLd_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
-
-  // Loads second instruction number.
-  int RCInstr2Ld_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
-
-  // Chooses and executes instruction.
-  int RCExecInstr_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
-
-  int RCChooseFn_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
-
-  //// Tries to check if we have some number of bytes in buffer.
-  // int RCLoadFirst_(int fd, SocketTCP4 *sock, SocStuff *stuff, int how_much);
-
-  // Resets 'state of machine' that coś tam coś tam.
-  int RCResetCm_(int fd, SocketTCP4 *sock, SocketStuff *stuff);
-
   // Deletes sockets marked to delete.
   int DeleteMarkedSocks_();
+
+  int NextSockId_() {
+    return next_sock_id_++;
+  }
 
   // This variable tells if server is now running.
   bool runs_;
@@ -145,13 +131,14 @@ class Server {
   World world_;
   Sel sel_;
   SocketTCP4 listening_sock_;
-  std::map<int, std::pair<SocketTCP4, SocketStuff> > client_socks_;
+  std::map<SockId, SocketStuff> client_socks_;
   std::map<Username, LoggedUser> users_;
-  std::map<SessionId, LoggedUser *> sess_to_users_;
-  std::map<int, LoggedUser *> socks_to_users_;
+  std::map<SockId, LoggedUser *> socks_to_users_;
   TheConfig conf_;
   AccountManager am_;
   std::list<std::unique_ptr<OutMessage> > messages_to_send_;
+
+  SockId next_sock_id_;
 
   // Pipe that may be used to tell the server to stop.
   int end_pipe_[2];

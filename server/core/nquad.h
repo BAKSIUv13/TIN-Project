@@ -9,6 +9,7 @@
 #include <cstring>
 #include <type_traits>
 #include <array>
+#include <string>
 
 namespace tin {
 
@@ -74,6 +75,10 @@ struct NQuad {
 
   std::array<char, 4> CharArray() const {
     return *reinterpret_cast<const std::array<char, 4> *>(&raw_uint);
+  }
+
+  void AppendToCpp11String(std::string *s) const {
+    s->append(this->CStr(), sizeof(*this));
   }
 
   const char *CStr() const {return reinterpret_cast<const char *>(&raw_uint);}

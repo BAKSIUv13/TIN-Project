@@ -4,15 +4,14 @@
 #include <utility>
 #include <string>
 
-#include "send_msgs/sess_capt_ok.h"
+#include "send_msgs/log_off.h"
 #include "core/mquads.h"
 
 namespace tin {
-int SessCaptOk::AddToBuf(WriteBuf *buf) {
-  int NQS = sizeof(NQuad);
+int LogOff::AddToBuf(WriteBuf *buf) {
   std::string str;
-  str.append(MQ::OWO.CStr(), NQS);
-  str.append(MQ::SESSION_ACCEPTED.CStr(), NQS);
+  MQ::OWO.AppendToCpp11String(&str);
+  MQ::SERV_LOG_OUT.AppendToCpp11String(&str);
   return buf->Add(str);
 }
 }  // namespace tin

@@ -159,4 +159,11 @@ void Username::ZeroBad_() {
   }
 }
 
+int Username::Len() const noexcept {
+  if (!Good()) {
+    return 0;
+  }
+  return strnlen(c_, MAX_NAME_LEN);
+}
+
 }  // namespace tin

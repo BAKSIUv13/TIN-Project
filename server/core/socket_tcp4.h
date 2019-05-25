@@ -35,8 +35,8 @@ class SocketTCP4 {
   int Close();
   int Shutdown(int how);
 
-  Status GetStatus() {return status_;}
-  int GetFD() {return fd_;}  // This shall be used for 'select'.
+  Status GetStatus() const {return status_;}
+  int GetFD() const {return fd_;}  // This shall be used for 'select'.
 
  private:
   static const struct ACCEPT_t {} ACCEPT;

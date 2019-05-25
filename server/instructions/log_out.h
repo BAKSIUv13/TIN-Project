@@ -1,34 +1,29 @@
 // Copyright 2019 Piotrek
 
-#ifndef SERVER_INSTRUCTIONS_MOVE_MOUSE_H_
-#define SERVER_INSTRUCTIONS_MOVE_MOUSE_H_
+#ifndef SERVER_INSTRUCTIONS_LOG_OUT_H_
+#define SERVER_INSTRUCTIONS_LOG_OUT_H_
 
 #include <iostream>
+#include <string>
 
 #include "core/instr_struct.h"
 #include "core/nquad.h"
-#include "app/session.h"
 #include "app/server.h"
 
 namespace tin {
-class MoveMouse : public InstrStruct {
+class LogOut : public InstrStruct {
  public:
   static constexpr int START = INSTR + NQS;
-  static constexpr int END = 4 * sizeof(NQuad);
+  static constexpr int END = START + NQS;
 
-  MoveMouse() {}
-  virtual ~MoveMouse() {}
+  LogOut() {}
+  virtual ~LogOut() {}
   static int Fn(Server *, SocketStuff *, World *, MsgPushFn);
   static void Construct(InstrStruct *);
   static void Destroy(InstrStruct *);
-
- private:
-  Username un_;
-  double x;
-  double y;
 };
 
 
 }  // namespace tin
 
-#endif  // SERVER_INSTRUCTIONS_MOVE_MOUSE_H_
+#endif  // SERVER_INSTRUCTIONS_LOG_OUT_H_
