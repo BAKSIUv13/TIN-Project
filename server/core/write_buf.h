@@ -28,7 +28,7 @@ class WriteBuf {
   constexpr int Place() const {return Good() ? SIZE - len_ : 0;}
 
  private:
-  constexpr int GetAt_(int x) {
+  constexpr int GetAt_(int x) const noexcept {
     return (x + start_) % SIZE;
   }
 

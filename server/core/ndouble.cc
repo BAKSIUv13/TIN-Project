@@ -1,6 +1,6 @@
 // Copyright 2019 Piotrek
 
-#include "core/nquad.h"
+#include "core/ndouble.h"
 
 namespace tin {
 }  // namespace tin

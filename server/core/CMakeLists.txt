@@ -18,4 +18,6 @@ set(SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/out_message.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/out_message.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/sock_id.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ndouble.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ndouble.cc"
 )

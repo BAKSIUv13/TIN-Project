@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cassert>
 #include <memory>
+#include <utility>
 
 #include "core/socket_tcp4.h"
 #include "core/nquad.h"
@@ -36,8 +37,9 @@ class SocketStuff {
 
   static constexpr int NQS = sizeof(NQuad);
 
-  explicit SocketStuff(Server *s, SockId id)
+  explicit SocketStuff(Server *s, SockId id, SocketTCP4 &&socket)
       : serv_(s),
+        socket_(std::move(socket)),
         shall_read_var_(false),
         shall_be_removed_(RemoveEnum::NO),
         cm_processed_(0), msg_len_(0), msg_processed_(0), strct_(nullptr),
@@ -141,7 +143,7 @@ class SocketStuff {
     char *cp_dest_ptr = dest != nullptr ?
       &(reinterpret_cast<char *>(dest)[cp_dest_start]) :
       nullptr;
-    int n = CountCopy_(end - cm_processed_);
+    int n = CountCopy_(end);
     if (dest != nullptr) {
       memcpy(cp_dest_ptr, cp_src_ptr, n);
     }
@@ -165,7 +167,7 @@ class SocketStuff {
       return -1;
     }
     char *cp_src_ptr = &(reinterpret_cast<char *>(read_buf_)[msg_processed_]);
-    int n = CountCopy_(end - cm_processed_);
+    int n = CountCopy_(end);
     if (dest != nullptr) {
       dest->append(cp_src_ptr, n);
     }
@@ -186,6 +188,9 @@ class SocketStuff {
     return !supp_.Blank();
   }
 
+  SocketTCP4 &GetSocket() {
+    return socket_;
+  }
 
   // ile jeszczse
   constexpr int CharsLeft() const {
@@ -243,6 +248,61 @@ class SocketStuff {
     return 0;
   }
 
+
+  int DealWithReadBuf(World *w, MsgPushFn push_fn) {
+    std::cerr << "int DealWithReadBuf()\n";
+    std::cerr << "Gniazdo o id " << id_ << " i fd " <<
+      GetSocket().GetFD() << '\n';
+
+    int pom;
+    while (CharsLeft() > 0) {
+      std::cerr << "chary w komunikacie: " << CmProcessed()
+        << "\nprzetworzone chary z gniazda: " << msg_processed_
+        << "\nchars read: " << msg_len_
+        << '\n';
+      if (CmProcessed() < 0) {
+        std::cerr << "Jakiś okropny błąd :<\n";
+        return - 100;
+      }
+      if (CmProcessed() < NQS) {
+        pom = ReadMagic();
+        if (pom > 0)
+          return 0;
+        if (pom < 0)
+          return pom;
+      }
+      if (CmProcessed() < 2 * NQS) {
+        pom = ReadInstr();
+        if (pom > 0)
+          return 0;
+        if (pom < 0)
+          return pom;
+      }
+      if (!HasInstr()) {
+        std::cerr << "Nie mieliśmy insttukcji, a chcemy mieć, ok\n";
+        pom = ChooseInstr();
+        if (pom > 0) {
+          // Nie doczytało :<
+          return 1;
+        } else if (pom < 0) {
+          return pom;
+        }
+      }
+      InstrFn fn = GetInstrFn();
+      pom = fn(serv_, this, w, push_fn);
+    if (pom > 0) {
+      std::cerr << "ExecInstr nieee fn zwróciło >0 xd\n";
+      return 0;
+    } else if (pom < 0) {
+      return pom;
+    }
+    std::cerr << "O, wygląda na to, że skończono czytać instrukcję.\n";
+    ResetCommand();
+  }  // while
+  std::cerr << "No to ten koniec czytanuia\n";
+  return 0;
+}
+
   // void CopyToCpp11String(std::string *dest, std::string::size_type how_much)
   // {
   //   dest->append(&read_buf[msg_processed], how_much);
@@ -259,8 +319,8 @@ class SocketStuff {
 
 
   // Counts how many chars can we copy at this time.
-  constexpr int CountCopy_(int how_much) const {
-    return std::min(msg_len_ - msg_processed_, how_much - cm_processed_);
+  constexpr int CountCopy_(int to) const {
+    return std::min(msg_len_ - msg_processed_, to - cm_processed_);
   }
 
 

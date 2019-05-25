@@ -16,6 +16,7 @@
 #include "core/mquads.h"
 
 #include "send_msgs/sig.h"
+#include "send_msgs/log_ok.h"
 
 static constexpr int STDIN_FD = STDIN_FILENO;
 
@@ -90,10 +91,10 @@ int Server::FeedSel_() {
       sock_it != client_socks_.end();
       ++sock_it) {
     if (sock_it->second.ShallRead()) {
-      sel_.AddFD(sock_it->first, Sel::READ);
+      sel_.AddFD(sock_it->second.GetSocket().GetFD(), Sel::READ);
     }
     if (sock_it->second.ShallWrite()) {
-      sel_.AddFD(sock_it->first, Sel::WRITE);
+      sel_.AddFD(sock_it->second.GetSocket().GetFD(), Sel::WRITE);
     }
   }
   return 0;
@@ -102,7 +103,7 @@ int Server::FeedSel_() {
 int Server::RegisterSockFromAccept_(SocketTCP4 &&sock) {
   SockId id = NextSockId_();
   auto emplace_ret = client_socks_.emplace(id,
-    SocketStuff {this, id});
+    SocketStuff {this, id, std::move(sock)});
   if (!emplace_ret.second) {
     std::cerr << "Nie udało się dodać socketu do mapy z socketami :<\n"
       "id: " << id
@@ -192,24 +193,28 @@ int Server::WriteToSocks_() {
   int sockets_written = 0;
   for (auto it = client_socks_.begin(); it != client_socks_.end(); ++it) {
     if (!(it->second.ShallWrite())
-        || !(Sel::WRITE & sel_.Get(it->first))) {
+        || !(Sel::WRITE & sel_.Get(it->second.GetSocket().GetFD()))) {
       continue;
     }
     WriteBuf &swb = it->second.WrBuf();
-    int pom = swb.Get(buf, WRT_BUF);
-    if (pom < 0) {
+    int loaded_from_buf = swb.Get(buf, WRT_BUF);
+    if (loaded_from_buf < 0) {
       // źle hehe
       it->second.Remove();
       continue;
     }
-    int pom2 = write(it->first, buf, pom);
-    if (pom2 < 0) std::terminate();
-    if (pom2 == 0) {
+    int written = write(it->second.GetSocket().GetFD(), buf, loaded_from_buf);
+    if (written < 0) {
+      // źle hehe
+      it->second.Remove();
+      continue;
+    }
+    if (written == 0) {
       // chyba zamknięte
       std::cerr << "zamknięte??\n";
       it->second.Remove();
     }
-    swb.Pop(pom2);
+    swb.Pop(written);
     ++sockets_written;
   }
   return sockets_written;
@@ -217,30 +222,32 @@ int Server::WriteToSocks_() {
 
 int Server::DoWork_() {
   OutMessage *msg = nullptr;
-  int pom;
-  while ((msg = FirstMsg_())) {
+  int added_to_buf;
+  while ((msg = FirstMsg_()) != nullptr) {
     if (msg->Broadcast()) {
       for (auto &x : client_socks_) {
         // Jeszcze pomińmy niezalogowane gniazda:
         if (socks_to_users_.count(x.first) < 1) {
           continue;
         }
-        pom = msg->AddToBuf(&x.second.WrBuf());
-        if (pom < 0) {
+        added_to_buf = msg->AddToBuf(&x.second.WrBuf());
+        if (added_to_buf < 0) {
           std::cerr << "Błąd przy dodawaniu wiadom,ości do bufora. :<\n";
           x.second.Remove();
         }
       }
     } else {
-      for (const Username& un : msg->Users()) {
+      for (const Username &un : msg->Users()) {
         if (users_.count(un) < 1) {
-          std::cerr << "Lel, nie ma takiego kogoś teraz xd\n";
+          std::cerr << "Lel, nie ma takiego kogoś teraz xd [[" << un << "]]\n";
           continue;
         }
+        // Jest user xd.
         auto &stuff = client_socks_.at(users_.at(un).GetSockId());
-        pom = msg->AddToBuf(&stuff.WrBuf());
-        if (pom < 0) {
-          std::cerr << "Błedzik [[" << un << "]]. :<\n";
+        added_to_buf = msg->AddToBuf(&stuff.WrBuf());
+        if (added_to_buf < 0) {
+          std::cerr << "Błedzik [[" << un << "]], chyba się do bufora nie "
+            "zmieściło. :<\n";
           stuff.Remove();
         }
       }
@@ -254,71 +261,42 @@ int Server::DoWork_() {
 int Server::ReadClients_() {
   int sockets_read = 0;
   for (auto it = client_socks_.begin(); it != client_socks_.end(); ++it) {
+    // bool jeden = !(it->second.ShallRead());
+    // bool dwa = !(Sel::READ & sel_.Get(it->second.GetSocket().GetFD()));
+    // bool shall_not_read = jeden || dwa;
+      // !(it->second.ShallRead()) || !(Sel::READ & sel_.Get(it->first));
     if (!(it->second.ShallRead())
-        || !(Sel::READ & sel_.Get(it->first))) {
+         || !(Sel::READ & sel_.Get(it->second.GetSocket().GetFD()))) {
+       continue;
+    }
+    // if (shall_not_read) {
+    //   continue;
+    // }
+    // if (ReadClientSocket_(it->first) >= 0) {
+    int read_chars = it->second.ReadCharsFromSocket();
+    if (read_chars < 0) {
+      std::cerr << "Był błąd przy czytaniu socketu o id " << it->first <<
+        " i fd " << it->second.GetSocket().GetFD() << '\n';
+      it->second.Remove();
+      continue;
+    } else if (read_chars == 0) {
+      std::cerr << "Zamykanko przyszło " << it->first <<
+        " i fd " << it->second.GetSocket().GetFD() << '\n';
+      it->second.Remove();
       continue;
     }
-    // if (ReadClientSocket_(it->first) >= 0) {
-    if (client_socks_.at(it->first).ReadCharsFromSocket() >= 0) {
-      ++sockets_read;
+    int deal_ret = it->second.DealWithReadBuf(&world_, &Server::PushMsg_);
+    if (deal_ret < 0) {
+      std::cerr << "Jakiś błąd przy ogarnianiu rzeczy z socketu " << it->first
+        << " i fd " << it->second.GetSocket().GetFD() << '\n';
+      it->second.Remove();
+      continue;
     }
+    ++sockets_read;
   }
   return sockets_read;
 }
 
-int Server::DealWithReadBuf_(int fd) {
-  SocketStuff *stuff = &client_socks_.at(fd);
-
-  std::cerr << "int Server::DealWithReadBuf_(int fd)\n";
-
-  int pom;
-  while (stuff->CharsLeft() > 0) {
-    std::cerr << ":\nchary w komunikacie: " << stuff->CmProcessed()
-      // << "\nprzetworzone chary z gniazda: " << stuff->read_processed_
-      // << "\nchars read: " << stuff->read_len_
-      << '\n';
-    if (stuff->CmProcessed() < 0) {
-      std::cerr << "Jakiś okropny błąd :<\n";
-      return - 100;
-    }
-    if (stuff->CmProcessed() < NQS) {
-      pom = stuff->ReadMagic();
-      if (pom > 0)
-        return 0;
-      if (pom < 0)
-        return pom;
-    }
-    if (stuff->CmProcessed() < 2 * NQS) {
-      pom = stuff->ReadInstr();
-      if (pom > 0)
-        return 0;
-      if (pom < 0)
-        return pom;
-    }
-    if (stuff->HasInstr()) {
-      std::cerr << "Nie mieliśmy insttukcji, a chcemy mieć, ok\n";
-      pom = stuff->ChooseInstr();
-      if (pom > 0) {
-        // Nie doczytało :<
-        return 1;
-      } else if (pom < 0) {
-        return pom;
-      }
-    }
-    InstrFn fn = stuff->GetInstrFn();
-    pom = fn(this, stuff, &world_, &Server::PushMsg_);
-    if (pom > 0) {
-      std::cerr << "ExecInstr nieee fn zwróciło >0 xd\n";
-      return 0;
-    } else if (pom < 0) {
-      return pom;
-    }
-    std::cerr << "O, wygląda na to, że skończono czytać instrukcję.\n";
-    stuff->ResetCommand();
-  }  // while
-  std::cerr << "No to ten koniec czytanuia\n";
-  return 0;
-}
 
 
 // "OwO!jabłka xd źle cos\n"
@@ -338,7 +316,7 @@ int Server::DropSock_(int fd) {
 
 
 void Server::SpecialHardcodeInit() {
-
+  return;
 }
 
 int Server::LoopTick_() {
@@ -368,16 +346,36 @@ int Server::LogInUser(const Username &un, const std::string &pw,
     SockId sock_id, bool generate_response) {
   if (!un.Good()) {
     std::cerr << "Podana nazwaw jest niepoprawna!!!\n";
-    PushMsg_(new Sig(un, MQ::ERR_BAG_LOG, false));
+    PushMsg_(std::unique_ptr<OutMessage>(new Sig(un, MQ::ERR_BAG_LOG, false)));
     return -1;
   }
-  if (IsLogged_(un)) {
-    std::cerr << "user [[" << un << "]] jest zalogowany już\n";
+  auto it = users_.find(un);
+  if (it != users_.end()) {
+  // if (IsLogged_(un)) {
+    std::cerr << "user [[" << un << "]] jest zalogowany już\n"
+      << "[[" << it->first << "]]\n";
+    PushMsg_(std::unique_ptr<OutMessage>(
+      new Sig(un, MQ::ERR_WAS_LOGGED, false)));
     return -1;
   }
   auto emplace_ret = users_.emplace(un, std::move(LoggedUser(un, sock_id)));
+  if (emplace_ret.second == false) {
+    std::cerr << "ojej, nie udało się dodać usera do mapy :\n";
+    PushMsg_(std::unique_ptr<OutMessage>(new Sig(un, MQ::ERR_OTHER, false)));
+    return -1;
+  }
   LoggedUser *lu = &emplace_ret.first->second;
-  socks_to_users_.emplace(sock_id, lu);
+  auto emplace_ret2 = socks_to_users_.emplace(sock_id, lu);
+  if (emplace_ret2.second == false) {
+    std::cerr << "nie udało się uzupełnić mapy z id socketa na userów nowym "
+      "userem :<\n";
+    auto rm = users_.erase(un);
+    PushMsg_(std::unique_ptr<OutMessage>(new Sig(un, MQ::ERR_OTHER, false)));
+    assert(rm == 1);
+    return -1;
+  }
+  std::cerr << "zalogowano [[" << un << "]]\n";
+  PushMsg_(std::unique_ptr<OutMessage>(new LogOk(un)));
   return 0;
 }
 
@@ -385,9 +383,9 @@ int Server::DeleteMarkedSocks_() {
   auto it = client_socks_.begin();
   while (it != client_socks_.end()) {
     if (it->second.ShallBeRemoved()) {
-      int fd = it->first;
+      SockId id = it->first;
       ++it;
-      DropSock_(fd);
+      DropSock_(id);
     } else {
       ++it;
     }
