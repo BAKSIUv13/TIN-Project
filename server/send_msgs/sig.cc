@@ -9,16 +9,15 @@
 
 namespace tin {
 int Sig::AddToBuf(WriteBuf *buf) {
-  int NQS = sizeof(NQuad);
   std::string str;
-  str.append(MQ::OWO.CStr(), NQS);
+  MQ::OWO.AppendToCpp11String(&str);
   if (IsHeavy()) {
-    str.append(MQ::SERV_SIGH, NQS);
+    MQ::SERV_SIGH.AppendToCpp11String(&str);
   } else {
-    str.append(MQ::SERV_SIGL, NQS);
+    MQ::SERV_SIGL.AppendToCpp11String(&str);
   }
-  str.append(code_, NQS);
-  str.append(NQuad(static_cast<uint32_t>(msg_.size())), NQS);
+  code_.AppendToCpp11String(&str);
+  NQuad(static_cast<uint32_t>(msg_.size())).AppendToCpp11String(&str);
   str.append(msg_);
   return buf->Add(str);
 }

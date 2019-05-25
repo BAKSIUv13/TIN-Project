@@ -14,31 +14,31 @@ namespace tin {
 class Sig : public OutMessage {
  public:
   Sig() {}
-  Sig(const Username &un, NQuad code, bool is_heavy,
+  Sig(SockId id, NQuad code, bool is_heavy,
     const std::string &msg)
-      : username_(un), code_(code), msg_(msg), heavy_(is_heavy) {}
-  Sig(const Username &un, NQuad code, bool is_heavy)
-      : username_(un), code_(code), msg_(""), heavy_(is_heavy) {}
+      : id_(id), code_(code), msg_(msg), heavy_(is_heavy) {}
+  Sig(SockId id, NQuad code, bool is_heavy)
+      : id_(id), code_(code), msg_(""), heavy_(is_heavy) {}
 
   virtual ~Sig() {}
-
-  Username GetUsername() {return username_;}
-  bool IsHeavy() {return heavy_;}
-  const std::string GetMsg() {return msg_;}
-  NQuad GetCode() {return code_;}
 
   virtual std::string GetTypeName() {
     return IsHeavy() ? "Signal Heavy" : "Signal Light";
   }
-  virtual bool Broadcast() {return false;}
-  virtual std::list<Username> Users() {
-    return username_.Good() ?
-      std::list<Username>{username_} : std::list<Username>{};
-  }
+
+  virtual int Audience() {return ONE_S;}
+  virtual SockId Sock() {return id_;}
   virtual int AddToBuf(WriteBuf *buf);
 
+
+
+  bool IsHeavy() {return heavy_;}
+  const std::string GetMsg() {return msg_;}
+  NQuad GetCode() {return code_;}
+
+
  private:
-  Username username_;
+  SockId id_;
   NQuad code_;
   std::string msg_;
   bool heavy_;

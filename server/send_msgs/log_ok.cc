@@ -9,10 +9,9 @@
 
 namespace tin {
 int LogOk::AddToBuf(WriteBuf *buf) {
-  int NQS = sizeof(NQuad);
   std::string str;
-  str.append(MQ::OWO.CStr(), NQS);
-  str.append(MQ::SERV_LOGIN_OK.CStr(), NQS);
+  MQ::OWO.AppendToCpp11String(&str);
+  MQ::SERV_LOGIN_OK.AppendToCpp11String(&str);
   return buf->Add(str);
 }
 }  // namespace tin

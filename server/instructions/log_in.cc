@@ -39,7 +39,7 @@ int LogIn::Fn(Server *server, SocketStuff *stuff, World *, MsgPushFn push_fn) {
   }
   pom = server->LogInUser(Username(s->un_), s->pw_, stuff->GetId(), true);
   if (pom < 0) {
-    return pom;
+    return 0;  // Chodzi o to, że po takim logowanku nie jest źle.
   }
   return 0;
 }

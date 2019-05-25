@@ -90,7 +90,7 @@ class Server {
   int RegisterSockFromAccept_(SocketTCP4 &&);
 
   // Removes socket from the server.
-  int DropSock_(int fd);
+  int DropSock_(SockId id);
 
   // Sets bitset of servers's 'select' object.
   int FeedSel_();
@@ -107,8 +107,8 @@ class Server {
   // Reads client sockets and deal with it.
   int ReadClients_();
 
-  // Do some work with all received stuff.
-  int DoWork_();
+  // Write messages to buffers to send.
+  int MsgsToBufs_();
 
   // Deals with read data from client socket.
   int DealWithReadBuf_(int fd);

@@ -220,37 +220,67 @@ int Server::WriteToSocks_() {
   return sockets_written;
 }
 
-int Server::DoWork_() {
+int Server::MsgsToBufs_() {
   OutMessage *msg = nullptr;
   int added_to_buf;
   while ((msg = FirstMsg_()) != nullptr) {
-    if (msg->Broadcast()) {
-      for (auto &x : client_socks_) {
-        // Jeszcze pomińmy niezalogowane gniazda:
-        if (socks_to_users_.count(x.first) < 1) {
-          continue;
+    switch (msg->Audience()) {
+      case OutMessage::BROADCAST_S:
+        std::cerr << "OutMessage::BROADCAST_S\n";
+        for (auto &x : client_socks_) {
+          added_to_buf = msg->AddToBuf(&x.second.WrBuf());
+          if (added_to_buf < 0) {
+            std::cerr << "Błąd przy dodawaniu wiadomości do bufora. :<\n" <<
+              "Socket o id " << x.first << " i fd " <<
+              x.second.GetSocket().GetFD() << '\n';
+            if (socks_to_users_.count(x.first) > 0) {
+              std::cerr << "Jest na nim zalogowany user [[" <<
+                socks_to_users_.at(x.first)->GetName() << "]]\n";
+            } else {
+              std::cerr << "Niezalogowane gniazdo :>\n";
+            }
+            x.second.ForceRemove();
+            // Force, bo już i tak nic nie napiszemy raczej
+          }
         }
-        added_to_buf = msg->AddToBuf(&x.second.WrBuf());
-        if (added_to_buf < 0) {
-          std::cerr << "Błąd przy dodawaniu wiadom,ości do bufora. :<\n";
-          x.second.Remove();
+        break;
+      case OutMessage::BROADCAST_U:
+        std::cerr << "OutMessage::BROADCAST_U jeszcze nie działa xd\n";
+        std::terminate();
+      case OutMessage::LIST_S:
+        std::cerr << "OutMessage::LIST_S jeszcze nie działa xd\n";
+        std::terminate();
+      case OutMessage::LIST_U:
+        std::cerr << "OutMessage::LIST_U jeszcze nie działa xd\n";
+        std::terminate();
+      case OutMessage::ONE_S:
+        std::cerr << "OutMessage::ONE_S\n";
+        {
+          SockId id = msg->Sock();
+          if (client_socks_.count(id) < 1) {
+            std::cerr << "Lol, nie ma gniazda o id " << id << " xd\n";
+            break;
+          }
+          auto &stuff = client_socks_.at(id);
+          added_to_buf = msg->AddToBuf(&stuff.WrBuf());
+          if (added_to_buf < 0) {
+            std::cerr << "Błąd przy dodawaniu wiadomości do bufora. :<\n" <<
+              "Socket o id " << id << " i fd " <<
+              stuff.GetSocket().GetFD() << '\n';
+            if (socks_to_users_.count(id) > 0) {
+              std::cerr << "Jest na nim zalogowany user [[" <<
+                socks_to_users_.at(id)->GetName() << "]]\n";
+            } else {
+              std::cerr << "Niezalogowane gniazdo :>\n";
+            }
+            stuff.ForceRemove();
+            // Force, bo już i tak nic nie napiszemy raczej
+          }
         }
-      }
-    } else {
-      for (const Username &un : msg->Users()) {
-        if (users_.count(un) < 1) {
-          std::cerr << "Lel, nie ma takiego kogoś teraz xd [[" << un << "]]\n";
-          continue;
-        }
-        // Jest user xd.
-        auto &stuff = client_socks_.at(users_.at(un).GetSockId());
-        added_to_buf = msg->AddToBuf(&stuff.WrBuf());
-        if (added_to_buf < 0) {
-          std::cerr << "Błedzik [[" << un << "]], chyba się do bufora nie "
-            "zmieściło. :<\n";
-          stuff.Remove();
-        }
-      }
+        break;
+      case OutMessage::ONE_U:
+        std::cerr << "OutMessage::ONE_U jeszcze nie działa xd\n";
+        std::terminate();
     }
     PopMsg_();
   }
@@ -303,11 +333,21 @@ int Server::ReadClients_() {
 
 
 
-int Server::DropSock_(int fd) {
-  std::cerr << "Próba dropnięcioa socketu " << fd << "\n";
-  // if (socks_to_users_.count(fd) > 0) {
-  // }
-  client_socks_.erase(fd);
+int Server::DropSock_(SockId id) {
+  std::cerr << "Próba dropnięcioa socketu id " << id << "\n";
+  if (client_socks_.count(id) < 1) {
+    std::cerr << "Nie ma takiego socketu, wychodzonko\n";
+    return -1;
+  }
+  if (socks_to_users_.count(id) > 0) {
+    std::cerr << "Na tym gnioeździe jest ktoś zalogowany\n";
+    Username un = socks_to_users_.at(id)->GetName();
+    std::cerr << "[[" << un << "]]\n";
+    users_.erase(un);
+    socks_to_users_.erase(id);
+  }
+  client_socks_.erase(id);
+  std::cerr << "drop: ok, wychodzonko\n";
   return 0;
 }
 
@@ -327,12 +367,12 @@ int Server::LoopTick_() {
     return 0;
   int write_to_socks_ret = WriteToSocks_();
   int read_clients_ret = ReadClients_();
-  int do_work_ret = DoWork_();
+  int msgs_to_bufs_ret = MsgsToBufs_();
   int delete_marked_socks_ret = DeleteMarkedSocks_();
   {
     (void)feed_sel_ret;
     (void)do_sel_ret;
-    (void)do_work_ret;
+    (void)msgs_to_bufs_ret;
     (void)read_main_fds_ret;
     (void)write_to_socks_ret;
     (void)read_clients_ret;
@@ -344,24 +384,32 @@ int Server::LoopTick_() {
 
 int Server::LogInUser(const Username &un, const std::string &pw,
     SockId sock_id, bool generate_response) {
+  if (socks_to_users_.count(sock_id) > 0) {
+    std::cerr << "gniazdo o id " << sock_id << " i fd " <<
+      client_socks_.at(sock_id).GetSocket().GetFD() << " jest już zalogowane\n";
+    PushMsg_(std::unique_ptr<OutMessage>(
+      new Sig(sock_id, MQ::ERR_OTHER, false, "no już sie zalogowałes no")));
+    return -1;
+  }
   if (!un.Good()) {
     std::cerr << "Podana nazwaw jest niepoprawna!!!\n";
-    PushMsg_(std::unique_ptr<OutMessage>(new Sig(un, MQ::ERR_BAG_LOG, false)));
+    PushMsg_(std::unique_ptr<OutMessage>(
+      new Sig(sock_id, MQ::ERR_BAG_LOG, false)));
     return -1;
   }
   auto it = users_.find(un);
   if (it != users_.end()) {
-  // if (IsLogged_(un)) {
     std::cerr << "user [[" << un << "]] jest zalogowany już\n"
       << "[[" << it->first << "]]\n";
     PushMsg_(std::unique_ptr<OutMessage>(
-      new Sig(un, MQ::ERR_WAS_LOGGED, false)));
+      new Sig(sock_id, MQ::ERR_WAS_LOGGED, false)));
     return -1;
   }
   auto emplace_ret = users_.emplace(un, std::move(LoggedUser(un, sock_id)));
   if (emplace_ret.second == false) {
     std::cerr << "ojej, nie udało się dodać usera do mapy :\n";
-    PushMsg_(std::unique_ptr<OutMessage>(new Sig(un, MQ::ERR_OTHER, false)));
+    PushMsg_(std::unique_ptr<OutMessage>(
+      new Sig(sock_id, MQ::ERR_OTHER, false)));
     return -1;
   }
   LoggedUser *lu = &emplace_ret.first->second;
@@ -370,12 +418,13 @@ int Server::LogInUser(const Username &un, const std::string &pw,
     std::cerr << "nie udało się uzupełnić mapy z id socketa na userów nowym "
       "userem :<\n";
     auto rm = users_.erase(un);
-    PushMsg_(std::unique_ptr<OutMessage>(new Sig(un, MQ::ERR_OTHER, false)));
+    PushMsg_(std::unique_ptr<OutMessage>(
+      new Sig(sock_id, MQ::ERR_OTHER, false)));
     assert(rm == 1);
     return -1;
   }
   std::cerr << "zalogowano [[" << un << "]]\n";
-  PushMsg_(std::unique_ptr<OutMessage>(new LogOk(un)));
+  PushMsg_(std::unique_ptr<OutMessage>(new LogOk(sock_id)));
   return 0;
 }
 

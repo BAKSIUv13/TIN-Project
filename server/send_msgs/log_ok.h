@@ -14,22 +14,20 @@ namespace tin {
 class LogOk : public OutMessage {
  public:
   LogOk() {}
-  explicit LogOk(const Username &un)
-      : username_(un) {}
+  explicit LogOk(SockId id)
+      : id_(id) {}
 
   virtual ~LogOk() {}
 
-  Username GetUsername() {return username_;}
-
   virtual std::string GetTypeName() {return "LogOk";}
-  virtual bool Broadcast() {return false;}
-  virtual std::list<Username> Users() {
-    return username_.Good() ?
-      std::list<Username>{username_} : std::list<Username>{};
-  }
+
+  virtual int Audience() {return ONE_S;}
+
+  virtual SockId Sock() {return id_;}
+
   virtual int AddToBuf(WriteBuf *buf);
  private:
-  Username username_;
+  SockId id_;
 };  // class LogOk
 }  // namespace tin
 
