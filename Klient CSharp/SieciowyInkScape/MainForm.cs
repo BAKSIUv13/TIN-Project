@@ -30,8 +30,15 @@ namespace SieciowyInkScape
 
             
             client = new Client(this, drawing.Size);
+            client.MessageInbound += OnMessageInbound;
+            client.ConnectionFailed += OnConnectionFailed;
+            client.ConnectionSucceeded += OnConnectionSucceeded;
+            client.LoginCompleted += OnLoginSucceeded;
+            client.LoginFailed += OnLoginFailed;
+            client.LogoutCompleted += OnLogout;
+            client.LogicErrorHappened += OnLogicError;
+            Show();
 
-           
         }
 
         public static void SetDoubleBuffered(System.Windows.Forms.Control c)
@@ -56,43 +63,119 @@ namespace SieciowyInkScape
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
             SetDoubleBuffered(drawing);
 
-            bool retry;
-
-            do
-            {
-                retry = false;
-
-                LoginForm loginForm = new LoginForm();
-                loginForm.ShowDialog();
-
-                if (loginForm.DialogResult == DialogResult.OK)
-                {
-                    if (client.Connect(loginForm.hostname, loginForm.port) == false)
-                    {
-                        MessageBox.Show("Połączenie z serwerem nieudane", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        retry = true;
-                    }
-                }
-                else
-                {
-                    Close();
-                }
-            }
-            while (retry);
-
-
         }
 
+        void OnLogout(object sender, EventArgs e)
+        {
+            ChatBoxWriteLine("Wylogowano");
 
+            buttonConnect.Enabled = false;
+            buttonLogin.Enabled = true;
+            buttonLogout.Enabled = false;
+            buttonDisconnect.Enabled = true;
 
-       
+            textBoxHostname.Enabled = false;
+            textBoxPort.Enabled = false;
+            textBoxUsername.Enabled = true;
+            textBoxPassword.Enabled = true;
+        }
+        void OnLoginSucceeded(object sender, EventArgs e)
+        {
+            ChatBoxWriteLine("Logowanie udane!");
+
+            buttonConnect.Enabled = false;
+            buttonLogin.Enabled = false;
+            buttonLogout.Enabled = true;
+            buttonDisconnect.Enabled = true;
+
+            textBoxHostname.Enabled = false;
+            textBoxPort.Enabled = false;
+            textBoxUsername.Enabled = false;
+            textBoxPassword.Enabled = false;
+        }
+        void OnLoginFailed(object sender, Client.LoginFailedEventArgs e)
+        {
+            ChatBoxWriteLine("Logowanie nieudane. | Kod: " + e.reason.ToString("g") + " | Wiadomość: " + e.serverMessage);
+
+            buttonConnect.Enabled = false;
+            buttonLogin.Enabled = true;
+            buttonLogout.Enabled = false;
+            buttonDisconnect.Enabled = true;
+
+            textBoxHostname.Enabled = false;
+            textBoxPort.Enabled = false;
+            textBoxUsername.Enabled = true;
+            textBoxPassword.Enabled = true;
+        }
+        void OnConnectionSucceeded(object sender, EventArgs e)
+        {
+            ChatBoxWriteLine("Połączenie udane!");
+
+            buttonConnect.Enabled = false;
+            buttonLogin.Enabled = true;
+            buttonLogout.Enabled = false;
+            buttonDisconnect.Enabled = true;
+
+            textBoxHostname.Enabled = false;
+            textBoxPort.Enabled = false;
+            textBoxUsername.Enabled = true;
+            textBoxPassword.Enabled = true;
+        }
+        void OnConnectionFailed(object sender, Client.ConnectionFailedEventArgs e)
+        {
+            if (e.reason == Client.ConnectionFailedEventArgs.ConnectionFailReasons.alreadyConnected)
+            {
+                ChatBoxWriteLine("Połączenie już wcześniej zostało nawiązane!");
+                return;
+            }
+            else if (e.reason == Client.ConnectionFailedEventArgs.ConnectionFailReasons.alreadyConnecting)
+            {
+                ChatBoxWriteLine("Proces łączenia już trwa!");
+                return;
+            }
+            else if (e.reason == Client.ConnectionFailedEventArgs.ConnectionFailReasons.socketException)
+            {
+                ChatBoxWriteLine("Połączenie przerwane. Status socketa: " + e.socketException.Message);
+            }
+            else
+            {
+                ChatBoxWriteLine("Połączenie przerwane. Powód: " + e.reason.ToString("g"));
+            }
+
+            buttonConnect.Enabled = true;
+            buttonLogin.Enabled = false;
+            buttonLogout.Enabled = false;
+            buttonDisconnect.Enabled = false;
+
+            textBoxHostname.Enabled = true;
+            textBoxPort.Enabled = true;
+            textBoxUsername.Enabled = true;
+            textBoxPassword.Enabled = true;
+        }
+        void OnLogicError(object sender, Client.LogicErrorEventArgs e)
+        {
+            ChatBoxWriteLine("Błąd logiki programu: " + e.error.ToString("g"));
+        }
+        void OnMessageInbound(object sender, Client.MessageInboundEventArgs e)
+        {
+            ChatBoxWriteLine(e.username + ": " + e.message);
+        }
+      
+
+        void ChatBoxWriteLine(string text)
+        {
+            chatBox.Invoke(new System.Windows.Forms.MethodInvoker(delegate ()
+            {
+                chatBox.Text += text + Environment.NewLine;
+            }));
+        }
 
         private void messageBox_KeyPressed(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == '\r')
             {
                 client.clientMachine.SendChatMessage(messageBox.Text);
-                chatBox.AppendText("Ja: " + messageBox.Text + "\n");
+                ChatBoxWriteLine("Ja: " + messageBox.Text);
                 messageBox.Clear();
             }
         }
@@ -281,6 +364,40 @@ namespace SieciowyInkScape
             DrawingAreaState drawingArea = client.clientMachine.drawingArea;
 
             drawingArea.selectedTool = DrawingAreaState.Tools.LINE;
+        }
+
+        private void buttonDisconnect_Click(object sender, EventArgs e)
+        {
+            buttonDisconnect.Enabled = false;
+            client.Disconnect();
+        }
+
+        private void buttonConnect_Click(object sender, EventArgs e)
+        {
+            int port;
+            if(Int32.TryParse(textBoxPort.Text, out port) == false)
+            {
+                ChatBoxWriteLine("Numer portu musi być liczbą");
+                return;
+            }
+            textBoxHostname.Enabled = false;
+            textBoxPort.Enabled = false;
+            buttonConnect.Enabled = false;
+            client.Connect(textBoxHostname.Text, port);
+        }
+
+        private void buttonLogout_Click(object sender, EventArgs e)
+        {
+            buttonLogout.Enabled = false;
+            client.clientMachine.Logout();
+        }
+
+        private void buttonLogin_Click(object sender, EventArgs e)
+        {
+            textBoxUsername.Enabled = false;
+            textBoxPassword.Enabled = false;
+            buttonLogin.Enabled = false;
+            client.clientMachine.Login(textBoxUsername.Text, textBoxPassword.Text);
         }
     }
 }

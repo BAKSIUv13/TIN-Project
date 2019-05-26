@@ -41,7 +41,23 @@
             this.RefreshTimer = new System.Windows.Forms.Timer(this.components);
             this.FPSTimer = new System.Windows.Forms.Timer(this.components);
             this.rectangleButton = new System.Windows.Forms.Button();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.buttonConnect = new System.Windows.Forms.Button();
+            this.buttonDisconnect = new System.Windows.Forms.Button();
+            this.textBoxHostname = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.textBoxPort = new System.Windows.Forms.TextBox();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.textBoxUsername = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.textBoxPassword = new System.Windows.Forms.TextBox();
+            this.buttonLogin = new System.Windows.Forms.Button();
+            this.buttonLogout = new System.Windows.Forms.Button();
             this.chatPanel.SuspendLayout();
+            this.groupBox1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // chatBox
@@ -91,7 +107,7 @@
             // 
             // drawing
             // 
-            this.drawing.Location = new System.Drawing.Point(13, 13);
+            this.drawing.Location = new System.Drawing.Point(12, 93);
             this.drawing.Name = "drawing";
             this.drawing.Size = new System.Drawing.Size(932, 576);
             this.drawing.TabIndex = 2;
@@ -149,11 +165,155 @@
             this.rectangleButton.UseVisualStyleBackColor = true;
             this.rectangleButton.Click += new System.EventHandler(this.rectangleButton_Click);
             // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.textBoxPort);
+            this.groupBox1.Controls.Add(this.label4);
+            this.groupBox1.Controls.Add(this.textBoxHostname);
+            this.groupBox1.Controls.Add(this.buttonDisconnect);
+            this.groupBox1.Controls.Add(this.buttonConnect);
+            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Location = new System.Drawing.Point(12, 12);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(365, 75);
+            this.groupBox1.TabIndex = 7;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Połączenie";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(7, 20);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(32, 13);
+            this.label3.TabIndex = 0;
+            this.label3.Text = "Host:";
+            // 
+            // buttonConnect
+            // 
+            this.buttonConnect.Location = new System.Drawing.Point(285, 46);
+            this.buttonConnect.Name = "buttonConnect";
+            this.buttonConnect.Size = new System.Drawing.Size(75, 23);
+            this.buttonConnect.TabIndex = 1;
+            this.buttonConnect.Text = "Połącz";
+            this.buttonConnect.UseVisualStyleBackColor = true;
+            this.buttonConnect.Click += new System.EventHandler(this.buttonConnect_Click);
+            // 
+            // buttonDisconnect
+            // 
+            this.buttonDisconnect.Enabled = false;
+            this.buttonDisconnect.Location = new System.Drawing.Point(204, 46);
+            this.buttonDisconnect.Name = "buttonDisconnect";
+            this.buttonDisconnect.Size = new System.Drawing.Size(75, 23);
+            this.buttonDisconnect.TabIndex = 2;
+            this.buttonDisconnect.Text = "Rozłącz";
+            this.buttonDisconnect.UseVisualStyleBackColor = true;
+            this.buttonDisconnect.Click += new System.EventHandler(this.buttonDisconnect_Click);
+            // 
+            // textBoxHostname
+            // 
+            this.textBoxHostname.Location = new System.Drawing.Point(45, 17);
+            this.textBoxHostname.Name = "textBoxHostname";
+            this.textBoxHostname.Size = new System.Drawing.Size(178, 20);
+            this.textBoxHostname.TabIndex = 3;
+            this.textBoxHostname.Text = "127.0.0.1";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(250, 21);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(29, 13);
+            this.label4.TabIndex = 4;
+            this.label4.Text = "Port:";
+            // 
+            // textBoxPort
+            // 
+            this.textBoxPort.Location = new System.Drawing.Point(285, 17);
+            this.textBoxPort.Name = "textBoxPort";
+            this.textBoxPort.Size = new System.Drawing.Size(74, 20);
+            this.textBoxPort.TabIndex = 5;
+            this.textBoxPort.Text = "12345";
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.buttonLogout);
+            this.groupBox2.Controls.Add(this.buttonLogin);
+            this.groupBox2.Controls.Add(this.textBoxPassword);
+            this.groupBox2.Controls.Add(this.label6);
+            this.groupBox2.Controls.Add(this.textBoxUsername);
+            this.groupBox2.Controls.Add(this.label5);
+            this.groupBox2.Location = new System.Drawing.Point(383, 12);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(474, 75);
+            this.groupBox2.TabIndex = 8;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Logowanie";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(6, 20);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(65, 13);
+            this.label5.TabIndex = 0;
+            this.label5.Text = "Użytkownik:";
+            // 
+            // textBoxUsername
+            // 
+            this.textBoxUsername.Location = new System.Drawing.Point(78, 17);
+            this.textBoxUsername.Name = "textBoxUsername";
+            this.textBoxUsername.Size = new System.Drawing.Size(136, 20);
+            this.textBoxUsername.TabIndex = 1;
+            this.textBoxUsername.Text = "nkp123";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(242, 20);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(39, 13);
+            this.label6.TabIndex = 2;
+            this.label6.Text = "Hasło:";
+            // 
+            // textBoxPassword
+            // 
+            this.textBoxPassword.Location = new System.Drawing.Point(287, 17);
+            this.textBoxPassword.Name = "textBoxPassword";
+            this.textBoxPassword.PasswordChar = '*';
+            this.textBoxPassword.Size = new System.Drawing.Size(181, 20);
+            this.textBoxPassword.TabIndex = 3;
+            this.textBoxPassword.Text = "norbert1";
+            // 
+            // buttonLogin
+            // 
+            this.buttonLogin.Enabled = false;
+            this.buttonLogin.Location = new System.Drawing.Point(393, 46);
+            this.buttonLogin.Name = "buttonLogin";
+            this.buttonLogin.Size = new System.Drawing.Size(75, 23);
+            this.buttonLogin.TabIndex = 4;
+            this.buttonLogin.Text = "Zaloguj";
+            this.buttonLogin.UseVisualStyleBackColor = true;
+            this.buttonLogin.Click += new System.EventHandler(this.buttonLogin_Click);
+            // 
+            // buttonLogout
+            // 
+            this.buttonLogout.Enabled = false;
+            this.buttonLogout.Location = new System.Drawing.Point(312, 46);
+            this.buttonLogout.Name = "buttonLogout";
+            this.buttonLogout.Size = new System.Drawing.Size(75, 23);
+            this.buttonLogout.TabIndex = 5;
+            this.buttonLogout.Text = "Wyloguj";
+            this.buttonLogout.UseVisualStyleBackColor = true;
+            this.buttonLogout.Click += new System.EventHandler(this.buttonLogout_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1264, 601);
+            this.ClientSize = new System.Drawing.Size(1264, 681);
+            this.Controls.Add(this.groupBox2);
+            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.rectangleButton);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
@@ -166,6 +326,10 @@
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.chatPanel.ResumeLayout(false);
             this.chatPanel.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -183,6 +347,20 @@
         private System.Windows.Forms.Timer FPSTimer;
         private System.Windows.Forms.Button rectangleButton;
         public System.Windows.Forms.TextBox chatBox;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.TextBox textBoxPort;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox textBoxHostname;
+        private System.Windows.Forms.Button buttonDisconnect;
+        private System.Windows.Forms.Button buttonConnect;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.Button buttonLogout;
+        private System.Windows.Forms.Button buttonLogin;
+        private System.Windows.Forms.TextBox textBoxPassword;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.TextBox textBoxUsername;
+        private System.Windows.Forms.Label label5;
     }
 }
 

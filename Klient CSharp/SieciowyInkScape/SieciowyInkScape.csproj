@@ -47,6 +47,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Client.cs" />
+    <Compile Include="ClientEvents.cs" />
+    <Compile Include="ClientReceiver.cs" />
     <Compile Include="DrawingAreaState.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
