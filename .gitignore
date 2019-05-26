@@ -355,4 +355,3 @@ build
 VENV-django-client/
 .DS_Store
 __pycache__/
-backup
