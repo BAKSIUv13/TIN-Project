@@ -5,15 +5,16 @@
 
 #include <string>
 
+#include "core/username.h"
+
 namespace tin {
 class Artist{
  public:
-  using MousePosition = std::array<int, 2>;
+  using MousePosition = std::array<double, 2>;
 
  private:
+  Username un_;
   MousePosition mouse_;
-  int image_id_;
-  std::string user_;
 };  // class Artist
 }  // namespace tin
 

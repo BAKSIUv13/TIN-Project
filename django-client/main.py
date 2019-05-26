@@ -3,46 +3,39 @@
 
 """Main program module."""
 
-from network_and_data import network
-from network_and_data import receiver
-from network_and_data import sender
+from network_and_data import network, receiver, sender
 
-HOST = 'localhost'
-PORT = 12345
+def main():
+    """Pydocstyle is annoying."""
+    host = 'localhost'
+    port = 22345
 
-# interface to sockets
+    # interface to sockets
 
-CLIENT_SOCKET = network.prepare_socket(HOST, PORT)
+    client_socket = network.prepare_socket(host, port)
 
-RECV_READ_PIPE, RECV_WRITE_PIPE = network.prepare_error_pipe()
-SEND_READ_PIPE, SEND_WRITE_PIPE = network.prepare_error_pipe()
+    recv_read_pipe, recv_write_pipe = network.prepare_error_pipe()
+    send_read_pipe, send_write_pipe = network.prepare_error_pipe()
 
-RECEIVER = receiver.Receiver(CLIENT_SOCKET, RECV_READ_PIPE, SEND_WRITE_PIPE)
-SENDER = sender.Sender(CLIENT_SOCKET, SEND_READ_PIPE, RECV_WRITE_PIPE)
+    my_receiver = receiver.Receiver(client_socket, recv_read_pipe, send_write_pipe)
+    my_sender = sender.Sender(client_socket, send_read_pipe, recv_write_pipe)
 
-RECEIVER.start()
-SENDER.start()
+    my_receiver.start()
+    my_sender.start()
 
-SENDER.put_byte('a'[0].encode())
+    # my code
 
-"""
-LICZBA = 13
+    my_sender.put_int32_value(589505316)
 
-BAJTY = LICZBA.to_bytes(4, byteorder='big', signed=True)
-
+    print(my_receiver.get_int32_value())
 
 
-ODEBRANE_BAJTY = []
-for bajt in BAJTY:
-    ODEBRANE_BAJTY.append(bajt)
+    # end my code
 
-ODEBRANA_LICZBA = int.from_bytes(ODEBRANE_BAJTY, byteorder='big', signed=True)
-print(ODEBRANA_LICZBA)
-"""
+    my_receiver.join()
+    my_sender.join()
 
-RECEIVER.join()
-SENDER.join()
+    client_socket.close()
 
-CLIENT_SOCKET.close()
-
-print("The end!")
+if __name__ == '__main__':
+    main()

@@ -16,10 +16,9 @@ namespace SieciowyInkScape
     public partial class MainForm : Form
     {
 
+
         Client client;
 
-
-        
 
         int framesCounted = 0;
         int FPS = 0;
@@ -27,7 +26,6 @@ namespace SieciowyInkScape
         public MainForm()
         {
             InitializeComponent();
-
             
             client = new Client(this, drawing.Size);
             client.MessageInbound += OnMessageInbound;
@@ -38,7 +36,6 @@ namespace SieciowyInkScape
             client.LogoutCompleted += OnLogout;
             client.LogicErrorHappened += OnLogicError;
             Show();
-
         }
 
         public static void SetDoubleBuffered(System.Windows.Forms.Control c)
@@ -206,6 +203,7 @@ namespace SieciowyInkScape
             DrawingAreaState drawingArea = client.clientMachine.drawingArea;
 
             if (!(drawingArea is null))
+
             {
                 framesCounted++;
 
@@ -259,6 +257,7 @@ namespace SieciowyInkScape
             DrawingAreaState drawingArea = client.clientMachine.drawingArea;
 
             if (drawingArea.state == DrawingAreaState.State.IDLE)
+
             {
                 drawingArea.state = DrawingAreaState.State.DRAWING;
                 switch (drawingArea.selectedTool)
@@ -314,12 +313,14 @@ namespace SieciowyInkScape
             drawingArea.Exit();
             */
 
+
             drawing.Refresh();
         }
 
         private void drawing_MouseUp(object sender, MouseEventArgs e)
         {
             DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+
 
             if (drawingArea.state == DrawingAreaState.State.DRAWING)
             {
@@ -339,6 +340,7 @@ namespace SieciowyInkScape
         {
             DrawingAreaState drawingArea = client.clientMachine.drawingArea;
 
+
             if (!(drawingArea is null))
             {
                 drawingArea.CheckPendingObjects();
@@ -356,11 +358,13 @@ namespace SieciowyInkScape
         {
             DrawingAreaState drawingArea = client.clientMachine.drawingArea;
 
+
             drawingArea.selectedTool = DrawingAreaState.Tools.RECTANGLE;
         }
 
         private void lineButton_Click(object sender, EventArgs e)
         {
+
             DrawingAreaState drawingArea = client.clientMachine.drawingArea;
 
             drawingArea.selectedTool = DrawingAreaState.Tools.LINE;

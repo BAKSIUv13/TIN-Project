@@ -9,7 +9,7 @@
 #include "send_msgs/mouse_moved.h"
 
 namespace tin {
-
+/*
 int MoveMouse::Fn(Server *server, int fd, SocketStuff *stuff, World *world,
     MsgPushFn push_fn) {
   MoveMouse *s = reinterpret_cast<MoveMouse *>(stuff->strct);
@@ -47,5 +47,5 @@ void MoveMouse::Destroy(InstrStruct *q) {
 }
 
 const int MoveMouse::START, MoveMouse::END;
-
+*/
 }  // namespace tin

@@ -16,6 +16,7 @@ class World {
   int AddArtist(const Username&);
   int RemoveArtist();
  private:
+  // To jest tylko dodatkowa struktura z myszką i tak dalej.
   std::map<Username, Artist> artists_;
 };  // class World
 }  // namespace tin

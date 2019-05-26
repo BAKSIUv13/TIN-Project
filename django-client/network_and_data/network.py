@@ -1,10 +1,11 @@
 # TIN
 # Bartłomiej Kulik
 
-"""Module responsible for creating socket and necessary pipes."""
+"""Module responsible for creating socket, necessary pipes and conversions."""
 
-import socket
 import os
+import socket
+
 
 def prepare_socket(host, port):
     """Create socket and try to connect. Return createdf socket."""

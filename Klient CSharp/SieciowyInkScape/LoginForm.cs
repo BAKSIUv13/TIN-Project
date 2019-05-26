@@ -48,6 +48,5 @@ namespace SieciowyInkScape
 
             DialogResult = DialogResult.OK;
         }
-        
     }
 }

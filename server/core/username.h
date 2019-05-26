@@ -43,6 +43,8 @@ class Username {
   operator const char *() const {return c_;}
   explicit operator std::string() const {return std::string(c_);}
 
+  int Len() const noexcept;
+
 
  private:
   int state_;

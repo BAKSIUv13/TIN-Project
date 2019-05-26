@@ -58,6 +58,7 @@
             this.chatPanel.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
+
             this.SuspendLayout();
             // 
             // chatBox
@@ -107,7 +108,9 @@
             // 
             // drawing
             // 
+
             this.drawing.Location = new System.Drawing.Point(12, 93);
+
             this.drawing.Name = "drawing";
             this.drawing.Size = new System.Drawing.Size(932, 576);
             this.drawing.TabIndex = 2;
@@ -165,6 +168,7 @@
             this.rectangleButton.UseVisualStyleBackColor = true;
             this.rectangleButton.Click += new System.EventHandler(this.rectangleButton_Click);
             // 
+
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.textBoxPort);
@@ -307,13 +311,16 @@
             this.buttonLogout.UseVisualStyleBackColor = true;
             this.buttonLogout.Click += new System.EventHandler(this.buttonLogout_Click);
             // 
+
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+
             this.ClientSize = new System.Drawing.Size(1264, 681);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
+
             this.Controls.Add(this.rectangleButton);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
@@ -330,6 +337,7 @@
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+
             this.ResumeLayout(false);
 
         }
@@ -361,6 +369,7 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.TextBox textBoxUsername;
         private System.Windows.Forms.Label label5;
+
     }
 }
 
