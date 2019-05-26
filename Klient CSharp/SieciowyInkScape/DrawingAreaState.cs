@@ -30,7 +30,7 @@ namespace SieciowyInkScape
 
 
 
-
+        
         public DrawingAreaState(Point areaSize)
         {
             semaphore = new Semaphore(1, 1);
@@ -49,6 +49,14 @@ namespace SieciowyInkScape
             semaphore.Release();
         }
 
+        public void ChangeAreaSize(Point areaSize)
+        {
+            this.areaSize = areaSize;
+        }
+        public void ChangeAreaSize(Size areaSize)
+        {
+            this.areaSize = new Point(areaSize.Width, areaSize.Height);
+        }
 
         public void FinalizeObject(MainForm main, DrawingObject obj)
         {

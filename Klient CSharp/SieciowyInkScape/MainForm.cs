@@ -403,5 +403,10 @@ namespace SieciowyInkScape
             buttonLogin.Enabled = false;
             client.clientMachine.Login(textBoxUsername.Text, textBoxPassword.Text);
         }
+
+        private void drawing_Resize(object sender, EventArgs e)
+        {
+            client.clientMachine.drawingArea.ChangeAreaSize(drawing.Size);
+        }
     }
 }
