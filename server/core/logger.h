@@ -13,6 +13,7 @@
 namespace tin {
 
 enum class LogLevel {
+  VERY_LOW,
   LOW,
   MEDIUM,
   HIGH,
@@ -52,15 +53,15 @@ class Logger : public std::ostream {
     return internal_ << arg;
   }
 
-  static Logger LogH, LogM, LogL;
+  static Logger LogH, LogM, LogL, LogVL;
 
  private:
   constexpr static bool DEBUG = true;
-  static std::string GenerateTime_() {return "[siódma rano]\n";}
+  static std::string GenerateTime_();
   template <LogLevel LvL>
   static void DefaultLogFn_(const std::ostringstream &oss) {
     static std::ofstream default_log_file("./log.log", std::ios::out);
-    if (DEBUG || LvL >= LogLevel::HIGH) {
+    if (DEBUG && LvL >= LogLevel::LOW || LvL >= LogLevel::HIGH) {
       std::cerr << oss.str();
     }
     if (DEBUG || LvL >= LogLevel::MEDIUM) {
@@ -73,8 +74,7 @@ class Logger : public std::ostream {
 };
 
 extern Logger \
-&LogH, &LogM, &LogL;
-
+&LogH, &LogM, &LogL, &LogVL;
 
 }  // namespace tin
 
