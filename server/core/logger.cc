@@ -13,6 +13,9 @@ namespace tin {
     return s.str();
   }
 
+  std::ofstream Logger::default_log_file_
+    (Logger::log_file_name_, std::ios::out);
+
   Logger Logger::LogH(Logger::DefaultLogFn_<LogLevel::HIGH>);
   Logger Logger::LogM(Logger::DefaultLogFn_<LogLevel::MEDIUM>);
   Logger Logger::LogL(Logger::DefaultLogFn_<LogLevel::LOW>);

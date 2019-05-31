@@ -56,17 +56,22 @@ class Logger : public std::ostream {
   static Logger LogH, LogM, LogL, LogVL;
 
  private:
-  constexpr static bool DEBUG = true;
+#ifdef NDEBUG
+  static constexpr bool DEBUG = false;
+#else
+  static constexpr bool DEBUG = true;
+#endif
   static std::string GenerateTime_();
+  static constexpr const char *log_file_name_ = "./log.log";
+  static std::ofstream default_log_file_;
   template <LogLevel LvL>
   static void DefaultLogFn_(const std::ostringstream &oss) {
-    static std::ofstream default_log_file("./log.log", std::ios::out);
     if ((DEBUG && LvL >= LogLevel::LOW) || LvL >= LogLevel::HIGH) {
       std::cerr << oss.str();
     }
     if (DEBUG || LvL >= LogLevel::MEDIUM) {
-      if (default_log_file.is_open()) {
-        default_log_file << oss.str();
+      if (default_log_file_.is_open()) {
+        default_log_file_ << oss.str();
       }
     }
   }

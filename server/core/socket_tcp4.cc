@@ -12,10 +12,10 @@
 
 #include "core/logger.h"
 
-static std::array<char, 16> gen_ip_str(uint32_t x) {
+static const char *gen_ip_str(uint32_t x) {
   // nie chciało mi się szukać tych funkcji więc napisałem sam na rzaie
-  std::array<char, 16> arr;
-  char *it = arr.data();
+  static thread_local char arr[16];
+  char *it = arr;
   for (uint32_t i = 24;; i -= 8) {
     it += snprintf(it, 4 * sizeof(char), "%d.", (x >> i) & 255);
     if (i == 0) break;
@@ -156,11 +156,11 @@ namespace tin {
       }
       new_sock->addr_here_ = ntohl(saddr.sin_addr.s_addr);
       new_sock->port_here_ = ntohs(saddr.sin_port);
-      LogM << "serv here xd  " << gen_ip_str(addr_here_).data() << ":"
+      LogM << "serv here xd  " << gen_ip_str(addr_here_) << ":"
         << port_here_
-        << "\nclient here   " << gen_ip_str(new_sock->addr_here_).data() << ":"
+        << "\nclient here   " << gen_ip_str(new_sock->addr_here_) << ":"
         << new_sock->port_here_
-        << "\nclient there  " << gen_ip_str(new_sock->addr_there_).data() << ":"
+        << "\nclient there  " << gen_ip_str(new_sock->addr_there_) << ":"
         << new_sock->port_there_ << '\n';
       return 0;
     }
