@@ -105,7 +105,8 @@ class SocketStuff {
       // LogM << "Na gniazdo przyszło zamknięcie.\n";
       return 0;
     } else /* read_ret > 0 */ {
-      LogVL << "Na gnieździe " << fd << " przeczytano:\n" << read_buf_ << "\n";
+      LogVL << "Na gnieździe " << fd << " przeczytano:\n"
+        << std::string(read_buf_, read_ret) << "\n";
       msg_len_ = read_ret;
       msg_processed_ = 0;
       return read_ret;

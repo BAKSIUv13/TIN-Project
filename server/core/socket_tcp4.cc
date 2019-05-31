@@ -17,7 +17,7 @@ static const char *gen_ip_str(uint32_t x) {
   static thread_local char arr[16];
   char *it = arr;
   for (uint32_t i = 24;; i -= 8) {
-    it += snprintf(it, 4 * sizeof(char), "%d.", (x >> i) & 255);
+    it += snprintf(it, 5 * sizeof(char), "%d.", (x >> i) & 255);
     if (i == 0) break;
   }
   it[-1] = '\0';

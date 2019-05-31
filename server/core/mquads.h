@@ -27,6 +27,7 @@ constexpr NQuad
   CLI_LOGOUT {"lout"},
   CLI_MOUSE {"maus"},
   CLI_MESG {"mesg"},
+  CLI_CR_SH {"crea"},
 
   SERV_LOGIN_OK {"LGOK"},
   SERV_LOG_OUT {"LOFF"},

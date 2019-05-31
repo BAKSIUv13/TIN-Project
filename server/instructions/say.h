@@ -1,4 +1,4 @@
-// Copyright 2019 Piotrek
+// Copyright 2019 TIN
 
 #ifndef SERVER_INSTRUCTIONS_SAY_H_
 #define SERVER_INSTRUCTIONS_SAY_H_
