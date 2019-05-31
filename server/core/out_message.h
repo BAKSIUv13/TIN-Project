@@ -50,7 +50,7 @@ class OutMessage {
   virtual int AddToBuf(WriteBuf *) = 0;
 
   template <typename T>
-  static std::unique_ptr<OutMessage> GenMsg(T *t) {
+  static std::unique_ptr<OutMessage> UP(T *t) {
     return std::move(std::unique_ptr<OutMessage>(t));
   }
 };

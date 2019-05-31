@@ -1,7 +1,7 @@
 // Copyright 2019 Piotrek
 
-#ifndef SERVER_APP_SERVER_H_
-#define SERVER_APP_SERVER_H_
+#ifndef SERVER_CORE_SERVER_H_
+#define SERVER_CORE_SERVER_H_
 
 #include <string>
 #include <map>
@@ -11,16 +11,15 @@
 #include <memory>
 
 #include "account_manager/account_manager.h"
-#include "app/logged_user.h"
-#include "app/session.h"
-#include "app/world.h"
+#include "core/logged_user.h"
+#include "core/world.h"
 #include "configurator/the_config.h"
 #include "core/username.h"
-#include "app/socket_stuff.h"
+#include "core/socket_stuff.h"
 #include "core/socket_tcp4.h"
 #include "core/sel.h"
 #include "core/instr_id.h"
-#include "app/instr_supp.h"
+#include "core/instr_supp.h"
 #include "core/sock_id.h"
 
 namespace tin {
@@ -35,6 +34,7 @@ class Server {
   static constexpr int MAX_PW_LEN = 32;
 
   static const std::map<InstrId, InstrSupp> instructions;
+  
 
   Server();
   Server(const Server &) = delete;
@@ -144,4 +144,4 @@ class Server {
 };  // class Server
 }  // namespace tin
 
-#endif  // SERVER_APP_SERVER_H_
+#endif  // SERVER_CORE_SERVER_H_

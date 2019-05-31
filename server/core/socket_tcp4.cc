@@ -1,4 +1,4 @@
-// Copyright 1410 Jurand ze Spychowa
+// Copyright 2019 TIN
 
 #include "core/socket_tcp4.h"
 

@@ -1,4 +1,4 @@
-// Copyright 2019 Piotrek
+// Copyright 2019 TIN
 
 #include "core/username.h"
 

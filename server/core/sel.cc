@@ -1,4 +1,4 @@
-// Copyright 2019 Piotrek
+// Copyright 2019 TIN
 
 #include "core/sel.h"
 
@@ -8,27 +8,6 @@
 #include <cstring>
 
 namespace tin {
-
-/*
-static void set_bit(void *where, int which) {
-  uint8_t *buf = reinterpret_cast<uint8_t *>(where);
-  buf[which / 8] |= 1 << (which % 8);
-}
-
-static void reset_bit(void *where, int which) {
-  uint8_t *buf = reinterpret_cast<uint8_t *>(where);
-  uint8_t q = -1, w = -1, e;
-  q <<= which % 8 + 1;
-  w >>= (8 - which % 8);
-  e = q | w;
-  buf[which / 8] &= e;
-}
-
-static bool get_bit(void *where, int which) {
-  uint8_t *buf = reinterpret_cast<uint8_t *>(where);
-  return buf[which / 8] & (1 << (which % 8));
-}
-*/
 
 Sel::Sel()
     : buffer_len_(0) {

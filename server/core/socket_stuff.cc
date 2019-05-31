@@ -1,15 +1,15 @@
-// Copyright 1029 Piotrek
+// Copyright 2019 TIN
 
 #include "core/logger.h"
-#include "app/socket_stuff.h"
+#include "core/socket_stuff.h"
 
-#include "app/server.h"
+#include "core/server.h"
 
 namespace tin {
 
 int SocketStuff::ChooseInstr() {
   // Zakładaamy, że już doczytaliśmy instrukcję.
-  // Możliwe, że później to zmienięi8989i9i9i9i9i9i98uuiiiiiiiiiiiiiiiiiiiiiiiii
+  // Możliwe, że później to zmienię
   InstrId instr_id(instr_);
   const InstrSupp *supp_ptr = serv_->GetInstr(instr_id);
   if (supp_ptr == nullptr) {
@@ -36,21 +36,9 @@ int SocketStuff::ChooseInstr() {
       return -1;
     }
   }
-  if (!supp_ptr->GetFn()) {
-    LogH << "Nie ma funkcji lel xd w instrukcji " << instr_
-      << std::string(instr2_ ? std::string(instr2_) : std::string("--"))
-      << "\n";
-    supp_ = InstrSupp();
-    return -1;
-  } else {
-    supp_ = *supp_ptr;
-    strct_
-      = reinterpret_cast<InstrStruct *>(malloc(supp_.GetSize()));
-    ConstructFn fn = supp_.GetConstructor();
-    if (fn) {
-      fn(strct_);
-    }
-  }
+  supp_ = *supp_ptr;
+  strct_ = supp_.Create();
+  assert(strct_);
   return 0;
 }
 

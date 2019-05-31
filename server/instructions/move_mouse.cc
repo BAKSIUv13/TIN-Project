@@ -12,43 +12,33 @@
 namespace tin {
 int MoveMouse::Fn(Server *server, SocketStuff *stuff, World *world,
     MsgPushFn push_fn) {
-  MoveMouse *s = reinterpret_cast<MoveMouse *>(stuff->GetStrct());
   LogL << "Przesuwanie myszki.\n";
-  s->un_ = server->SockToUn(stuff->GetId());
+  un_ = server->SockToUn(stuff->GetId());
   int pom;
-  if (stuff->CmProcessed() < s->Y) {
-    pom = stuff->ReadDouble(s->X, &s->x_);
+  if (stuff->CmProcessed() < Y) {
+    pom = stuff->ReadDouble(X, &x_);
     if (pom != 0) return pom;
   }
-  if (stuff->CmProcessed() < s->END) {
-    pom = stuff->ReadDouble(s->Y, &s->y_);
+  if (stuff->CmProcessed() < END) {
+    pom = stuff->ReadDouble(Y, &y_);
     if (pom != 0) return pom;
   }
-  if (!s->un_) {
+  if (!un_) {
     LogM << "Gniazdo " << stuff->GetId() << " nie jest zalogowane, nie przesuni"
       "e myszki.\n";
-    (server->*push_fn)(std::unique_ptr<OutMessage>(
+    (server->*push_fn)(OutMessage::UP(
       new Sig(stuff->GetId(), MQ::ERR_NOT_LOGGED, false)));
     return -1;
   }
 
-  LogM << "Ok, mam koordy: " << s->x_ << " " << s->y_
+  LogM << "Ok, mam koordy: " << x_ << " " << y_
     << "\n";
-  world->SetCursor(s->un_, s->x_.Double(), s->y_.Double());
+  world->SetCursor(un_, x_.Double(), y_.Double());
   (server->*push_fn)
-    (std::move(OutMessage::GenMsg(new MouseMoved(s->un_, s->x_, s->y_))));
+    (std::move(OutMessage::UP(new MouseMoved(un_, x_, y_))));
   return 0;
 }
 
-void MoveMouse::Construct(InstrStruct *q) {
-  new(q) MoveMouse();
-}
-
-void MoveMouse::Destroy(InstrStruct *q) {
-  // reinterpret_cast<CaptureSession *>(q)->~CaptureSession();
-  q->~InstrStruct();
-  std::cerr << "move_mouse  : destroyv " << q << '\n';
-}
 
 const int MoveMouse::START, MoveMouse::END;
 

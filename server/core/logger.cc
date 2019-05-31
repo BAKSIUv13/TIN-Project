@@ -25,4 +25,5 @@ namespace tin {
   Logger &LogM = Logger::LogM;
   Logger &LogL = Logger::LogL;
   Logger &LogVL = Logger::LogVL;
+
 }  // namespace tin

@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <cinttypes>
 
-#include "app/server.h"
+#include "core/server.h"
 #include "core/username.h"
 #include "core/nquad.h"
 #include "core/mquads.h"

@@ -1,6 +1,6 @@
 // Copyright 2019 Piotrek
 
-#include "app/world.h"
+#include "core/world.h"
 
 #include <unistd.h>
 

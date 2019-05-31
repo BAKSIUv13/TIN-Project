@@ -1,6 +1,6 @@
-// Copyright 2077 piotrek
+// Copyright 2019 TIN
 
-#include "app/server.h"
+#include "core/server.h"
 
 #include <unistd.h>
 
@@ -160,7 +160,7 @@ int Server::DoWorldWork_() {
   Username un;
   const std::string *str_ptr;
   while (world_.NextMsg(&un, &str_ptr) == 0) {
-    PushMsg_(OutMessage::GenMsg(new UserMsg(un, *str_ptr)));
+    PushMsg_(OutMessage::UP(new UserMsg(un, *str_ptr)));
   }
   return 0;
 }

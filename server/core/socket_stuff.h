@@ -1,7 +1,7 @@
-// Copyright 2019 Piotrek
+// Copyright 2019 TIN
 
-#ifndef SERVER_APP_SOCKET_STUFF_H_
-#define SERVER_APP_SOCKET_STUFF_H_
+#ifndef SERVER_CORE_SOCKET_STUFF_H_
+#define SERVER_CORE_SOCKET_STUFF_H_
 
 #include <unistd.h>
 
@@ -17,13 +17,14 @@
 #include "core/nquad.h"
 #include "core/ndouble.h"
 #include "core/instr_struct.h"
-#include "app/instr_supp.h"
+#include "core/instr_supp.h"
 #include "core/write_buf.h"
 #include "core/mquads.h"
 #include "core/instr_id.h"
-#include "core/destroy_fn.h"
 #include "core/sock_id.h"
 #include "core/logger.h"
+#include "core/factory.h"
+#include "core/msg_push_fn.h"
 
 // Definitions for this file for 'readability':
 // - command - that string which starts with 'OwO!'
@@ -211,32 +212,14 @@ class SocketStuff {
 
   int ChooseInstr();
 
-  InstrFn GetInstrFn() {
-    if (supp_.Blank()) {
-      return nullptr;
-    }
-    return supp_.GetFn();
-  }
-
-  InstrStruct *GetStrct() {
-    return strct_;
-  }
-
   SockId GetId() {
     return id_;
   }
 
   int ResetCommand() {
     cm_processed_ = 0;
-    if (supp_ && supp_.GetFn()) {
-      DestroyFn fn = supp_.GetDestructor();
-      if (fn) {
-        fn(strct_);
-      }
-      free(strct_);
-      strct_ = nullptr;
-      supp_ = InstrSupp();
-    }
+    supp_ = InstrSupp();
+    strct_.reset();
     return 0;
   }
 
@@ -279,8 +262,7 @@ class SocketStuff {
           return pom;
         }
       }
-      InstrFn fn = GetInstrFn();
-      pom = fn(serv_, this, w, push_fn);
+      pom = strct_->Fn(serv_, this, w, push_fn);
       if (pom > 0) {
         LogM << "ExecInstr nieee fn zwróciło >0 xd\n";
         return 0;
@@ -327,8 +309,8 @@ class SocketStuff {
   int msg_processed_;
 
   // Memory to store instruction helping information.
-  InstrStruct *strct_;
-  // std::unique_ptr<InstrStruct, DestroyFn> strct_;
+  // InstrStruct *strct_;
+  std::unique_ptr<InstrStruct> strct_;
 
   // Info about actual instruction.
   InstrSupp supp_;
@@ -354,4 +336,4 @@ class SocketStuff {
 
 }  // namespace tin
 
-#endif  // SERVER_APP_SOCKET_STUFF_H_
+#endif  // SERVER_CORE_SOCKET_STUFF_H_

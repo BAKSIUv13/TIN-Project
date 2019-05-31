@@ -1,7 +1,7 @@
-// Copyright 2077 jabka
+// Copyright 2019 TIN
 
-#ifndef SERVER_APP_ARTIST_H_
-#define SERVER_APP_ARTIST_H_
+#ifndef SERVER_CORE_ARTIST_H_
+#define SERVER_CORE_ARTIST_H_
 
 #include <string>
 
@@ -24,4 +24,4 @@ class Artist{
 };  // class Artist
 }  // namespace tin
 
-#endif  // SERVER_APP_ARTIST_H_
+#endif  // SERVER_CORE_ARTIST_H_

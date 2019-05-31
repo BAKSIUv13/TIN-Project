@@ -7,8 +7,7 @@
 
 #include "core/instr_struct.h"
 #include "core/nquad.h"
-#include "app/session.h"
-#include "app/server.h"
+#include "core/server.h"
 
 namespace tin {
 class MoveMouse : public InstrStruct {
@@ -20,9 +19,7 @@ class MoveMouse : public InstrStruct {
 
   MoveMouse() {}
   virtual ~MoveMouse() {}
-  static int Fn(Server *, SocketStuff *, World *, MsgPushFn);
-  static void Construct(InstrStruct *);
-  static void Destroy(InstrStruct *);
+  virtual int Fn(Server *, SocketStuff *, World *, MsgPushFn);
 
  private:
   Username un_;

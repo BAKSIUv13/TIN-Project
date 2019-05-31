@@ -11,57 +11,46 @@
 namespace tin {
 
 int LogIn::Fn(Server *server, SocketStuff *stuff, World *, MsgPushFn push_fn) {
-  LogIn *s = reinterpret_cast<LogIn *>(stuff->GetStrct());
   int pom;
-  if (stuff->CmProcessed() < s->Un_()) {
-    pom = stuff->ReadQuad(s->UnLen_(), &s->un_len_);
+  if (stuff->CmProcessed() < Un_()) {
+    pom = stuff->ReadQuad(UnLen_(), &un_len_);
     if (pom != 0) {
       return pom;
     }
   }
-  if (s->un_len_ > Server::MAX_UN_LEN) {
-    (server->*push_fn)(std::unique_ptr<OutMessage>(
+  if (un_len_ > Server::MAX_UN_LEN) {
+    (server->*push_fn)(OutMessage::UP(
       new Sig(stuff->GetId(), MQ::ERRR_LONG_UN, true)));
     return -1;
   }
-  if (stuff->CmProcessed() < s->PwLen_()) {
-    pom = stuff->ReadCpp11String(s->Un_(), s->un_len_, &s->un_);
+  if (stuff->CmProcessed() < PwLen_()) {
+    pom = stuff->ReadCpp11String(Un_(), un_len_, &un_);
     if (pom != 0) {
       return pom;
     }
   }
-  if (stuff->CmProcessed() < s->Pw_()) {
-    pom = stuff->ReadQuad(s->PwLen_(), &s->pw_len_);
+  if (stuff->CmProcessed() < Pw_()) {
+    pom = stuff->ReadQuad(PwLen_(), &pw_len_);
     if (pom != 0) {
       return pom;
     }
   }
-  if (s->pw_len_ > Server::MAX_PW_LEN) {
-    (server->*push_fn)(std::unique_ptr<OutMessage>(
+  if (pw_len_ > Server::MAX_PW_LEN) {
+    (server->*push_fn)(OutMessage::UP(
       new Sig(stuff->GetId(), MQ::ERRR_LONG_PW, true)));
     return -1;
   }
-  if (stuff->CmProcessed() < s->End_()) {
-    pom = stuff->ReadCpp11String(s->Pw_(), s->pw_len_, &s->pw_);
+  if (stuff->CmProcessed() < End_()) {
+    pom = stuff->ReadCpp11String(Pw_(), pw_len_, &pw_);
     if (pom != 0) {
       return pom;
     }
   }
-  pom = server->LogInUser(Username(s->un_), s->pw_, stuff->GetId(), true);
+  pom = server->LogInUser(Username(un_), pw_, stuff->GetId(), true);
   if (pom < 0) {
     return 0;  // Chodzi o to, że po takim logowanku nie jest źle.
   }
   return 0;
-}
-
-void LogIn::Construct(InstrStruct *q) {
-  new(q) LogIn();
-}
-
-void LogIn::Destroy(InstrStruct *q) {
-  // reinterpret_cast<LogIn *>(q)->~LogIn();
-  q->~InstrStruct();
-  std::cerr << "LogIn  : destroyv " << q << '\n';
 }
 
 }  // namespace tin

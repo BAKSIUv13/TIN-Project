@@ -1,14 +1,14 @@
 // Copyright 2019 Piotrek
 
-#ifndef SERVER_APP_WORLD_H_
-#define SERVER_APP_WORLD_H_
+#ifndef SERVER_CORE_WORLD_H_
+#define SERVER_CORE_WORLD_H_
 
 #include <map>
 #include <vector>
 #include <list>
 #include <string>
 
-#include "app/artist.h"
+#include "core/artist.h"
 #include "image/image.h"
 #include "core/out_message.h"
 #include "chat/chat_msg.h"
@@ -33,4 +33,4 @@ class World {
 };  // class World
 }  // namespace tin
 
-#endif  // SERVER_APP_WORLD_H_
+#endif  // SERVER_CORE_WORLD_H_

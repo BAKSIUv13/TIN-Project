@@ -9,8 +9,7 @@
 
 #include "core/instr_struct.h"
 #include "core/nquad.h"
-#include "app/session.h"
-#include "app/server.h"
+#include "core/server.h"
 
 namespace tin {
 class Say : public InstrStruct {
@@ -20,9 +19,8 @@ class Say : public InstrStruct {
 
   Say() : len_is_read_(false) {}
   virtual ~Say() {}
-  static int Fn(Server *, SocketStuff *, World *, MsgPushFn);
-  static void Construct(InstrStruct *);
-  static void Destroy(InstrStruct *);
+  virtual int Fn(Server *, SocketStuff *, World *, MsgPushFn);
+
  private:
   constexpr int MsgLen_() const {return START;}
   constexpr int Msg_() const {return MsgLen_() + NQS;}
