@@ -21,6 +21,7 @@ constexpr NQuad
 
   ERRR_LONG_UN {"LNun"},
   ERRR_LONG_PW {"LNpw"},
+  ERRR_LONG_MSG {"LNms"},
 
   CLI_LOGIN {"logo"},
   CLI_LOGOUT {"lout"},

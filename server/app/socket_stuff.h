@@ -15,6 +15,7 @@
 
 #include "core/socket_tcp4.h"
 #include "core/nquad.h"
+#include "core/ndouble.h"
 #include "core/instr_struct.h"
 #include "app/instr_supp.h"
 #include "core/write_buf.h"
@@ -113,6 +114,10 @@ class SocketStuff {
   // Get int32 from socket.
   int ReadQuad(int at, NQuad *dest) {
     return ReadString(at, NQS, dest);
+  }
+
+  int ReadDouble(int at, NDouble *dest) {
+    return ReadString(at, sizeof(NDouble), dest);
   }
 
   int ReadString(int start, int len, void *dest) {

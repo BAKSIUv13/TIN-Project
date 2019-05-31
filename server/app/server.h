@@ -51,7 +51,7 @@ class Server {
   int StopRun();
 
   // Returns username assigned to fd. Blank if fd does not have session.
-  Username SockToUn(int fd);
+  Username SockToUn(SockId id);
 
   // xd
   const InstrSupp *GetInstr(const InstrId &id) {
@@ -104,6 +104,9 @@ class Server {
 
   // Reads client sockets and deal with it.
   int ReadClients_();
+
+  // Do work in world.
+  int DoWorldWork_();
 
   // Write messages to buffers to send.
   int MsgsToBufs_();

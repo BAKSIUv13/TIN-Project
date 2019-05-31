@@ -2,9 +2,15 @@
 
 #include "core/logger.h"
 
+#include <ctime>
+#include <iomanip>
+
 namespace tin {
   std::string Logger::GenerateTime_() {
-    return "[siódma rano]\n";
+    std::time_t t = std::time(nullptr);
+    std::stringstream s;
+    s << std::put_time(std::localtime(&t), "[%F %T %Z]%n");
+    return s.str();
   }
 
   Logger Logger::LogH(Logger::DefaultLogFn_<LogLevel::HIGH>);

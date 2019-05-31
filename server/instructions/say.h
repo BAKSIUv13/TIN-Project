@@ -16,9 +16,7 @@ namespace tin {
 class Say : public InstrStruct {
  public:
   static constexpr int START = INSTR + NQS;
-  static constexpr int LEN = START;
-  static constexpr int MSG = LEN + NQS;
-  static constexpr int32_t LEN_CUT {2048};
+  static constexpr int32_t LEN_CUT = 2048;
 
   Say() : len_is_read_(false) {}
   virtual ~Say() {}
@@ -26,12 +24,16 @@ class Say : public InstrStruct {
   static void Construct(InstrStruct *);
   static void Destroy(InstrStruct *);
  private:
+  constexpr int MsgLen_() const {return START;}
+  constexpr int Msg_() const {return MsgLen_() + NQS;}
+  constexpr int End_() const {return Msg_() + len_;}
+
   constexpr int32_t Len_() const {
-    return std::min(len_.Int(), LEN_CUT);
+    return len_.Int();
   }
 
-  NQuad len_;
   Username un_;
+  NQuad len_;
   std::string message_;
   bool len_is_read_;
 };

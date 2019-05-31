@@ -13,6 +13,8 @@
 namespace tin {
 class LogIn : public InstrStruct {
  public:
+  // static constexpr InstrSupp supp(&LogIn::Fn, sizeof(LogIn))
+
   static constexpr int START = INSTR + NQS;
 
   LogIn() {}

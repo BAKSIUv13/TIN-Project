@@ -31,6 +31,13 @@ const std::map<InstrId, InstrSupp> Server::instructions {
       sizeof(Say),
       &Say::Construct,
       &Say::Destroy)},
+
+  {InstrId(MQ::CLI_MOUSE),
+    InstrSupp(
+      &MoveMouse::Fn,
+      sizeof(MoveMouse),
+      &MoveMouse::Construct,
+      &MoveMouse::Destroy)},
 };
 
 }  // namespace tin

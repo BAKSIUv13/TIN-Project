@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 #include <list>
+#include <string>
 
 #include "app/artist.h"
 #include "image/image.h"
@@ -15,13 +16,19 @@
 namespace tin {
 class World {
  public:
-  int AddArtist(const Username&);
-  int RemoveArtist();
+  World() : next_msg_(chat_msgs_.end()) {}
+
+  int AddArtist(const Username &);
+  int RemoveArtist(const Username &);
+  int PutMsg(ChatMsg &&);
+  int NextMsg(Username *, const std::string **);
+  int SetCursor(const Username &, double x, double y);
  private:
   // To jest tylko dodatkowa struktura z myszką i tak dalej.
   std::map<Username, Artist> artists_;
 
   std::list<ChatMsg> chat_msgs_;
+  decltype(chat_msgs_)::iterator next_msg_;  // to send
 
 };  // class World
 }  // namespace tin

@@ -7,32 +7,36 @@
 #include "instructions/move_mouse.h"
 
 #include "send_msgs/mouse_moved.h"
+#include "send_msgs/sig.h"
 
 namespace tin {
-/*
-int MoveMouse::Fn(Server *server, int fd, SocketStuff *stuff, World *world,
+int MoveMouse::Fn(Server *server, SocketStuff *stuff, World *world,
     MsgPushFn push_fn) {
-  MoveMouse *s = reinterpret_cast<MoveMouse *>(stuff->strct);
-  int chars_to_copy;
-  s->un_ = server->SockToUn(fd);
-  std::cerr << "Przyszło przesuwanko myszki";
-  if (s->un_.Good()) {
-    std::cerr << " od gracza [[" << s->un_ << "]]\n";
-  } else {
-    std::cerr << " od kogoś nie zalogowanego xd\n";
+  MoveMouse *s = reinterpret_cast<MoveMouse *>(stuff->GetStrct());
+  LogL << "Przesuwanie myszki.\n";
+  s->un_ = server->SockToUn(stuff->GetId());
+  int pom;
+  if (stuff->CmProcessed() < s->Y) {
+    pom = stuff->ReadDouble(s->X, &s->x_);
+    if (pom != 0) return pom;
+  }
+  if (stuff->CmProcessed() < s->END) {
+    pom = stuff->ReadDouble(s->Y, &s->y_);
+    if (pom != 0) return pom;
+  }
+  if (!s->un_) {
+    LogM << "Gniazdo " << stuff->GetId() << " nie jest zalogowane, nie przesuni"
+      "e myszki.\n";
+    (server->*push_fn)(std::unique_ptr<OutMessage>(
+      new Sig(stuff->GetId(), MQ::ERR_NOT_LOGGED, false)));
     return -1;
   }
-  if (stuff->cm_processed < END) {
-    chars_to_copy = stuff->CountCopy(END);
-    stuff->Copy(&s->coords_[stuff->cm_processed - START], chars_to_copy);
-    if (stuff->cm_processed < END) {
-      return 1;
-    }
-  }
-  std::cerr << "Ok, mam koordy: " << s->x() << " " << s->y()
+
+  LogM << "Ok, mam koordy: " << s->x_ << " " << s->y_
     << "\n";
-  std::unique_ptr<OutMessage> msg {new MouseMoved(s->un_, s->x(), s->y())};
-  (server->*push_fn)(std::move(msg));
+  world->SetCursor(s->un_, s->x_.Double(), s->y_.Double());
+  (server->*push_fn)
+    (std::move(OutMessage::GenMsg(new MouseMoved(s->un_, s->x_, s->y_))));
   return 0;
 }
 
@@ -47,5 +51,5 @@ void MoveMouse::Destroy(InstrStruct *q) {
 }
 
 const int MoveMouse::START, MoveMouse::END;
-*/
+
 }  // namespace tin

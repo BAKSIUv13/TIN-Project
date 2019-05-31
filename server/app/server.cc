@@ -19,6 +19,7 @@
 #include "send_msgs/sig.h"
 #include "send_msgs/log_ok.h"
 #include "send_msgs/log_off.h"
+#include "send_msgs/user_msg.h"
 
 static constexpr int STDIN_FD = STDIN_FILENO;
 
@@ -155,9 +156,18 @@ int Server::ReadMainFds_() {
   return 0;
 }
 
-Username Server::SockToUn(int fd) {
+int Server::DoWorldWork_() {
+  Username un;
+  const std::string *str_ptr;
+  while (world_.NextMsg(&un, &str_ptr) == 0) {
+    PushMsg_(OutMessage::GenMsg(new UserMsg(un, *str_ptr)));
+  }
+  return 0;
+}
+
+Username Server::SockToUn(SockId id) {
   try {
-    return socks_to_users_.at(fd)->GetName();
+    return socks_to_users_.at(id)->GetName();
   } catch(std::out_of_range &e) {
     return Username();
   }
@@ -232,8 +242,19 @@ int Server::MsgsToBufs_() {
         }
         break;
       case OutMessage::BROADCAST_U:
-        LogH << "OutMessage::BROADCAST_U jeszcze nie działa xd\n";
-        throw std::runtime_error("OutMessage::BROADCAST_U not implemented");
+        LogM << "OutMessage::BROADCAST_U\n";
+        for (auto &x : users_) {
+          SocketStuff *stuff = &client_socks_.at(x.second.GetSockId());
+          added_to_buf = msg->AddToBuf(&stuff->WrBuf());
+          if (added_to_buf < 0) {
+            LogH << "Błąd przy dodawaniu wiadomości do bufora. :<\n" <<
+              "Socket o id " << stuff->GetId() << " i fd " <<
+              stuff->GetSocket().GetFD() << "\nuser: " << x.first << '\n';
+            stuff->ForceRemove();
+            // :>
+          }
+        }
+        break;
       case OutMessage::LIST_S:
         LogH << "OutMessage::LIST_S jeszcze nie działa xd\n";
         throw std::runtime_error("OutMessage::LIST_S not implemented");
@@ -335,6 +356,7 @@ int Server::LoopTick_() {
     return 0;
   int write_to_socks_ret = WriteToSocks_();
   int read_clients_ret = ReadClients_();
+  int do_world_work_ret = DoWorldWork_();
   int msgs_to_bufs_ret = MsgsToBufs_();
   int delete_marked_socks_ret = DeleteMarkedSocks_();
   {
@@ -344,6 +366,7 @@ int Server::LoopTick_() {
     (void)read_main_fds_ret;
     (void)write_to_socks_ret;
     (void)read_clients_ret;
+    (void)do_world_work_ret;
     (void)delete_marked_socks_ret;
   }
 
@@ -399,6 +422,7 @@ int Server::LogInUser(const Username &un, const std::string &pw,
     return -1;
   }
   LogM << "zalogowano [[" << un << "]]\n";
+  world_.AddArtist(un);
   if (generate_response)
     PushMsg_(std::unique_ptr<OutMessage>(new LogOk(sock_id)));
   return 0;

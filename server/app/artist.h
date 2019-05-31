@@ -12,6 +12,12 @@ class Artist{
  public:
   using MousePosition = std::array<double, 2>;
 
+  explicit Artist(Username un) : un_(un) {}
+
+  void SetCursor(double x, double y) {
+    mouse_[0] = x;
+    mouse_[1] = y;
+  }
  private:
   Username un_;
   MousePosition mouse_;
