@@ -28,7 +28,6 @@ class MoveMouse : public InstrStruct {
   double y;
 };
 
-
 }  // namespace tin
 
 #endif  // SERVER_INSTRUCTIONS_MOVE_MOUSE_H_

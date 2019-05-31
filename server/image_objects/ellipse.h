@@ -23,5 +23,4 @@ struct Ellipse : BasicObject {
 
 }  // namespace tin
 
-
 #endif  // SERVER_IMAGE_OBJECTS_ELLIPSE_H_

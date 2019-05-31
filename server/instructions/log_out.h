@@ -23,7 +23,6 @@ class LogOut : public InstrStruct {
   static void Destroy(InstrStruct *);
 };
 
-
 }  // namespace tin
 
 #endif  // SERVER_INSTRUCTIONS_LOG_OUT_H_

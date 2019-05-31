@@ -25,7 +25,6 @@ class Username {
   explicit Username(const char *);
   explicit Username(const Username &, CONDENSE_t);
 
-
   int GetState() const {return state_;}
 
   bool operator==(const Username &o) const {return Compare_(o) == 0;}
@@ -44,7 +43,6 @@ class Username {
   explicit operator std::string() const {return std::string(c_);}
 
   int Len() const noexcept;
-
 
  private:
   int state_;

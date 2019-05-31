@@ -85,23 +85,10 @@ class SocketStuff {
     return write_buf_.Chars() > 0 && shall_be_removed_ < RemoveEnum::FORCE;
   }
 
-/*
-  constexpr int CountCopy(int how_much) const {
-    return std::min(msg_len_ - msg_processed_, how_much - cm_processed_);
-  }
-
-  void Copy(void *dest, size_t how_much) {
-    memcpy(dest, &read_buf_[msg_processed_], how_much);
-    msg_processed_ += how_much;
-    cm_processed_ += how_much;
-  }
-*/
-
   // write buf
   WriteBuf &WrBuf() {
     return write_buf_;
   }
-
 
   // This reads from socket to our buffer as much chars as it can.
   int ReadCharsFromSocket() {
@@ -248,7 +235,6 @@ class SocketStuff {
     return 0;
   }
 
-
   int DealWithReadBuf(World *w, MsgPushFn push_fn) {
     std::cerr << "int DealWithReadBuf()\n";
     std::cerr << "Gniazdo o id " << id_ << " i fd " <<
@@ -290,40 +276,29 @@ class SocketStuff {
       }
       InstrFn fn = GetInstrFn();
       pom = fn(serv_, this, w, push_fn);
-    if (pom > 0) {
-      std::cerr << "ExecInstr nieee fn zwróciło >0 xd\n";
-      return 0;
-    } else if (pom < 0) {
-      return pom;
+      if (pom > 0) {
+        std::cerr << "ExecInstr nieee fn zwróciło >0 xd\n";
+        return 0;
+      } else if (pom < 0) {
+        return pom;
     }
-    std::cerr << "O, wygląda na to, że skończono czytać instrukcję.\n";
-    ResetCommand();
-  }  // while
-  std::cerr << "No to ten koniec czytanuia\n";
-  return 0;
-}
-
-  // void CopyToCpp11String(std::string *dest, std::string::size_type how_much)
-  // {
-  //   dest->append(&read_buf[msg_processed], how_much);
-  //   read_processed += how_much;
-  //   cm_processed += how_much;
-  // }
+      std::cerr << "O, wygląda na to, że skończono czytać instrukcję.\n";
+      ResetCommand();
+    }  // while
+    std::cerr << "No to ten koniec czytanuia\n";
+    return 0;
+  }
 
  private:
-
   void Shift_(int how_much) {
     cm_processed_ += how_much;
     msg_processed_ += how_much;
   }
 
-
   // Counts how many chars can we copy at this time.
   constexpr int CountCopy_(int to) const {
     return std::min(msg_len_ - msg_processed_, to - cm_processed_);
   }
-
-
 
   // We need this pointer to server :<
   Server *serv_;

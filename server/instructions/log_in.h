@@ -34,7 +34,6 @@ class LogIn : public InstrStruct {
   std::string pw_;
 };
 
-
 }  // namespace tin
 
 #endif  // SERVER_INSTRUCTIONS_LOG_IN_H_

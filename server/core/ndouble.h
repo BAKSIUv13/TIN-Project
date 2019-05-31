@@ -9,7 +9,7 @@
 #include <cstring>
 #include <type_traits>
 #include <array>
-
+/*
 static_assert(sizeof(uint64_t) == sizeof(double));
 static_assert(__BYTE_ORDER == __LITTLE_ENDIAN);
 static_assert(__FLOAT_WORD_ORDER == __LITTLE_ENDIAN);
@@ -17,7 +17,7 @@ static_assert(__FLOAT_WORD_ORDER == __LITTLE_ENDIAN);
   _M_I86 || _M_IX86)
 #error "bad arch xd"
 #endif
-
+*/
 namespace tin {
 
 struct NDouble {
@@ -45,21 +45,6 @@ struct NDouble {
     return Double();
   }
 
-  /*
-  constexpr int32_t Int() const {
-    return static_cast<int32_t>(Uint());
-  }
-  constexpr operator uint32_t() const {return Uint();}
-  constexpr explicit operator int32_t() const {return Int();}
-
-  std::array<char, 4> CharArray() const {
-    return *reinterpret_cast<const std::array<char, 4> *>(&raw_uint);
-  }
-
-  */
-  /*
-  const char *CStr() const {return reinterpret_cast<const char *>(&raw_uint);}
-  */
 };
 
 }  // namespace tin

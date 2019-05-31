@@ -54,7 +54,6 @@ Server::~Server() {
   close(end_pipe_[1]);
 }
 
-
 int Server::InitializeListener_(uint16_t port, int queue_size) {
   int result = 0;
   result = listening_sock_.Open();
@@ -81,7 +80,6 @@ void Server::Run(uint16_t port, int queue_size) {
     LoopTick_();
   }
 }
-
 
 int Server::FeedSel_() {
   sel_.Zero();
@@ -188,14 +186,14 @@ int Server::WriteToSocks_() {
     WriteBuf &swb = it->second.WrBuf();
     int loaded_from_buf = swb.Get(buf, WRT_BUF);
     if (loaded_from_buf < 0) {
-      // źle hehe
-      it->second.Remove();
+      // Tutaj mamy obsługę gniazda w tak złym stanie, że musimy je zamknąć.
+      it->second.ForceRemove();
       continue;
     }
     int written = write(it->second.GetSocket().GetFD(), buf, loaded_from_buf);
     if (written < 0) {
-      // źle hehe
-      it->second.Remove();
+      // Tutaj też jest źle.
+      it->second.ForceRemove();
       continue;
     }
     if (written == 0) {
@@ -276,7 +274,6 @@ int Server::MsgsToBufs_() {
   return 0;
 }
 
-
 int Server::ReadClients_() {
   int sockets_read = 0;
   for (auto it = client_socks_.begin(); it != client_socks_.end(); ++it) {
@@ -316,12 +313,6 @@ int Server::ReadClients_() {
   return sockets_read;
 }
 
-
-
-// "OwO!jabłka xd źle cos\n"
-
-
-
 int Server::DropSock_(SockId id) {
   std::cerr << "Próba dropnięcioa socketu id " << id << "\n";
   if (client_socks_.count(id) < 1) {
@@ -339,10 +330,6 @@ int Server::DropSock_(SockId id) {
   std::cerr << "drop: ok, wychodzonko\n";
   return 0;
 }
-
-
-
-
 
 void Server::SpecialHardcodeInit() {
   return;
@@ -448,7 +435,6 @@ int Server::LogOutUser(SockId id, bool generate_response) {
   return 0;
 }
 
-
 int Server::DeleteMarkedSocks_() {
   auto it = client_socks_.begin();
   while (it != client_socks_.end()) {
@@ -463,12 +449,10 @@ int Server::DeleteMarkedSocks_() {
   return 0;
 }
 
-
 int Server::PushMsg_(std::unique_ptr<OutMessage> msg) {
   messages_to_send_.emplace_back(std::move(msg));
   return 0;
 }
-
 
 OutMessage *Server::FirstMsg_() {
   if (messages_to_send_.size() < 1) return nullptr;
@@ -479,6 +463,5 @@ int Server::PopMsg_() {
   messages_to_send_.erase(messages_to_send_.begin());
   return 0;
 }
-
 
 }  // namespace tin

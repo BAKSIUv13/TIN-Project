@@ -27,5 +27,4 @@ void LogOut::Destroy(InstrStruct *q) {
   std::cerr << "LogOut  : destroyv " << q << '\n';
 }
 
-
 }  // namespace tin

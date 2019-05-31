@@ -84,7 +84,4 @@ int WriteBuf::Pop(int n) {
   return 0;
 }
 
-
-
-
 }  // namespace tin

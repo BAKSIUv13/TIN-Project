@@ -7,12 +7,9 @@
 
 #include <cstring>
 
-// UWAGA!!! To może nie działać!!!
-
 namespace tin {
 
-static_assert(FD_SETSIZE == Sel::MAX_SIZE);
-
+/*
 static void set_bit(void *where, int which) {
   uint8_t *buf = reinterpret_cast<uint8_t *>(where);
   buf[which / 8] |= 1 << (which % 8);
@@ -31,17 +28,20 @@ static bool get_bit(void *where, int which) {
   uint8_t *buf = reinterpret_cast<uint8_t *>(where);
   return buf[which / 8] & (1 << (which % 8));
 }
+*/
 
 Sel::Sel()
     : buffer_len_(0) {
-  memset(fds_, 0, sizeof(fds_));
+  FD_ZERO(&read_fds_);
+  FD_ZERO(&write_fds_);
 }
 
 Sel::~Sel() {}
 
 void Sel::Zero() {
   buffer_len_ = 0;
-  memset(fds_, 0, sizeof(fds_));
+  FD_ZERO(&read_fds_);
+  FD_ZERO(&write_fds_);
 }
 
 int Sel::AddFD(int fd, int t) {
@@ -55,13 +55,10 @@ int Sel::AddFD(int fd, int t) {
     buffer_len_ = fd + 1;
   }
   if (t & READ) {
-    set_bit(read_fds_(), fd);
+    FD_SET(fd, &read_fds_);
   }
   if (t & WRITE) {
-    set_bit(write_fds_(), fd);
-  }
-  if (t & EXCEPTION) {
-    set_bit(exc_fds_(), fd);
+    FD_SET(fd, &write_fds_);
   }
   return 0;
 }
@@ -77,13 +74,10 @@ int Sel::DelFD(int fd, int t) {
     return -1;
   }
   if (t & READ) {
-    reset_bit(read_fds_(), fd);
+    FD_CLR(fd, &read_fds_);
   }
   if (t & WRITE) {
-    reset_bit(write_fds_(), fd);
-  }
-  if (t & EXCEPTION) {
-    reset_bit(exc_fds_(), fd);
+    FD_CLR(fd, &write_fds_);
   }
   Shrink_();
   return 0;
@@ -94,14 +88,11 @@ int Sel::Get(int fd) {
     return NONE;
   }
   int ret = NONE;
-  if (get_bit(read_fds_(), fd)) {
+  if (FD_ISSET(fd, &read_fds_)) {
     ret |= READ;
   }
-  if (get_bit(write_fds_(), fd)) {
+  if (FD_ISSET(fd, &write_fds_)) {
     ret |= WRITE;
-  }
-  if (get_bit(exc_fds_(), fd)) {
-    ret |= EXCEPTION;
   }
   return ret;
 }
@@ -109,9 +100,8 @@ int Sel::Get(int fd) {
 void Sel::Shrink_() {
   int last = buffer_len_ - 1;
   while (last >= 0) {
-    if (get_bit(read_fds_(), last)
-      | get_bit(write_fds_(), last)
-      | get_bit(exc_fds_(), last)) {
+    if (FD_ISSET(last, &read_fds_)
+      | FD_ISSET(last, &write_fds_)) {
       break;
     }
     --last;
@@ -120,8 +110,6 @@ void Sel::Shrink_() {
     buffer_len_ = last + 1;
   }
 }
-
-
 
 int Sel::Select(TimeVal time_value) {
   struct timeval tv, *tv_ptr;
@@ -133,13 +121,12 @@ int Sel::Select(TimeVal time_value) {
     tv.tv_usec = time_value.microseconds;
   }
   int ret = select(buffer_len_,
-    reinterpret_cast<fd_set *>(read_fds_()),
-    reinterpret_cast<fd_set *>(write_fds_()),
-    reinterpret_cast<fd_set *>(exc_fds_()),
+    &read_fds_,
+    &write_fds_,
+    nullptr,
     tv_ptr);
   Shrink_();
   return ret;
 }
-
 
 }  // namespace tin

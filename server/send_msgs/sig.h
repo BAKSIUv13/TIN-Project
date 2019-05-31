@@ -30,12 +30,9 @@ class Sig : public OutMessage {
   virtual SockId Sock() {return id_;}
   virtual int AddToBuf(WriteBuf *buf);
 
-
-
   bool IsHeavy() {return heavy_;}
   const std::string GetMsg() {return msg_;}
   NQuad GetCode() {return code_;}
-
 
  private:
   SockId id_;

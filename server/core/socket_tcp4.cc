@@ -10,16 +10,16 @@
 #include <iostream>
 #include <array>
 
-static std::array<char, 16> fgfg(uint32_t x) {
+static std::array<char, 16> gen_ip_str(uint32_t x) {
   // nie chciało mi się szukać tyhc funkcji więc napisałem sam na rzaie
-  std::array<char, 16> xc;
-  char *gd = xc.data();
+  std::array<char, 16> arr;
+  char *it = arr.data();
   for (uint32_t i = 24;; i -= 8) {
-    gd += snprintf(gd, 16 * sizeof(char), "%d.", (x >> i) & 255);
+    it += snprintf(it, 4 * sizeof(char), "%d.", (x >> i) & 255);
     if (i == 0) break;
   }
-  *(gd - 1) = '\0';
-  return xc;
+  it[-1] = '\0';
+  return arr;
 }
 
 namespace tin {
@@ -149,8 +149,8 @@ namespace tin {
       new_sock->fd_ = accept_ret;
       new_sock->addr_there_ = ntohl(saddr.sin_addr.s_addr);
       new_sock->port_there_ = ntohs(saddr.sin_port);
-      int hahaha = getsockname(accept_ret, &saddr_l, &addrlen);
-      if (hahaha < 0) {
+      int accepted_socket_name = getsockname(accept_ret, &saddr_l, &addrlen);
+      if (accepted_socket_name < 0) {
         std::cerr << "najgorzej\n";
         std::terminate();
       }
@@ -158,9 +158,9 @@ namespace tin {
       new_sock->port_here_ = ntohs(saddr.sin_port);
       std::fprintf(stderr, "serv here xd  %s:%d\nclient here   %s:%d\n"
         "client there  %s:%d\n",
-        fgfg(addr_here_).data(), port_here_,
-        fgfg(new_sock->addr_here_).data(), new_sock->port_here_,
-        fgfg(new_sock->addr_there_).data(), new_sock->port_there_);
+        gen_ip_str(addr_here_).data(), port_here_,
+        gen_ip_str(new_sock->addr_here_).data(), new_sock->port_here_,
+        gen_ip_str(new_sock->addr_there_).data(), new_sock->port_there_);
       return 0;
     }
     return accept_ret;

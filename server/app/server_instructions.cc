@@ -23,35 +23,14 @@ const std::map<InstrId, InstrSupp> Server::instructions {
       &LogOut::Fn,
       sizeof(LogOut),
       &LogOut::Construct,
-      &LogOut::Destroy)}
-/*
-  {InstrId(MQ::REQUEST_LOGIN),
-    InstrSupp(
-      nullptr,
-      0,
-      nullptr,
-      nullptr)},
-*/
+      &LogOut::Destroy)},
 
-/*
-  {InstrId(MQ::SAY),
+  {InstrId(MQ::CLI_MESG),
     InstrSupp(
       &Say::Fn,
       sizeof(Say),
       &Say::Construct,
       &Say::Destroy)},
-
-  {InstrId(MQ::MOVE_MOUSE),
-    InstrSupp(
-      &MoveMouse::Fn,
-      sizeof(MoveMouse),
-      &MoveMouse::Construct,
-      &MoveMouse::Destroy)},  
-      */
-/*
-  {InstrId(NQuad(10)),
-    InstrSupp(InstrSupp::EXPAND)},
-    */
 };
 
-}
+}  // namespace tin

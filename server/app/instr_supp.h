@@ -44,5 +44,4 @@ class InstrSupp {
 };
 }  // namespace tin
 
-
 #endif  // SERVER_APP_INSTR_SUPP_H_

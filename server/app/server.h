@@ -25,13 +25,14 @@
 
 namespace tin {
 
-
 class Server {
  public:
   static constexpr uint16_t DEFAULT_PORT = 42000;
   static constexpr bool DEAL_WITH_STDIN = true;
   static constexpr int DEFAULT_LISTEN_QUEUE_LEN = 32;
   static constexpr int NQS = sizeof(NQuad);
+  static constexpr int MAX_UN_LEN = Username::MAX_NAME_LEN;
+  static constexpr int MAX_PW_LEN = 32;
 
   static const std::map<InstrId, InstrSupp> instructions;
 
@@ -51,11 +52,6 @@ class Server {
 
   // Returns username assigned to fd. Blank if fd does not have session.
   Username SockToUn(int fd);
-
-  // TheConfig &GetConf() {return conf_;}
-  // AccountManager &GetAccountManager() {return am_;}
-
-  // World &GetWorld() {return world_;}
 
   // xd
   const InstrSupp *GetInstr(const InstrId &id) {

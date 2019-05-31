@@ -19,7 +19,7 @@ int LogIn::Fn(Server *server, SocketStuff *stuff, World *, MsgPushFn push_fn) {
       return pom;
     }
   }
-  if (s->un_len_ > Username::MAX_NAME_LEN) {
+  if (s->un_len_ > Server::MAX_UN_LEN) {
     (server->*push_fn)(std::unique_ptr<OutMessage>(
       new Sig(stuff->GetId(), MQ::ERRR_LONG_UN, true)));
     return -1;
@@ -36,7 +36,7 @@ int LogIn::Fn(Server *server, SocketStuff *stuff, World *, MsgPushFn push_fn) {
       return pom;
     }
   }
-  if (s->pw_len_ > 32) {
+  if (s->pw_len_ > Server::MAX_PW_LEN) {
     (server->*push_fn)(std::unique_ptr<OutMessage>(
       new Sig(stuff->GetId(), MQ::ERRR_LONG_PW, true)));
     return -1;
@@ -63,6 +63,5 @@ void LogIn::Destroy(InstrStruct *q) {
   q->~InstrStruct();
   std::cerr << "LogIn  : destroyv " << q << '\n';
 }
-
 
 }  // namespace tin

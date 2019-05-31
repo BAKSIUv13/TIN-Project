@@ -22,5 +22,4 @@ struct Rectangle : BasicObject {
 
 }  // namespace tin
 
-
 #endif  // SERVER_IMAGE_OBJECTS_RECTANGLE_H_

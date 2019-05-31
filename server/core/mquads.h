@@ -11,8 +11,6 @@ namespace MQ {
 constexpr NQuad
   ZERO {},
   OWO {"OwO!"},
-  // CAPTURE_SESSION {"sess"},
-  // SESSION_ACCEPTED {"okej"},
 
   ERR_BAD_LOG {"badl"},
   ERR_BANNED {"band"},
@@ -29,17 +27,6 @@ constexpr NQuad
   CLI_MOUSE {"maus"},
   CLI_MESG {"mesg"},
 
-
-  MOVE_MOUSE {"mysz"},
-  SAY {"msg0"},
-  SAY2 {"sayy"},  // ??
-  SERVER_DELIVER_MSG {"msg1"},
-  SERVER_MOUSE {"maus"},
-  SERVER_DELIVER_MSG2 {"said"},  // ??
-  SERVER_DISCONNECT {"disc"},
-  SERVER_ANNOUNCEMENT {"hejo"},
-  SERVER_NOTICE {"ueuo"},
-
   SERV_LOGIN_OK {"LGOK"},
   SERV_LOG_OUT {"LOFF"},
   SERV_MOUSE {"MAUS"},
@@ -52,12 +39,7 @@ constexpr NQuad
   ELLIPSE {"elip"},
   POLYGONAL_CHAIN {"path"},
 
-  EDIT {"edit"},
-  ADD_PARAMS {"addd"},
-  GRAB {"grab"},
-  DONE {"done"},
-  NOPE {"NOPE"},
-  OBJECT_DELETED {"puff"};
+  NOTHING {"xdxd"};
 
 }  // namespace MQ
 }  // namespace tin

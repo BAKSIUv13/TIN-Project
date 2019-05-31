@@ -1,4 +1,4 @@
-// Copyright 1410 xd
+// Copyright 2019 TIN
 
 #ifndef SERVER_IMAGE_IMAGE_H_
 #define SERVER_IMAGE_IMAGE_H_
@@ -44,7 +44,6 @@ class Image {
       return -1;
     }
   }
-
 
  private:
   Id GetNewId_() {
