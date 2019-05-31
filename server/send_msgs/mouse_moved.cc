@@ -5,18 +5,18 @@
 
 #include "send_msgs/mouse_moved.h"
 #include "core/mquads.h"
+#include "core/ndouble.h"
 
 namespace tin {
 
 int MouseMoved::AddToBuf(WriteBuf *buf) {
-  int NQS = sizeof(NQuad);
   std::string str;
-  str.append(MQ::OWO.CStr(), NQS);
-  str.append(MQ::SERVER_MOUSE.CStr(), NQS);
+  MQ::OWO.AppendToCpp11String(&str);
+  MQ::SERV_MOUSE.AppendToCpp11String(&str);
   const char *name = GetUsername();
-  str.append(name, 16);
-  str.append(NQuad(x()).CStr(), NQS);
-  str.append(NQuad(y()).CStr(), NQS);
+  str.append(name);
+  NDouble(x()).AppendToCpp11String(&str);
+  NDouble(y()).AppendToCpp11String(&str);
   return buf->Add(str);
 }
 }  // namespace tin

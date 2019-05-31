@@ -14,15 +14,6 @@
 #include "core/mquads.h"
 #include "core/logger.h"
 
-void print_nquad(tin::NQuad nq) {
-  char x[5];
-  x[4] = '\0';
-  memcpy(x, &nq, 4);
-  std::ios ios_state(nullptr);
-  ios_state.copyfmt(std::cerr);
-  std::cerr << std::hex << nq << " : " << x << '\n';
-  std::cerr.copyfmt(ios_state);
-}
 
 int main(int argc, char **argv, char **env) {
 

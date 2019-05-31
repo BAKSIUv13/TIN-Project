@@ -35,9 +35,9 @@ constexpr NQuad
   SERV_SIGL {"SIGL"},
   SERV_SIGH {"SIGH"},
 
-  RECTANGLE {"rect"},
-  ELLIPSE {"elip"},
-  POLYGONAL_CHAIN {"path"},
+  SHAPE_RECTANGLE {"rect"},
+  SHAPE_ELLIPSE {"elip"},
+  SHAPE_POLYGONAL_CHAIN {"path"},
 
   NOTHING {"xdxd"};
 

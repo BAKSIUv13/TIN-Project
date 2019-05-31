@@ -9,6 +9,8 @@
 #include <cstring>
 #include <type_traits>
 #include <array>
+#include <string>
+
 /*
 static_assert(sizeof(uint64_t) == sizeof(double));
 static_assert(__BYTE_ORDER == __LITTLE_ENDIAN);
@@ -22,9 +24,9 @@ namespace tin {
 
 struct NDouble {
   double x;
-  constexpr NDouble()
-    : x(0.0) {
-  }
+  constexpr NDouble() : x(0.0) {}
+  explicit constexpr NDouble(double n) : x(n) {}
+
   constexpr bool operator==(const NDouble &o) {return x == o.x;}
   constexpr bool operator!=(const NDouble &o) {return x != o.x;}
 
@@ -45,6 +47,11 @@ struct NDouble {
     return Double();
   }
 
+  void AppendToCpp11String(std::string *s) const {
+    s->append(this->CStr(), sizeof(*this));
+  }
+
+  const char *CStr() const {return reinterpret_cast<const char *>(&x);}
 };
 
 }  // namespace tin

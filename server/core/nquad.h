@@ -81,6 +81,12 @@ struct NQuad {
     s->append(this->CStr(), sizeof(*this));
   }
 
+  operator std::string() const {
+    std::string s;
+    this->AppendToCpp11String(&s);
+    return s;
+  }
+
   const char *CStr() const {return reinterpret_cast<const char *>(&raw_uint);}
 };
 

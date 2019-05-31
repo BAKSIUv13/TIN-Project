@@ -61,7 +61,7 @@ class Logger : public std::ostream {
   template <LogLevel LvL>
   static void DefaultLogFn_(const std::ostringstream &oss) {
     static std::ofstream default_log_file("./log.log", std::ios::out);
-    if (DEBUG && LvL >= LogLevel::LOW || LvL >= LogLevel::HIGH) {
+    if ((DEBUG && LvL >= LogLevel::LOW) || LvL >= LogLevel::HIGH) {
       std::cerr << oss.str();
     }
     if (DEBUG || LvL >= LogLevel::MEDIUM) {

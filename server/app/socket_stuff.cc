@@ -1,5 +1,6 @@
 // Copyright 1029 Piotrek
 
+#include "core/logger.h"
 #include "app/socket_stuff.h"
 
 #include "app/server.h"
@@ -12,36 +13,33 @@ int SocketStuff::ChooseInstr() {
   InstrId instr_id(instr_);
   const InstrSupp *supp_ptr = serv_->GetInstr(instr_id);
   if (supp_ptr == nullptr) {
-    std::cerr << "Nie ma instrukcji " << instr_ << " :< \n";
+    LogM << "Nie ma instrukcji " << instr_ << " :< \n";
     supp_ = InstrSupp();
     return -1;
   }
   if (supp_ptr->Expands()) {
     int pom = ReadInstr2();
     if (pom < 0) {
-      std::cerr << "Błąd przy doczytywaniu do wybieranka.\n";
+      LogM << "Błąd przy doczytywaniu do wybieranka.\n";
       return pom;
     }
     if (pom > 0) {
-      std::cerr << "nie doczytało \n";
+      LogM << "nie doczytało \n";
       return 1;
     }
     instr_id = InstrId(instr_, instr2_);
     supp_ptr = serv_->GetInstr(instr_id);
     if (supp_ptr == nullptr) {
-      std::cerr << "Nie ma instrukcji " << instr_<< ' '
+      LogM << "Nie ma instrukcji " << instr_<< ' '
         << instr2_ << " :< \n";
       supp_ = InstrSupp();
       return -1;
     }
   }
   if (!supp_ptr->GetFn()) {
-    std::cerr << "Nie ma funkcji lel xd w instrukcji " << instr_;
-    if (instr2_) {
-      std::cerr << ' ' << instr2_ << "\n";
-    } else {
-      std::cerr << '\n';
-    }
+    LogH << "Nie ma funkcji lel xd w instrukcji " << instr_
+      << std::string(instr2_ ? std::string(instr2_) : std::string("--"))
+      << "\n";
     supp_ = InstrSupp();
     return -1;
   } else {
