@@ -13,6 +13,7 @@
 #include "core/username.h"
 #include "core/nquad.h"
 #include "core/mquads.h"
+#include "core/logger.h"
 
 
 void haha(tin::NQuad nq) {
@@ -80,12 +81,15 @@ int main(int argc, char **argv, char **env) {
   //  return 0;
   //  return 0;
 
+  tin::LogH << "Uruchamianie serwera.\n";
+
   uint16_t port = 0;
   bool arg_port = false;
   if (argc > 1) {
     std::sscanf(argv[1], "%" SCNd16, &port);
     arg_port = true;
   }
+
 
   tin::Server server;
   server.SpecialHardcodeInit();

@@ -20,7 +20,7 @@ class MouseMoved : public OutMessage {
 
   virtual ~MouseMoved() {}
 
-  constexpr Username GetUsername() const {return username_;}
+  Username GetUsername() const {return username_;}
   constexpr int32_t x() const {return x_;}
   constexpr int32_t y() const {return y_;}
 

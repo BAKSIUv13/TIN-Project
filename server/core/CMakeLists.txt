@@ -20,4 +20,6 @@ set(SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/sock_id.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/ndouble.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/ndouble.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/logger.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/logger.cc"
 )

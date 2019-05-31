@@ -14,6 +14,7 @@
 #include "core/socket_tcp4.h"
 #include "core/nquad.h"
 #include "core/mquads.h"
+#include "core/logger.h"
 
 #include "send_msgs/sig.h"
 #include "send_msgs/log_ok.h"
@@ -68,9 +69,10 @@ int Server::InitializeListener_(uint16_t port, int queue_size) {
 }
 
 void Server::Run(uint16_t port, int queue_size) {
+  LogM << "Port: " << port << '\n';
   int init_ret = InitializeListener_(port, queue_size);
   if (init_ret < 0) {
-    std::cerr << "Nie udało się zainicjalizować listenera.\n";
+    LogH << "Nie udało się zainicjalizować listenera.\n";
     return;
   }
   bool not_exit = true;
@@ -123,31 +125,31 @@ int Server::ReadMainFds_() {
   static constexpr std::streamsize IN_BUF_SIZE = 256;
   char in_buf[IN_BUF_SIZE];
   if (Sel::READ & sel_.Get(end_pipe_[0])) {
-    std::cerr << "Przyszło zamknięcie ze specjanego potoku.\n";
+    LogH << "Przyszło zamknięcie ze specjanego potoku.\n";
     runs_ = false;
     return 1;
   }
   if (DEAL_WITH_STDIN && (Sel::READ & sel_.Get(STDIN_FD))) {
     std::cin.getline(in_buf, IN_BUF_SIZE);
     if (std::cin.eof()) {
-      std::cerr << "Na stdin przyszedł koniec, zamykanko :>\n";
+      LogH << "Na stdin przyszedł koniec, zamykanko :>\n";
       runs_ = false;
     } else if (std::cin.good()) {
-      std::cerr << "Na stdin wpisano:\n" << in_buf << '\n';
+      LogM << "Na stdin wpisano:\n" << in_buf << '\n';
       DealWithStdinBuf_(in_buf);
     } else if (std::cin.bad()) {
-      std::cerr << "Przyszło coś na stdin, ale coś było nie tak, jak trzeba, "
+      LogH << "Przyszło coś na stdin, ale coś było nie tak, jak trzeba, "
         << " pomijam.\n";
     }
     std::cin.clear();
     return 1;
   }
   if (Sel::READ & sel_.Get(listening_sock_.GetFD())) {
-    std::cerr << "Nowe połącznoko :>\n";
+    LogH << "Nowe połącznoko :>\n";
     SocketTCP4 sock;
     int acc_ret = listening_sock_.Accept(&sock);
     if (acc_ret < 0) {
-      std::cerr << "Jakiś błąd przy accepcie :<\n";
+      LogH << "Jakiś błąd przy accepcie :<\n";
     } else {
       RegisterSockFromAccept_(std::move(sock));
     }
@@ -167,20 +169,6 @@ int Server::DealWithStdinBuf_(const char *s) {
   if (strncmp(s, "stop", 4) == 0 && (s[4] == '\n' || s[4] == ' ')) {
     StopRun();
   }
-  /*else if (strncmp(s, "l ", 2) == 0) {
-    Username name(&s[2]);
-    std::cerr << "Nazwa: [[" << name << "]] - [["
-      << Username(name, Username::CONDENSE) << "]]\n";
-    SessionId sid;
-    try {
-      sid = users_.at(name).GetSession();
-    }
-    catch(std::out_of_range &e) {
-      std::cerr << "Nie ma sesji tego użytwkonika.\n";
-      return 0;
-    }
-    DelSession(sid);
-  }*/
   return 0;
 }
 
