@@ -28,7 +28,7 @@ int MoveMouse::Fn(Server *server, SocketStuff *stuff, World *world,
       "e myszki.\n";
     (server->*push_fn)(OutMessage::UP(
       new Sig(stuff->GetId(), MQ::ERR_NOT_LOGGED, false)));
-    return -1;
+    return 0;
   }
 
   LogM << "Ok, mam koordy: " << x_ << " " << y_
