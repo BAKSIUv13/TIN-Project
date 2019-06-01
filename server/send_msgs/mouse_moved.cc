@@ -14,6 +14,7 @@ int MouseMoved::AddToBuf(WriteBuf *buf) {
   MQ::OWO.AppendToCpp11String(&str);
   MQ::SERV_MOUSE.AppendToCpp11String(&str);
   const char *name = GetUsername();
+  NQuad(static_cast<uint32_t>(strlen(name))).AppendToCpp11String(&str);
   str.append(name);
   NDouble(x()).AppendToCpp11String(&str);
   NDouble(y()).AppendToCpp11String(&str);
