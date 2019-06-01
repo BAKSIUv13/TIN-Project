@@ -18,8 +18,8 @@ namespace SieciowyInkScape
         public List<DrawingObject> objects;
         public Queue<PendingObject> pendingObjects;
         public int drawingAckTime = 5;
+        public int mousePositionTimeOut = 30;
 
-        
 
         public enum State
         {
@@ -66,12 +66,23 @@ namespace SieciowyInkScape
             PendingObject pobj = new PendingObject(DateTime.Now, obj);
             pendingObjects.Enqueue(pobj);
         }
+
         public void CheckPendingObjects()
         {
             while (pendingObjects.Count > 0 && pendingObjects.Peek().timeStarted + new TimeSpan(0, 0, drawingAckTime) < DateTime.Now)
             {
                 pendingObjects.Dequeue();
             }
+        }
+        public void CheckPendingMousePositions()
+        {
+            foreach(MousePosition position in mousePositions.Values)
+            {
+                if(position.timeReceived + new TimeSpan(0, 0, mousePositionTimeOut) < DateTime.Now)
+                {
+                    mousePositions.Remove(position.username);
+                }
+            }  
         }
 
 
@@ -144,11 +155,15 @@ namespace SieciowyInkScape
             public float xpos;
             public float ypos;
             public string username;
-            public MousePosition(float xpos, float ypos, string username)
+
+            public DateTime timeReceived;
+
+            public MousePosition(float xpos, float ypos, string username, DateTime timeReceived)
             {
                 this.xpos = xpos;
                 this.ypos = ypos;
                 this.username = username;
+                this.timeReceived = timeReceived;
             }
         }
 

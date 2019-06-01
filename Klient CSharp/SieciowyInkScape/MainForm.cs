@@ -352,18 +352,21 @@ namespace SieciowyInkScape
 
             if (!(drawingArea is null))
             {
-                PointF mousePosition;
-
-                drawingArea.Access();
-                mousePosition = new PointF(drawingArea.mousePosition.X, drawingArea.mousePosition.Y);
-                drawingArea.CheckPendingObjects();
-                drawingArea.Exit();
-
                 if(client.loggedIn)
                 {
+                    PointF mousePosition;
+
+                    drawingArea.Access();
+                    mousePosition = new PointF(drawingArea.mousePosition.X, drawingArea.mousePosition.Y);
+                    drawingArea.CheckPendingMousePositions();
+                    drawingArea.Exit();
+
                     client.clientMachine.SendMousePosition(mousePosition);
                 }
-                
+
+                drawingArea.Access();
+                drawingArea.CheckPendingObjects();
+                drawingArea.Exit();
             }
 
 

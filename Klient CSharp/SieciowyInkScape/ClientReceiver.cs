@@ -49,7 +49,7 @@ namespace SieciowyInkScape
                             string username = SocketReceiveString(usernameLength);
 
                             clientMachine.drawingArea.Access();
-                            clientMachine.drawingArea.mousePositions[username] = new DrawingAreaState.MousePosition((float)xpos, (float)ypos, username);
+                            clientMachine.drawingArea.mousePositions[username] = new DrawingAreaState.MousePosition((float)xpos, (float)ypos, username, DateTime.Now);
                             clientMachine.drawingArea.Exit();
                         }
                         else if (messageType.Equals("LGOK"))
