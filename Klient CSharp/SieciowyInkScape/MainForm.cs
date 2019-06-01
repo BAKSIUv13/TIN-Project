@@ -194,10 +194,9 @@ namespace SieciowyInkScape
                 case DrawingAreaState.DrawingObject.ObjectType.RECTANGLE:
                     DrawingAreaState.RectangleObject rect = (DrawingAreaState.RectangleObject)obj;
                     gr.DrawRectangle(new Pen(new SolidBrush(rect.color), rect.thickness),
-                        ((rect.xpos2 - rect.xpos) > 0 ? (rect.xpos) : (rect.xpos2)) * state.areaSize.X,
-                        ((rect.ypos2 - rect.ypos) > 0 ? (rect.ypos) : (rect.ypos2)) * state.areaSize.Y,
-                        ((rect.xpos2 - rect.xpos) > 0 ? (rect.xpos2 - rect.xpos) : (rect.xpos - rect.xpos2)) * state.areaSize.X,
-                        ((rect.ypos2 - rect.ypos) > 0 ? (rect.ypos2 - rect.ypos) : (rect.ypos - rect.ypos2)) * state.areaSize.Y);
+                        rect.xpos * state.areaSize.X, rect.ypos * state.areaSize.Y,
+                        rect.width * state.areaSize.X, rect.height * state.areaSize.Y);
+                       
                     break;
             }
         }
@@ -265,6 +264,8 @@ namespace SieciowyInkScape
 
             {
                 drawingArea.state = DrawingAreaState.State.DRAWING;
+                drawingArea.mousepos_start = new Point(e.X, e.Y);
+                drawingArea.mousepos_now = new Point(e.X, e.Y);
                 switch (drawingArea.selectedTool)
                 {
                     case DrawingAreaState.Tools.LINE:
@@ -278,8 +279,10 @@ namespace SieciowyInkScape
                         drawingArea.tempObject = new DrawingAreaState.RectangleObject(
                         (float)(e.X) / (float)drawingArea.areaSize.X,
                         (float)(e.Y) / (float)drawingArea.areaSize.Y,
-                        (float)(e.X) / (float)drawingArea.areaSize.X,
-                        (float)(e.Y) / (float)drawingArea.areaSize.Y, 1, Color.Black);
+                        (float)0,
+                        (float)0, 1, Color.Black);
+                        DrawingAreaState.RectangleObject temp = (DrawingAreaState.RectangleObject)drawingArea.tempObject;
+
                         break;
                 }
             }
@@ -298,20 +301,25 @@ namespace SieciowyInkScape
 
             if (drawingArea.state == DrawingAreaState.State.DRAWING)
             {
+                drawingArea.mousepos_now = new Point(e.X, e.Y);
+                Point ms = drawingArea.mousepos_start;
+                Point mn = drawingArea.mousepos_now;
+
                 DrawingAreaState.DrawingObject obj = drawingArea.tempObject;
                 switch (obj.objectType)
                 {
                     case DrawingAreaState.DrawingObject.ObjectType.LINE:
                         DrawingAreaState.LineObject line = (DrawingAreaState.LineObject)obj;
-                        line.xpos2 = (float)(e.X) / (float)drawingArea.areaSize.X;
-                        line.ypos2 = (float)(e.Y) / (float)drawingArea.areaSize.Y;
+                        line.xpos2 = (float)(mn.X) / (float)drawingArea.areaSize.X;
+                        line.ypos2 = (float)(mn.Y) / (float)drawingArea.areaSize.Y;
 
                         break;
                     case DrawingAreaState.DrawingObject.ObjectType.RECTANGLE:
                         DrawingAreaState.RectangleObject rect = (DrawingAreaState.RectangleObject)obj;
-                        rect.xpos2 = (float)(e.X) / (float)drawingArea.areaSize.X;
-                        rect.ypos2 = (float)(e.Y) / (float)drawingArea.areaSize.Y;
-
+                        rect.xpos = (mn.X - ms.X) > 0 ? ((float)ms.X / (float)drawingArea.areaSize.X) : ((float)mn.X / (float)drawingArea.areaSize.X);
+                        rect.ypos = (mn.Y - ms.Y) > 0 ? ((float)ms.Y / (float)drawingArea.areaSize.Y) : ((float)mn.Y / (float)drawingArea.areaSize.Y);
+                        rect.width = (mn.X - ms.X) > 0 ? ((float)(mn.X - ms.X) / (float)drawingArea.areaSize.X) : ((float)(ms.X - mn.X) / (float)drawingArea.areaSize.X);
+                        rect.height = (mn.Y - ms.Y) > 0 ? ((float)(mn.Y - ms.Y) / (float)drawingArea.areaSize.Y) : ((float)(ms.Y - mn.Y) / (float)drawingArea.areaSize.Y);
                         break;
                 }
                
@@ -339,11 +347,19 @@ namespace SieciowyInkScape
                
                 drawingArea.FinalizeObject(this, drawingArea.tempObject);
 
+                if(obj is DrawingAreaState.RectangleObject)
+                {
+                    client.clientMachine.SendRectangle((DrawingAreaState.RectangleObject)obj);
+                }
+                
+
                 drawingArea.tempObject = null;
 
                 drawingArea.state = DrawingAreaState.State.IDLE;
             }
             drawingArea.Exit();
+
+
 
             drawing.Refresh();
         }

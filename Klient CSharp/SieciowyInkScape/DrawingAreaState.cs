@@ -12,13 +12,11 @@ namespace SieciowyInkScape
     {
         Semaphore semaphore;
         public State state;
-        public DrawingObject tempObject;
-        public Tools selectedTool;
+        
 
-        public List<DrawingObject> objects;
-        public Queue<PendingObject> pendingObjects;
-        public int drawingAckTime = 5;
-        public int mousePositionTimeOut = 30;
+        
+        public int drawingAckTime_ms = 500;
+        public int mousePositionTimeOut_s = 30;
 
 
         public enum State
@@ -67,9 +65,10 @@ namespace SieciowyInkScape
             pendingObjects.Enqueue(pobj);
         }
 
+
         public void CheckPendingObjects()
         {
-            while (pendingObjects.Count > 0 && pendingObjects.Peek().timeStarted + new TimeSpan(0, 0, drawingAckTime) < DateTime.Now)
+            while (pendingObjects.Count > 0 && pendingObjects.Peek().timeStarted + new TimeSpan(0, 0, 0, 0, drawingAckTime_ms) < DateTime.Now)
             {
                 pendingObjects.Dequeue();
             }
@@ -82,7 +81,7 @@ namespace SieciowyInkScape
                 modified = false;
                 foreach (MousePosition position in mousePositions.Values)
                 {
-                    if (position.timeReceived + new TimeSpan(0, 0, mousePositionTimeOut) < DateTime.Now)
+                    if (position.timeReceived + new TimeSpan(0, 0, mousePositionTimeOut_s) < DateTime.Now)
                     {
                         modified = true;
                         mousePositions.Remove(position.username);
@@ -141,20 +140,23 @@ namespace SieciowyInkScape
         }
         public class RectangleObject : DrawingObject
         {
-            public float xpos2;
-            public float ypos2;
+            public float width;
+            public float height;
 
             public int thickness;
 
-            public RectangleObject(float xpos, float ypos, float xpos2, float ypos2, int thickness, Color color)
+            public RectangleObject(float xpos, float ypos, float width, float height, int thickness, Color color)
             {
                 this.objectType = ObjectType.RECTANGLE;
                 this.xpos = xpos;
                 this.ypos = ypos;
-                this.xpos2 = xpos2;
-                this.ypos2 = ypos2;
+                this.width = width;
+                this.height = height;
                 this.thickness = thickness;
                 this.color = color;
+            }
+            public RectangleObject()
+            {
             }
         }
 
@@ -177,7 +179,14 @@ namespace SieciowyInkScape
 
         public Dictionary<string, MousePosition> mousePositions = new Dictionary<string, MousePosition>();
         public PointF mousePosition = new PointF(0.0f, 0.0f);
+
         public Point areaSize;
 
+        public List<DrawingObject> objects;
+        public Queue<PendingObject> pendingObjects;
+        public DrawingObject tempObject;
+        public Point mousepos_start;
+        public Point mousepos_now;
+        public Tools selectedTool;
     }
 }

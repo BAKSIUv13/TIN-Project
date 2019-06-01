@@ -92,6 +92,24 @@ namespace SieciowyInkScape
                 parent.SocketSend(bytes.ToArray());
             }
 
+            public void SendRectangle(DrawingAreaState.RectangleObject rect)
+            {
+                List<byte> bytes = new List<byte>();
+
+                ListConcat(bytes, parent.SocketSetString("crea"));
+                ListConcat(bytes, parent.SocketSetString("rect"));
+                ListConcat(bytes, parent.SocketSetByte(rect.color.R));
+                ListConcat(bytes, parent.SocketSetByte(rect.color.G));
+                ListConcat(bytes, parent.SocketSetByte(rect.color.B));
+                ListConcat(bytes, parent.SocketSetDouble((double)rect.xpos));
+                ListConcat(bytes, parent.SocketSetDouble((double)rect.ypos));
+                ListConcat(bytes, parent.SocketSetDouble((double)rect.width));
+                ListConcat(bytes, parent.SocketSetDouble((double)rect.height));
+
+
+                parent.SocketSend(bytes.ToArray());
+            }
+
             public void Login(string login, string password)
             {
                 usedNick = login;
@@ -331,14 +349,14 @@ namespace SieciowyInkScape
             }
         }
 
-        byte[] SocketSetInt64(Int32 value)
+        byte[] SocketSetInt64(Int64 value)
         {
             byte[] toRet = System.BitConverter.GetBytes(value);
             if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
 
             return toRet;
         }
-        byte[] SocketSetUInt64(UInt32 value)
+        byte[] SocketSetUInt64(UInt64 value)
         {
             byte[] toRet = System.BitConverter.GetBytes(value);
             if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
@@ -359,17 +377,23 @@ namespace SieciowyInkScape
 
             return toRet;
         }
-        byte[] SocketSetInt16(Int32 value)
+        byte[] SocketSetInt16(Int16 value)
         {
             byte[] toRet = System.BitConverter.GetBytes(value);
             if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
 
             return toRet;
         }
-        byte[] SocketSetUInt16(UInt32 value)
+        byte[] SocketSetUInt16(UInt16 value)
         {
             byte[] toRet = System.BitConverter.GetBytes(value);
             if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
+
+            return toRet;
+        }
+        byte[] SocketSetByte(byte value)
+        {
+            byte[] toRet = System.BitConverter.GetBytes(value);
 
             return toRet;
         }
@@ -424,6 +448,12 @@ namespace SieciowyInkScape
             if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 2);
             return System.BitConverter.ToUInt16(buf, 0);
         }
+        byte SocketReceiveByte()
+        {
+            SocketReceive(1);
+            return buf[0];
+        }
+
         double SocketReceiveDouble()
         {
             SocketReceive(8);

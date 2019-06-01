@@ -52,6 +52,30 @@ namespace SieciowyInkScape
                             clientMachine.drawingArea.mousePositions[username] = new DrawingAreaState.MousePosition((float)xpos, (float)ypos, username, DateTime.Now);
                             clientMachine.drawingArea.Exit();
                         }
+                        else if (messageType.Equals("NEWW"))
+                        {
+                            int ID = SocketReceiveInt32();
+                            string objectType = SocketReceiveString(4);
+
+                            if(objectType == "rect")
+                            {
+                                byte R = SocketReceiveByte();
+                                byte G = SocketReceiveByte();
+                                byte B = SocketReceiveByte();
+                                double xpos = SocketReceiveDouble();
+                                double ypos = SocketReceiveDouble();
+                                double width = SocketReceiveDouble();
+                                double height = SocketReceiveDouble();
+
+                                clientMachine.drawingArea.Access();
+                                clientMachine.drawingArea.objects.Add(new DrawingAreaState.RectangleObject((float)xpos, (float)ypos, (float)(xpos + width), (float)(ypos + height), 1, System.Drawing.Color.FromArgb(255, R, G, B)));
+                                clientMachine.drawingArea.Exit();
+                            }
+
+                            
+                        }
+
+
                         else if (messageType.Equals("LGOK"))
                         {
                             loggedUsername = clientMachine.UsedNick;
