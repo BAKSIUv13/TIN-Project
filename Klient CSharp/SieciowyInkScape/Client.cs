@@ -73,10 +73,10 @@ namespace SieciowyInkScape
             public void SendChatMessage(string message)
             {
                 List<byte> bytes = new List<byte>();
-
                 ListConcat(bytes, parent.SocketSetString("mesg"));
-                ListConcat(bytes, parent.SocketSetInt32(message.Length));
-                ListConcat(bytes, parent.SocketSetString(message));
+                byte[] messageArray = parent.SocketSetString(message);
+                ListConcat(bytes, parent.SocketSetInt32(messageArray.Length));
+                ListConcat(bytes, messageArray);
 
                 parent.SocketSend(bytes.ToArray());
             }
@@ -99,10 +99,12 @@ namespace SieciowyInkScape
                 List<byte> bytes = new List<byte>();
 
                 ListConcat(bytes, parent.SocketSetString("logo"));
-                ListConcat(bytes, parent.SocketSetInt32(login.Length));
-                ListConcat(bytes, parent.SocketSetString(login));
-                ListConcat(bytes, parent.SocketSetInt32(password.Length));
-                ListConcat(bytes, parent.SocketSetString(password));
+                byte[] loginArray = parent.SocketSetString(login);
+                ListConcat(bytes, parent.SocketSetInt32(loginArray.Length));
+                ListConcat(bytes, loginArray);
+                byte[] passArray = parent.SocketSetString(password);
+                ListConcat(bytes, parent.SocketSetInt32(passArray.Length));
+                ListConcat(bytes, passArray);
                                
                 parent.SocketSend(bytes.ToArray());
             }
@@ -378,7 +380,7 @@ namespace SieciowyInkScape
         }
         byte[] SocketSetString(string value)
         {
-            byte[] toRet = Encoding.ASCII.GetBytes(value);
+            byte[] toRet = Encoding.UTF8.GetBytes(value);
 
             return toRet;
         }
@@ -428,7 +430,7 @@ namespace SieciowyInkScape
         string SocketReceiveString(UInt32 size)
         {
             SocketReceive((int)size);
-            return Encoding.ASCII.GetString(buf, 0, (int)size);
+            return Encoding.UTF8.GetString(buf, 0, (int)size);
         }
 
        

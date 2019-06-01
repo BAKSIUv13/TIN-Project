@@ -163,7 +163,8 @@ namespace SieciowyInkScape
         {
             chatBox.Invoke(new System.Windows.Forms.MethodInvoker(delegate ()
             {
-                chatBox.Text += text + Environment.NewLine;
+                //chatBox.Text += text + Environment.NewLine;
+                chatBox.AppendText(text + Environment.NewLine);
             }));
         }
 
