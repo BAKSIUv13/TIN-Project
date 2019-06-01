@@ -54,9 +54,9 @@ namespace SieciowyInkScape
             public ClientMachine(Client parent, Size areaSize)
             {
                 drawingArea = new DrawingAreaState(new Point(areaSize.Width, areaSize.Width));
-                drawingArea.mousePositions["nkpkiller"] = new DrawingAreaState.MousePosition(0.4f, 0.3f, "nkpkiller");
-                drawingArea.mousePositions["LubiePierogi"] = new DrawingAreaState.MousePosition(0.7f, 0.4f, "LubiePierogi");
-                drawingArea.mousePositions["Baksiu"] = new DrawingAreaState.MousePosition(0.1f, 0.8f, "Baksiu");
+               // drawingArea.mousePositions["nkpkiller"] = new DrawingAreaState.MousePosition(0.4f, 0.3f, "nkpkiller");
+                //drawingArea.mousePositions["LubiePierogi"] = new DrawingAreaState.MousePosition(0.7f, 0.4f, "LubiePierogi");
+               // drawingArea.mousePositions["Baksiu"] = new DrawingAreaState.MousePosition(0.1f, 0.8f, "Baksiu");
 
                 this.parent = parent;
             }
@@ -86,8 +86,8 @@ namespace SieciowyInkScape
                 List<byte> bytes = new List<byte>();
 
                 ListConcat(bytes, parent.SocketSetString("maus"));
-                ListConcat(bytes, parent.SocketSetDouble(position.X));
-                ListConcat(bytes, parent.SocketSetDouble(position.Y));
+                ListConcat(bytes, parent.SocketSetDouble((double)position.X));
+                ListConcat(bytes, parent.SocketSetDouble((double)position.Y));
 
                 parent.SocketSend(bytes.ToArray());
             }
@@ -258,6 +258,7 @@ namespace SieciowyInkScape
                 }
                 ));
                 Disconnect();
+                return;
             }
 
             while (size > buf.Length) buf = new byte[buf.Length * 2];
@@ -371,7 +372,7 @@ namespace SieciowyInkScape
         byte[] SocketSetDouble(double value)
         {
             byte[] toRet = System.BitConverter.GetBytes(value);
-            if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
+           // if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
 
             return toRet;
         }
@@ -421,7 +422,7 @@ namespace SieciowyInkScape
         double SocketReceiveDouble()
         {
             SocketReceive(8);
-            if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 8);
+            //if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 8);
             return System.BitConverter.ToDouble(buf, 0);
         }
         string SocketReceiveString(UInt32 size)

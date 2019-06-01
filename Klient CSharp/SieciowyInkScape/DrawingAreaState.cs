@@ -19,6 +19,8 @@ namespace SieciowyInkScape
         public Queue<PendingObject> pendingObjects;
         public int drawingAckTime = 5;
 
+        
+
         public enum State
         {
             IDLE, DRAWING, EDITING
@@ -151,6 +153,7 @@ namespace SieciowyInkScape
         }
 
         public Dictionary<string, MousePosition> mousePositions = new Dictionary<string, MousePosition>();
+        public PointF mousePosition = new PointF(0.0f, 0.0f);
         public Point areaSize;
 
     }

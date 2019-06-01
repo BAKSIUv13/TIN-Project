@@ -33,7 +33,7 @@ namespace SieciowyInkScape
                             username = SocketReceiveString(usernameLength);
                             messageLength = SocketReceiveUInt32();
                             message = SocketReceiveString(messageLength);
-
+                            
                             mainForm.Invoke(new Action(() =>
                             {
                                 MessageInboundEventArgs args = new MessageInboundEventArgs(message, username);
@@ -43,13 +43,13 @@ namespace SieciowyInkScape
                         }
                         else if (messageType.Equals("MAUS"))
                         {
-                            UInt32 xpos = SocketReceiveUInt32();
-                            UInt32 ypos = SocketReceiveUInt32();
+                            double xpos = SocketReceiveDouble();
+                            double ypos = SocketReceiveDouble();
                             UInt32 usernameLength = SocketReceiveUInt32();
                             string username = SocketReceiveString(usernameLength);
 
                             clientMachine.drawingArea.Access();
-                            clientMachine.drawingArea.mousePositions[username] = new DrawingAreaState.MousePosition(xpos, ypos, username);
+                            clientMachine.drawingArea.mousePositions[username] = new DrawingAreaState.MousePosition((float)xpos, (float)ypos, username);
                             clientMachine.drawingArea.Exit();
                         }
                         else if (messageType.Equals("LGOK"))

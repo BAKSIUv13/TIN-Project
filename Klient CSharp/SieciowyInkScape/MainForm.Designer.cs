@@ -33,14 +33,14 @@
             this.chatPanel = new System.Windows.Forms.Panel();
             this.messageBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
-            this.drawing = new System.Windows.Forms.Panel();
-            this.lineButton = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
+            this.rectangleButton = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
+            this.label1 = new System.Windows.Forms.Label();
+            this.lineButton = new System.Windows.Forms.Button();
+            this.drawing = new System.Windows.Forms.Panel();
             this.RefreshTimer = new System.Windows.Forms.Timer(this.components);
             this.FPSTimer = new System.Windows.Forms.Timer(this.components);
-            this.rectangleButton = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.textBoxPort = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
@@ -83,7 +83,7 @@
             this.chatPanel.Dock = System.Windows.Forms.DockStyle.Right;
             this.chatPanel.Location = new System.Drawing.Point(963, 0);
             this.chatPanel.Name = "chatPanel";
-            this.chatPanel.Size = new System.Drawing.Size(301, 681);
+            this.chatPanel.Size = new System.Drawing.Size(301, 682);
             this.chatPanel.TabIndex = 1;
             // 
             // messageBox
@@ -92,6 +92,7 @@
             this.messageBox.Name = "messageBox";
             this.messageBox.Size = new System.Drawing.Size(295, 20);
             this.messageBox.TabIndex = 3;
+            this.messageBox.TextChanged += new System.EventHandler(this.messageBox_TextChanged);
             this.messageBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.messageBox_KeyPressed);
             // 
             // label2
@@ -103,6 +104,34 @@
             this.label2.TabIndex = 2;
             this.label2.Text = "Napisz wiadomość:";
             // 
+            // button3
+            // 
+            this.button3.Location = new System.Drawing.Point(87, 488);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(75, 23);
+            this.button3.TabIndex = 5;
+            this.button3.Text = "Czerwony";
+            this.button3.UseVisualStyleBackColor = true;
+            // 
+            // rectangleButton
+            // 
+            this.rectangleButton.Location = new System.Drawing.Point(87, 415);
+            this.rectangleButton.Name = "rectangleButton";
+            this.rectangleButton.Size = new System.Drawing.Size(75, 23);
+            this.rectangleButton.TabIndex = 6;
+            this.rectangleButton.Text = "Prostokąt";
+            this.rectangleButton.UseVisualStyleBackColor = true;
+            this.rectangleButton.Click += new System.EventHandler(this.rectangleButton_Click);
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(6, 488);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(75, 23);
+            this.button2.TabIndex = 4;
+            this.button2.Text = "Czarny";
+            this.button2.UseVisualStyleBackColor = true;
+            // 
             // label1
             // 
             this.label1.AutoSize = true;
@@ -111,6 +140,16 @@
             this.label1.Size = new System.Drawing.Size(32, 13);
             this.label1.TabIndex = 1;
             this.label1.Text = "Chat:";
+            // 
+            // lineButton
+            // 
+            this.lineButton.Location = new System.Drawing.Point(6, 415);
+            this.lineButton.Name = "lineButton";
+            this.lineButton.Size = new System.Drawing.Size(75, 23);
+            this.lineButton.TabIndex = 3;
+            this.lineButton.Text = "Linia";
+            this.lineButton.UseVisualStyleBackColor = true;
+            this.lineButton.Click += new System.EventHandler(this.lineButton_Click);
             // 
             // drawing
             // 
@@ -129,34 +168,6 @@
             this.drawing.MouseUp += new System.Windows.Forms.MouseEventHandler(this.drawing_MouseUp);
             this.drawing.Resize += new System.EventHandler(this.drawing_Resize);
             // 
-            // lineButton
-            // 
-            this.lineButton.Location = new System.Drawing.Point(6, 415);
-            this.lineButton.Name = "lineButton";
-            this.lineButton.Size = new System.Drawing.Size(75, 23);
-            this.lineButton.TabIndex = 3;
-            this.lineButton.Text = "Linia";
-            this.lineButton.UseVisualStyleBackColor = true;
-            this.lineButton.Click += new System.EventHandler(this.lineButton_Click);
-            // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(6, 488);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 4;
-            this.button2.Text = "Czarny";
-            this.button2.UseVisualStyleBackColor = true;
-            // 
-            // button3
-            // 
-            this.button3.Location = new System.Drawing.Point(87, 488);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(75, 23);
-            this.button3.TabIndex = 5;
-            this.button3.Text = "Czerwony";
-            this.button3.UseVisualStyleBackColor = true;
-            // 
             // RefreshTimer
             // 
             this.RefreshTimer.Enabled = true;
@@ -167,16 +178,6 @@
             this.FPSTimer.Enabled = true;
             this.FPSTimer.Interval = 1000;
             this.FPSTimer.Tick += new System.EventHandler(this.FPSTimer_Tick);
-            // 
-            // rectangleButton
-            // 
-            this.rectangleButton.Location = new System.Drawing.Point(87, 415);
-            this.rectangleButton.Name = "rectangleButton";
-            this.rectangleButton.Size = new System.Drawing.Size(75, 23);
-            this.rectangleButton.TabIndex = 6;
-            this.rectangleButton.Text = "Prostokąt";
-            this.rectangleButton.UseVisualStyleBackColor = true;
-            this.rectangleButton.Click += new System.EventHandler(this.rectangleButton_Click);
             // 
             // groupBox1
             // 
@@ -199,7 +200,7 @@
             this.textBoxPort.Name = "textBoxPort";
             this.textBoxPort.Size = new System.Drawing.Size(74, 20);
             this.textBoxPort.TabIndex = 5;
-            this.textBoxPort.Text = "12345";
+            this.textBoxPort.Text = "59898";
             // 
             // label4
             // 
@@ -216,7 +217,7 @@
             this.textBoxHostname.Name = "textBoxHostname";
             this.textBoxHostname.Size = new System.Drawing.Size(178, 20);
             this.textBoxHostname.TabIndex = 3;
-            this.textBoxHostname.Text = "127.0.0.1";
+            this.textBoxHostname.Text = "192.168.0.52";
             // 
             // buttonDisconnect
             // 
@@ -334,7 +335,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1264, 681);
+            this.ClientSize = new System.Drawing.Size(1264, 682);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.drawing);
             this.Controls.Add(this.chatPanel);

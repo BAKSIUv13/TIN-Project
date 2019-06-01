@@ -172,7 +172,7 @@ namespace SieciowyInkScape
             if (e.KeyChar == '\r')
             {
                 client.clientMachine.SendChatMessage(messageBox.Text);
-                ChatBoxWriteLine("Ja: " + messageBox.Text);
+               // ChatBoxWriteLine("Ja: " + messageBox.Text);
                 messageBox.Clear();
             }
         }
@@ -256,6 +256,7 @@ namespace SieciowyInkScape
         {
             DrawingAreaState drawingArea = client.clientMachine.drawingArea;
 
+            drawingArea.Access();
             if (drawingArea.state == DrawingAreaState.State.IDLE)
 
             {
@@ -278,6 +279,7 @@ namespace SieciowyInkScape
                         break;
                 }
             }
+            drawingArea.Exit();
 
             drawing.Refresh();
         }
@@ -285,6 +287,10 @@ namespace SieciowyInkScape
         private void drawing_MouseMove(object sender, MouseEventArgs e)
         {
             DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+
+            drawingArea.Access();
+            drawingArea.mousePosition.X = (float)e.Location.X / (float)drawingArea.areaSize.X;
+            drawingArea.mousePosition.Y = (float)e.Location.Y / (float)drawingArea.areaSize.Y;
 
             if (drawingArea.state == DrawingAreaState.State.DRAWING)
             {
@@ -306,6 +312,7 @@ namespace SieciowyInkScape
                 }
                
             }
+            drawingArea.Exit();
 
             /*
             drawingArea.Access();
@@ -321,7 +328,7 @@ namespace SieciowyInkScape
         {
             DrawingAreaState drawingArea = client.clientMachine.drawingArea;
 
-
+            drawingArea.Access();
             if (drawingArea.state == DrawingAreaState.State.DRAWING)
             {
                 DrawingAreaState.DrawingObject obj = drawingArea.tempObject;
@@ -332,6 +339,7 @@ namespace SieciowyInkScape
 
                 drawingArea.state = DrawingAreaState.State.IDLE;
             }
+            drawingArea.Exit();
 
             drawing.Refresh();
         }
@@ -343,8 +351,22 @@ namespace SieciowyInkScape
 
             if (!(drawingArea is null))
             {
+                PointF mousePosition;
+
+                drawingArea.Access();
+                mousePosition = new PointF(drawingArea.mousePosition.X, drawingArea.mousePosition.Y);
                 drawingArea.CheckPendingObjects();
+                drawingArea.Exit();
+
+                if(client.loggedIn)
+                {
+                    client.clientMachine.SendMousePosition(mousePosition);
+                }
+                
             }
+
+
+
             drawing.Refresh();
         }
 
@@ -358,16 +380,18 @@ namespace SieciowyInkScape
         {
             DrawingAreaState drawingArea = client.clientMachine.drawingArea;
 
-
+            drawingArea.Access();
             drawingArea.selectedTool = DrawingAreaState.Tools.RECTANGLE;
+            drawingArea.Exit();
         }
 
         private void lineButton_Click(object sender, EventArgs e)
         {
-
             DrawingAreaState drawingArea = client.clientMachine.drawingArea;
 
+            drawingArea.Access();
             drawingArea.selectedTool = DrawingAreaState.Tools.LINE;
+            drawingArea.Exit();
         }
 
         private void buttonDisconnect_Click(object sender, EventArgs e)
@@ -407,6 +431,11 @@ namespace SieciowyInkScape
         private void drawing_Resize(object sender, EventArgs e)
         {
             client.clientMachine.drawingArea.ChangeAreaSize(drawing.Size);
+        }
+
+        private void messageBox_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
