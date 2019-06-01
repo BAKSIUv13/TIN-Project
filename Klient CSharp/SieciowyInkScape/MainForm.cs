@@ -353,6 +353,10 @@ namespace SieciowyInkScape
                     {
                         client.clientMachine.SendRectangle((DrawingAreaState.RectangleObject)obj);
                     }
+                    else if (obj is DrawingAreaState.LineObject)
+                    {
+                        client.clientMachine.SendLine((DrawingAreaState.LineObject)obj);
+                    }
                 }
 
                 drawingArea.tempObject = null;

@@ -68,11 +68,24 @@ namespace SieciowyInkScape
                                 double height = SocketReceiveDouble();
 
                                 clientMachine.drawingArea.Access();
-                                clientMachine.drawingArea.objects.Add(new DrawingAreaState.RectangleObject((float)xpos, (float)ypos, (float)(xpos + width), (float)(ypos + height), 1, System.Drawing.Color.FromArgb(255, R, G, B)));
+                                clientMachine.drawingArea.objects.Add(new DrawingAreaState.RectangleObject((float)xpos, (float)ypos, (float)(width), (float)(height), 1, System.Drawing.Color.FromArgb(255, R, G, B)));
+                                clientMachine.drawingArea.Exit();
+                            }
+                            else if (objectType == "line")
+                            {
+                                byte R = SocketReceiveByte();
+                                byte G = SocketReceiveByte();
+                                byte B = SocketReceiveByte();
+                                double xpos = SocketReceiveDouble();
+                                double ypos = SocketReceiveDouble();
+                                double xpos2 = SocketReceiveDouble();
+                                double ypos2 = SocketReceiveDouble();
+
+                                clientMachine.drawingArea.Access();
+                                clientMachine.drawingArea.objects.Add(new DrawingAreaState.LineObject((float)xpos, (float)ypos, (float)(xpos2), (float)(ypos2), 1, System.Drawing.Color.FromArgb(255, R, G, B)));
                                 clientMachine.drawingArea.Exit();
                             }
 
-                            
                         }
 
 

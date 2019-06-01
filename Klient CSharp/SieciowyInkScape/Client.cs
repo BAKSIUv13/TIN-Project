@@ -110,6 +110,24 @@ namespace SieciowyInkScape
                 parent.SocketSend(bytes.ToArray());
             }
 
+            public void SendLine(DrawingAreaState.LineObject rect)
+            {
+                List<byte> bytes = new List<byte>();
+
+                ListConcat(bytes, parent.SocketSetString("crea"));
+                ListConcat(bytes, parent.SocketSetString("line"));
+                ListConcat(bytes, parent.SocketSetByte(rect.color.R));
+                ListConcat(bytes, parent.SocketSetByte(rect.color.G));
+                ListConcat(bytes, parent.SocketSetByte(rect.color.B));
+                ListConcat(bytes, parent.SocketSetDouble((double)rect.xpos));
+                ListConcat(bytes, parent.SocketSetDouble((double)rect.ypos));
+                ListConcat(bytes, parent.SocketSetDouble((double)rect.xpos2));
+                ListConcat(bytes, parent.SocketSetDouble((double)rect.ypos2));
+
+
+                parent.SocketSend(bytes.ToArray());
+            }
+
             public void Login(string login, string password)
             {
                 usedNick = login;
