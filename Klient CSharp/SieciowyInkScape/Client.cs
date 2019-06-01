@@ -111,6 +111,9 @@ namespace SieciowyInkScape
 
             public void Logout()
             {
+                parent.loggedUsername = "";
+                parent.loggedIn = false;
+
                 List<byte> bytes = new List<byte>();
 
                 ListConcat(bytes, parent.SocketSetString("lout"));

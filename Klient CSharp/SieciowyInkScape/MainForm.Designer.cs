@@ -64,6 +64,8 @@
             // 
             // chatBox
             // 
+            this.chatBox.BackColor = System.Drawing.Color.White;
+            this.chatBox.Enabled = false;
             this.chatBox.Location = new System.Drawing.Point(3, 21);
             this.chatBox.Multiline = true;
             this.chatBox.Name = "chatBox";

@@ -76,13 +76,21 @@ namespace SieciowyInkScape
         }
         public void CheckPendingMousePositions()
         {
-            foreach(MousePosition position in mousePositions.Values)
+            bool modified = true;
+            while(modified)
             {
-                if(position.timeReceived + new TimeSpan(0, 0, mousePositionTimeOut) < DateTime.Now)
+                modified = false;
+                foreach (MousePosition position in mousePositions.Values)
                 {
-                    mousePositions.Remove(position.username);
+                    if (position.timeReceived + new TimeSpan(0, 0, mousePositionTimeOut) < DateTime.Now)
+                    {
+                        modified = true;
+                        mousePositions.Remove(position.username);
+                        break;
+                    }
                 }
-            }  
+            }
+            
         }
 
 
