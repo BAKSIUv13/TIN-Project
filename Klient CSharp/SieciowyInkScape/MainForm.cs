@@ -344,14 +344,16 @@ namespace SieciowyInkScape
             if (drawingArea.state == DrawingAreaState.State.DRAWING)
             {
                 DrawingAreaState.DrawingObject obj = drawingArea.tempObject;
-               
-                drawingArea.FinalizeObject(this, drawingArea.tempObject);
 
-                if(obj is DrawingAreaState.RectangleObject)
+                if (client.loggedIn)
                 {
-                    client.clientMachine.SendRectangle((DrawingAreaState.RectangleObject)obj);
+                    drawingArea.FinalizeObject(this, drawingArea.tempObject);
+
+                    if (obj is DrawingAreaState.RectangleObject)
+                    {
+                        client.clientMachine.SendRectangle((DrawingAreaState.RectangleObject)obj);
+                    }
                 }
-                
 
                 drawingArea.tempObject = null;
 
