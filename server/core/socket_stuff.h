@@ -1,7 +1,7 @@
-// Copyright 2019 Piotrek
+// Copyright 2019 TIN
 
-#ifndef SERVER_APP_SOCKET_STUFF_H_
-#define SERVER_APP_SOCKET_STUFF_H_
+#ifndef SERVER_CORE_SOCKET_STUFF_H_
+#define SERVER_CORE_SOCKET_STUFF_H_
 
 #include <unistd.h>
 
@@ -15,13 +15,16 @@
 
 #include "core/socket_tcp4.h"
 #include "core/nquad.h"
+#include "core/ndouble.h"
 #include "core/instr_struct.h"
-#include "app/instr_supp.h"
+#include "core/instr_supp.h"
 #include "core/write_buf.h"
 #include "core/mquads.h"
 #include "core/instr_id.h"
-#include "core/destroy_fn.h"
 #include "core/sock_id.h"
+#include "core/logger.h"
+#include "core/factory.h"
+#include "core/msg_push_fn.h"
 
 // Definitions for this file for 'readability':
 // - command - that string which starts with 'OwO!'
@@ -85,38 +88,25 @@ class SocketStuff {
     return write_buf_.Chars() > 0 && shall_be_removed_ < RemoveEnum::FORCE;
   }
 
-/*
-  constexpr int CountCopy(int how_much) const {
-    return std::min(msg_len_ - msg_processed_, how_much - cm_processed_);
-  }
-
-  void Copy(void *dest, size_t how_much) {
-    memcpy(dest, &read_buf_[msg_processed_], how_much);
-    msg_processed_ += how_much;
-    cm_processed_ += how_much;
-  }
-*/
-
   // write buf
   WriteBuf &WrBuf() {
     return write_buf_;
   }
-
 
   // This reads from socket to our buffer as much chars as it can.
   int ReadCharsFromSocket() {
     int fd = socket_.GetFD();
     ssize_t read_ret = read(fd, read_buf_, BUF_SIZE);
     if (read_ret < 0) {
-      std::cerr << "Błąd przy czytaniu socketu " << fd
+      LogH << "Błąd przy czytaniu socketu " << fd
         << "\n errno: " << std::strerror(errno) << "\n";
       return -1;
     } else if (read_ret == 0) {
-      // std::cerr << "Na gniazdo przyszło zamknięcie.\n";
-      // Remove();
-      // ZAMKNIĘCIE
+      // LogM << "Na gniazdo przyszło zamknięcie.\n";
       return 0;
     } else /* read_ret > 0 */ {
+      LogVL << "Na gnieździe " << fd << " przeczytano:\n"
+        << std::string(read_buf_, read_ret) << "\n";
       msg_len_ = read_ret;
       msg_processed_ = 0;
       return read_ret;
@@ -128,15 +118,19 @@ class SocketStuff {
     return ReadString(at, NQS, dest);
   }
 
+  int ReadDouble(int at, NDouble *dest) {
+    return ReadString(at, sizeof(NDouble), dest);
+  }
+
   int ReadString(int start, int len, void *dest) {
     if (cm_processed_ < start) {
-      std::cerr << "za daleko jest to, co chcemy skopiować\n";
+      LogM << "za daleko jest to, co chcemy skopiować\n";
       return -1;
     }
     int cp_dest_start = cm_processed_ - start;\
     int end = start + len;
     if (cm_processed_ >= end) {
-      std::cerr << "za daleko już jesteśmy\n";
+      LogM << "za daleko już jesteśmy\n";
       return -1;
     }
     char *cp_src_ptr = &(reinterpret_cast<char *>(read_buf_)[msg_processed_]);
@@ -158,12 +152,12 @@ class SocketStuff {
 
   int ReadCpp11String(int start, int len, std::string *dest) {
     if (cm_processed_ < start) {
-      std::cerr << "za daleko jest to, co chcemy skopiować\n";
+      LogM << "za daleko jest to, co chcemy skopiować\n";
       return -1;
     }
     int end = start + len;
     if (cm_processed_ >= end) {
-      std::cerr << "za daleko już jesteśmy\n";
+      LogM << "za daleko już jesteśmy\n";
       return -1;
     }
     char *cp_src_ptr = &(reinterpret_cast<char *>(read_buf_)[msg_processed_]);
@@ -203,7 +197,7 @@ class SocketStuff {
       return x;
     }
     if (magic_ != MQ::OWO) {
-      std::cerr << "Miało być 'OwO!', a nie jest\n";
+      LogM << "Miało być 'OwO!', a nie jest\n";
       return -1;
     }
     return 0;
@@ -219,49 +213,30 @@ class SocketStuff {
 
   int ChooseInstr();
 
-  InstrFn GetInstrFn() {
-    if (supp_.Blank()) {
-      return nullptr;
-    }
-    return supp_.GetFn();
-  }
-
-  InstrStruct *GetStrct() {
-    return strct_;
-  }
-
   SockId GetId() {
     return id_;
   }
 
   int ResetCommand() {
     cm_processed_ = 0;
-    if (supp_ && supp_.GetFn()) {
-      DestroyFn fn = supp_.GetDestructor();
-      if (fn) {
-        fn(strct_);
-      }
-      free(strct_);
-      strct_ = nullptr;
-      supp_ = InstrSupp();
-    }
+    supp_ = InstrSupp();
+    strct_.reset();
     return 0;
   }
 
-
   int DealWithReadBuf(World *w, MsgPushFn push_fn) {
-    std::cerr << "int DealWithReadBuf()\n";
-    std::cerr << "Gniazdo o id " << id_ << " i fd " <<
+    LogM << "int DealWithReadBuf()\n";
+    LogM << "Gniazdo o id " << id_ << " i fd " <<
       GetSocket().GetFD() << '\n';
 
     int pom;
     while (CharsLeft() > 0) {
-      std::cerr << "chary w komunikacie: " << CmProcessed()
+      LogM << "chary w komunikacie: " << CmProcessed()
         << "\nprzetworzone chary z gniazda: " << msg_processed_
         << "\nchars read: " << msg_len_
         << '\n';
       if (CmProcessed() < 0) {
-        std::cerr << "Jakiś okropny błąd :<\n";
+        LogH << "Jakiś okropny błąd :<\n";
         return - 100;
       }
       if (CmProcessed() < NQS) {
@@ -279,7 +254,7 @@ class SocketStuff {
           return pom;
       }
       if (!HasInstr()) {
-        std::cerr << "Nie mieliśmy insttukcji, a chcemy mieć, ok\n";
+        LogM << "Nie mieliśmy insttukcji, a chcemy mieć, ok\n";
         pom = ChooseInstr();
         if (pom > 0) {
           // Nie doczytało :<
@@ -288,42 +263,30 @@ class SocketStuff {
           return pom;
         }
       }
-      InstrFn fn = GetInstrFn();
-      pom = fn(serv_, this, w, push_fn);
-    if (pom > 0) {
-      std::cerr << "ExecInstr nieee fn zwróciło >0 xd\n";
-      return 0;
-    } else if (pom < 0) {
-      return pom;
+      pom = strct_->Fn(serv_, this, w, push_fn);
+      if (pom > 0) {
+        LogM << "ExecInstr nieee fn zwróciło >0 xd\n";
+        return 0;
+      } else if (pom < 0) {
+        return pom;
     }
-    std::cerr << "O, wygląda na to, że skończono czytać instrukcję.\n";
-    ResetCommand();
-  }  // while
-  std::cerr << "No to ten koniec czytanuia\n";
-  return 0;
-}
-
-  // void CopyToCpp11String(std::string *dest, std::string::size_type how_much)
-  // {
-  //   dest->append(&read_buf[msg_processed], how_much);
-  //   read_processed += how_much;
-  //   cm_processed += how_much;
-  // }
+      LogL << "O, wygląda na to, że skończono czytać instrukcję.\n";
+      ResetCommand();
+    }  // while
+    LogL << "No to ten koniec czytanuia\n";
+    return 0;
+  }
 
  private:
-
   void Shift_(int how_much) {
     cm_processed_ += how_much;
     msg_processed_ += how_much;
   }
 
-
   // Counts how many chars can we copy at this time.
   constexpr int CountCopy_(int to) const {
     return std::min(msg_len_ - msg_processed_, to - cm_processed_);
   }
-
-
 
   // We need this pointer to server :<
   Server *serv_;
@@ -347,8 +310,8 @@ class SocketStuff {
   int msg_processed_;
 
   // Memory to store instruction helping information.
-  InstrStruct *strct_;
-  // std::unique_ptr<InstrStruct, DestroyFn> strct_;
+  // InstrStruct *strct_;
+  std::unique_ptr<InstrStruct> strct_;
 
   // Info about actual instruction.
   InstrSupp supp_;
@@ -374,4 +337,4 @@ class SocketStuff {
 
 }  // namespace tin
 
-#endif  // SERVER_APP_SOCKET_STUFF_H_
+#endif  // SERVER_CORE_SOCKET_STUFF_H_

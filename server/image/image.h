@@ -1,4 +1,4 @@
-// Copyright 1410 xd
+// Copyright 2019 TIN
 
 #ifndef SERVER_IMAGE_IMAGE_H_
 #define SERVER_IMAGE_IMAGE_H_
@@ -9,6 +9,7 @@
 #include <memory>
 #include <iostream>
 
+#include "core/logger.h"
 #include "image/basic_object.h"
 
 namespace tin {
@@ -28,8 +29,8 @@ class Image {
     std::unique_ptr<BasicObject> x = new T();
     auto emplace_ret = objects_.emplace(id, std::move(x));
     if (!emplace_ret.second) {
-      std::cerr << "Ojojoj, nie dodano obiektu :<\n";
-      std::terminate();
+      LogH << "Ojojoj, nie dodano obiektu :<\n";
+      throw std::runtime_error("error at adding new object to image");
     }
     obj_order_.push_back(id);
     addr_to_id_.emplace(&*x, id);
@@ -44,7 +45,6 @@ class Image {
       return -1;
     }
   }
-
 
  private:
   Id GetNewId_() {

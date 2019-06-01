@@ -5,10 +5,11 @@
 
 #include <iostream>
 #include <string>
+#include <memory>
 
 #include "core/instr_struct.h"
 #include "core/nquad.h"
-#include "app/server.h"
+#include "core/server.h"
 
 namespace tin {
 class LogOut : public InstrStruct {
@@ -18,11 +19,8 @@ class LogOut : public InstrStruct {
 
   LogOut() {}
   virtual ~LogOut() {}
-  static int Fn(Server *, SocketStuff *, World *, MsgPushFn);
-  static void Construct(InstrStruct *);
-  static void Destroy(InstrStruct *);
+  virtual int Fn(Server *, SocketStuff *, World *, MsgPushFn);
 };
-
 
 }  // namespace tin
 

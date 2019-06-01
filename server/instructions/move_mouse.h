@@ -7,27 +7,25 @@
 
 #include "core/instr_struct.h"
 #include "core/nquad.h"
-#include "app/session.h"
-#include "app/server.h"
+#include "core/server.h"
 
 namespace tin {
 class MoveMouse : public InstrStruct {
  public:
   static constexpr int START = INSTR + NQS;
-  static constexpr int END = 4 * sizeof(NQuad);
+  static constexpr int X = START;
+  static constexpr int Y = X + sizeof(NDouble);
+  static constexpr int END = Y + sizeof(NDouble);
 
   MoveMouse() {}
   virtual ~MoveMouse() {}
-  static int Fn(Server *, SocketStuff *, World *, MsgPushFn);
-  static void Construct(InstrStruct *);
-  static void Destroy(InstrStruct *);
+  virtual int Fn(Server *, SocketStuff *, World *, MsgPushFn);
 
  private:
   Username un_;
-  double x;
-  double y;
+  NDouble x_;
+  NDouble y_;
 };
-
 
 }  // namespace tin
 

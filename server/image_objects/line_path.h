@@ -22,5 +22,4 @@ struct LinePath : BasicObject {
 
 }  // namespace tin
 
-
 #endif  // SERVER_IMAGE_OBJECTS_LINE_PATH_H_

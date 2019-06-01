@@ -1,4 +1,4 @@
-// Copyright 2019 Piotrek
+// Copyright 2019 TIN
 
 #ifndef SERVER_CORE_INSTR_ID_H_
 #define SERVER_CORE_INSTR_ID_H_

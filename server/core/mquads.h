@@ -11,8 +11,6 @@ namespace MQ {
 constexpr NQuad
   ZERO {},
   OWO {"OwO!"},
-  // CAPTURE_SESSION {"sess"},
-  // SESSION_ACCEPTED {"okej"},
 
   ERR_BAD_LOG {"badl"},
   ERR_BANNED {"band"},
@@ -23,22 +21,13 @@ constexpr NQuad
 
   ERRR_LONG_UN {"LNun"},
   ERRR_LONG_PW {"LNpw"},
+  ERRR_LONG_MSG {"LNms"},
 
   CLI_LOGIN {"logo"},
   CLI_LOGOUT {"lout"},
   CLI_MOUSE {"maus"},
   CLI_MESG {"mesg"},
-
-
-  MOVE_MOUSE {"mysz"},
-  SAY {"msg0"},
-  SAY2 {"sayy"},  // ??
-  SERVER_DELIVER_MSG {"msg1"},
-  SERVER_MOUSE {"maus"},
-  SERVER_DELIVER_MSG2 {"said"},  // ??
-  SERVER_DISCONNECT {"disc"},
-  SERVER_ANNOUNCEMENT {"hejo"},
-  SERVER_NOTICE {"ueuo"},
+  CLI_CR_SH {"crea"},
 
   SERV_LOGIN_OK {"LGOK"},
   SERV_LOG_OUT {"LOFF"},
@@ -48,16 +37,11 @@ constexpr NQuad
   SERV_SIGL {"SIGL"},
   SERV_SIGH {"SIGH"},
 
-  RECTANGLE {"rect"},
-  ELLIPSE {"elip"},
-  POLYGONAL_CHAIN {"path"},
+  SHAPE_RECTANGLE {"rect"},
+  SHAPE_ELLIPSE {"elip"},
+  SHAPE_POLYGONAL_CHAIN {"path"},
 
-  EDIT {"edit"},
-  ADD_PARAMS {"addd"},
-  GRAB {"grab"},
-  DONE {"done"},
-  NOPE {"NOPE"},
-  OBJECT_DELETED {"puff"};
+  NOTHING {"xdxd"};
 
 }  // namespace MQ
 }  // namespace tin

@@ -1,7 +1,7 @@
 // Copyright 2019 Piotrek
 
-#ifndef SERVER_APP_SERVER_H_
-#define SERVER_APP_SERVER_H_
+#ifndef SERVER_CORE_SERVER_H_
+#define SERVER_CORE_SERVER_H_
 
 #include <string>
 #include <map>
@@ -11,20 +11,18 @@
 #include <memory>
 
 #include "account_manager/account_manager.h"
-#include "app/logged_user.h"
-#include "app/session.h"
-#include "app/world.h"
+#include "core/logged_user.h"
+#include "core/world.h"
 #include "configurator/the_config.h"
 #include "core/username.h"
-#include "app/socket_stuff.h"
+#include "core/socket_stuff.h"
 #include "core/socket_tcp4.h"
 #include "core/sel.h"
 #include "core/instr_id.h"
-#include "app/instr_supp.h"
+#include "core/instr_supp.h"
 #include "core/sock_id.h"
 
 namespace tin {
-
 
 class Server {
  public:
@@ -32,8 +30,11 @@ class Server {
   static constexpr bool DEAL_WITH_STDIN = true;
   static constexpr int DEFAULT_LISTEN_QUEUE_LEN = 32;
   static constexpr int NQS = sizeof(NQuad);
+  static constexpr int MAX_UN_LEN = Username::MAX_NAME_LEN;
+  static constexpr int MAX_PW_LEN = 32;
 
   static const std::map<InstrId, InstrSupp> instructions;
+  
 
   Server();
   Server(const Server &) = delete;
@@ -50,12 +51,7 @@ class Server {
   int StopRun();
 
   // Returns username assigned to fd. Blank if fd does not have session.
-  Username SockToUn(int fd);
-
-  // TheConfig &GetConf() {return conf_;}
-  // AccountManager &GetAccountManager() {return am_;}
-
-  // World &GetWorld() {return world_;}
+  Username SockToUn(SockId id);
 
   // xd
   const InstrSupp *GetInstr(const InstrId &id) {
@@ -109,6 +105,9 @@ class Server {
   // Reads client sockets and deal with it.
   int ReadClients_();
 
+  // Do work in world.
+  int DoWorldWork_();
+
   // Write messages to buffers to send.
   int MsgsToBufs_();
 
@@ -145,4 +144,4 @@ class Server {
 };  // class Server
 }  // namespace tin
 
-#endif  // SERVER_APP_SERVER_H_
+#endif  // SERVER_CORE_SERVER_H_

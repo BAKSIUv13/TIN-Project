@@ -20,14 +20,13 @@ class UserMsg : public OutMessage {
 
   virtual ~UserMsg() {}
 
+  virtual std::string GetTypeName() {return "UserMsg";}
+
+  virtual int Audience() {return BROADCAST_U;}
+
   Username GetUsername() {return username_;}
   const std::string &GetContent() {return content_;}
 
-  virtual std::string GetTypeName() {return "UserMsg";}
-  virtual bool Broadcast() {return true;}
-  virtual std::list<Username> Users() {
-    return std::list<Username>{};
-  }
   virtual int AddToBuf(WriteBuf *buf);
  private:
   Username username_;

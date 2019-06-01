@@ -1,7 +1,9 @@
-// Copyright 2019 Piotrek
+// Copyright 2019 TIN
 
 #ifndef SERVER_CORE_SEL_H_
 #define SERVER_CORE_SEL_H_
+
+#include <sys/select.h>
 
 #include <vector>
 #include <cstdint>
@@ -20,12 +22,10 @@ class Sel {
     NONE = 0,
     READ = 1,
     WRITE = 1 << 1,
-    EXCEPTION = 1 << 2,
+    EXCEPTION = 1 << 2,  // EXCEPTION nie działa
     ALL = READ | WRITE | EXCEPTION,
   };
-  static constexpr int MAX_SIZE = 1024;
-  // const, nie constexpr, bo nie chce include'ować
-  // tych makr wszystkich tutaj
+  static constexpr int MAX_SIZE = FD_SETSIZE;
 
   Sel();
   ~Sel();
@@ -43,11 +43,8 @@ class Sel {
  private:
   void Shrink_();
   int buffer_len_;
-  using mask_int_t = uint8_t;
-  mask_int_t fds_[3 * MAX_SIZE / sizeof(mask_int_t)];
-  mask_int_t *read_fds_() {return fds_;}
-  mask_int_t *write_fds_() {return fds_ + MAX_SIZE / sizeof(mask_int_t);}
-  mask_int_t *exc_fds_() {return fds_ + 2 * MAX_SIZE / sizeof(mask_int_t);}
+  fd_set read_fds_;
+  fd_set write_fds_;
 };  // class Sel
 
 }  // namespace tin

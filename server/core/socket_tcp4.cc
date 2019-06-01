@@ -1,4 +1,4 @@
-// Copyright 1410 Jurand ze Spychowa
+// Copyright 2019 TIN
 
 #include "core/socket_tcp4.h"
 
@@ -10,22 +10,24 @@
 #include <iostream>
 #include <array>
 
-static std::array<char, 16> fgfg(uint32_t x) {
-  // nie chciało mi się szukać tyhc funkcji więc napisałem sam na rzaie
-  std::array<char, 16> xc;
-  char *gd = xc.data();
+#include "core/logger.h"
+
+static const char *gen_ip_str(uint32_t x) {
+  // nie chciało mi się szukać tych funkcji więc napisałem sam na rzaie
+  static thread_local char arr[16];
+  char *it = arr;
   for (uint32_t i = 24;; i -= 8) {
-    gd += snprintf(gd, 16 * sizeof(char), "%d.", (x >> i) & 255);
+    it += snprintf(it, 5 * sizeof(char), "%d.", (x >> i) & 255);
     if (i == 0) break;
   }
-  *(gd - 1) = '\0';
-  return xc;
+  it[-1] = '\0';
+  return arr;
 }
 
 namespace tin {
   SocketTCP4::SocketTCP4()
       : fd_(-1), status_(BLANK) {
-    std::cerr << "SocketTCP4: empty constructor\n";
+    LogM << "SocketTCP4: empty constructor\n";
   }  // fd -1 means socket is not open
 
   //  SocketTCP4::SocketTCP4(uint32_t address, uint16_t port)
@@ -33,15 +35,15 @@ namespace tin {
   //  int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 
   SocketTCP4::~SocketTCP4() {
-    std::cerr << "SocketTCP4: destructor\n";
+    LogM << "SocketTCP4: destructor\n";
     Destroy_();
   }
 
   int SocketTCP4::Open() {
-    std::cerr << "SocketTCP4: open\n";
+    LogM << "SocketTCP4: open\n";
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd < 0) {
-      std::cerr << "Could not create socket :<\n";
+      LogH << "Could not create socket :<\n";
       return -1;
     }
     fd_ = sock_fd;
@@ -50,12 +52,12 @@ namespace tin {
   }
 
   SocketTCP4::SocketTCP4(SocketTCP4 &&other) noexcept {
-    std::cerr << "SocketTCP4: move constructor\n";
+    LogM << "SocketTCP4: move constructor\n";
     Move_(&other);
   }
 
   SocketTCP4 &SocketTCP4::operator=(SocketTCP4 &&other) noexcept {
-    std::cerr << "SocketTCP4: move assign\n";
+    LogM << "SocketTCP4: move assign\n";
     if (this == &other) {
       return *this;
     }
@@ -65,7 +67,7 @@ namespace tin {
   }
 
   void SocketTCP4::Destroy_() {
-    std::cerr << "SocketTCP4: destroy\n";
+    LogM << "SocketTCP4: destroy\n";
     if (status_ != BLANK) {
       close(fd_);
       status_ = BLANK;
@@ -73,13 +75,13 @@ namespace tin {
   }
 
   void SocketTCP4::Move_(SocketTCP4 *other) {
-    std::cerr << "SocketTCP4: move\n";
+    LogM << "SocketTCP4: move\n";
     std::memcpy(this, other, sizeof(*this));
     other->status_ = BLANK;
   }
 
   int SocketTCP4::Bind(uint32_t address, uint16_t port) {
-    std::cerr << "SocketTCP4: bind\n";
+    LogM << "SocketTCP4: bind\n";
     struct sockaddr_in saddr;
     saddr.sin_family = AF_INET;
     saddr.sin_addr.s_addr = htonl(address);
@@ -91,21 +93,19 @@ namespace tin {
       addr_here_ = address;  // nie wiem
       port_here_ = port;  // czy dobrze xd
       status_ = BOND;
-#ifdef SOME_DEBUG
     } else {
-      std::cerr << "Bind nie poszedl :<\n";
-#endif
+      LogM << "Bind nie poszedl :<\n";
     }
     return bind_ret;
   }
 
   int SocketTCP4::BindAny(uint16_t port) {
-    std::cerr << "SocketTCP4: bind any\n";
+    LogM << "SocketTCP4: bind any\n";
     return Bind(INADDR_ANY, port);
   }
 
   int SocketTCP4::Listen(int queue_length) {
-    std::cerr << "SocketTCP4: listen\n";
+    LogM << "SocketTCP4: listen\n";
     int listen_ret = listen(fd_, queue_length);
     if (listen_ret == 0) {
       status_ = LISTENING;
@@ -114,7 +114,7 @@ namespace tin {
   }
 
   int SocketTCP4::Connect(uint32_t address, uint16_t port) {
-    std::cerr << "SocketTCP4: connect\n";
+    LogM << "SocketTCP4: connect\n";
     struct sockaddr_in saddr;
     saddr.sin_family = AF_INET;
     saddr.sin_addr.s_addr = htonl(address);
@@ -131,7 +131,7 @@ namespace tin {
   }
 
   int SocketTCP4::Accept(SocketTCP4 *new_sock) {
-    std::cerr << "SocketTCP4: accept\n";
+    LogM << "SocketTCP4: accept\n";
     if (new_sock->status_ != BLANK) {
       return -1000;
     }
@@ -142,39 +142,40 @@ namespace tin {
     int accept_ret = accept(fd_, &saddr_l, &addrlen);
     if (accept_ret >= 0) {
       if (addrlen != sizeof(saddr)) {
-        std::cerr << "jakiś mocny błąd w accepcie xd\n";
+        LogH << "jakiś mocny błąd w accepcie xd\n";
         std::terminate();
       }
       new_sock->status_ = CONNECTED;
       new_sock->fd_ = accept_ret;
       new_sock->addr_there_ = ntohl(saddr.sin_addr.s_addr);
       new_sock->port_there_ = ntohs(saddr.sin_port);
-      int hahaha = getsockname(accept_ret, &saddr_l, &addrlen);
-      if (hahaha < 0) {
-        std::cerr << "najgorzej\n";
+      int accepted_socket_name = getsockname(accept_ret, &saddr_l, &addrlen);
+      if (accepted_socket_name < 0) {
+        LogH << "najgorzej, nie dało się przeczytać adrsu w gnieździe\n";
         std::terminate();
       }
       new_sock->addr_here_ = ntohl(saddr.sin_addr.s_addr);
       new_sock->port_here_ = ntohs(saddr.sin_port);
-      std::fprintf(stderr, "serv here xd  %s:%d\nclient here   %s:%d\n"
-        "client there  %s:%d\n",
-        fgfg(addr_here_).data(), port_here_,
-        fgfg(new_sock->addr_here_).data(), new_sock->port_here_,
-        fgfg(new_sock->addr_there_).data(), new_sock->port_there_);
+      LogM << "serv here xd  " << gen_ip_str(addr_here_) << ":"
+        << port_here_
+        << "\nclient here   " << gen_ip_str(new_sock->addr_here_) << ":"
+        << new_sock->port_here_
+        << "\nclient there  " << gen_ip_str(new_sock->addr_there_) << ":"
+        << new_sock->port_there_ << '\n';
       return 0;
     }
     return accept_ret;
   }
 
   int SocketTCP4::Close() {
-    std::cerr << "SocketTCP4: close\n";
+    LogM << "SocketTCP4: close\n";
     int close_ret = close(fd_);
     status_ = BLANK;
     return close_ret;
   }
 
   int SocketTCP4::Shutdown(int how) {
-    std::cerr << "SocketTCP4: shutdown\n";
+    LogM << "SocketTCP4: shutdown\n";
     return shutdown(fd_, how);
   }
 }  // namespace tin

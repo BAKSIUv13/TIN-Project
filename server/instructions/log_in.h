@@ -8,7 +8,7 @@
 
 #include "core/instr_struct.h"
 #include "core/nquad.h"
-#include "app/server.h"
+#include "core/server.h"
 
 namespace tin {
 class LogIn : public InstrStruct {
@@ -17,9 +17,7 @@ class LogIn : public InstrStruct {
 
   LogIn() {}
   virtual ~LogIn() {}
-  static int Fn(Server *, SocketStuff *, World *, MsgPushFn);
-  static void Construct(InstrStruct *);
-  static void Destroy(InstrStruct *);
+  virtual int Fn(Server *, SocketStuff *, World *, MsgPushFn);
 
  private:
   constexpr int UnLen_() const {return START;}
@@ -33,7 +31,6 @@ class LogIn : public InstrStruct {
   std::string un_;
   std::string pw_;
 };
-
 
 }  // namespace tin
 

@@ -1,6 +1,6 @@
-// Copyright 2019 Piotrek
+// Copyright 2019 TIN
 
-#include "app/logged_user.h"
+#include "core/logged_user.h"
 
 #include <unistd.h>
 

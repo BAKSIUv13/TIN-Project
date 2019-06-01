@@ -1,4 +1,4 @@
-// Copyright 2019 Piotrek
+// Copyright 2019 TIN
 
 #ifndef SERVER_CORE_WRITE_BUF_H_
 #define SERVER_CORE_WRITE_BUF_H_

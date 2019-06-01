@@ -1,4 +1,4 @@
-// Copyright 2019 Piotrek
+// Copyright 2019 TIN
 
 #ifndef SERVER_CORE_SOCKET_TCP4_H_
 #define SERVER_CORE_SOCKET_TCP4_H_

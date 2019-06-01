@@ -1,11 +1,10 @@
-// Copyright 2019 Piotrek
+// Copyright 2019 TIN
 
-#ifndef SERVER_APP_LOGGED_USER_H_
-#define SERVER_APP_LOGGED_USER_H_
+#ifndef SERVER_CORE_LOGGED_USER_H_
+#define SERVER_CORE_LOGGED_USER_H_
 
 #include <string>
 
-#include "app/session.h"
 #include "core/username.h"
 #include "core/sock_id.h"
 
@@ -31,4 +30,4 @@ class LoggedUser{
 };  // class LoggedUser
 }  // namespace tin
 
-#endif  // SERVER_APP_LOGGED_USER_H_
+#endif  // SERVER_CORE_LOGGED_USER_H_

@@ -9,14 +9,14 @@
 namespace tin {
 
 int UserMsg::AddToBuf(WriteBuf *buf) {
-  int NQS = sizeof(NQuad);
   std::string str;
-  str.append(MQ::OWO.CStr(), NQS);
-  str.append(MQ::SERVER_DELIVER_MSG.CStr(), NQS);
+  MQ::OWO.AppendToCpp11String(&str);
+  MQ::SERV_MESG.AppendToCpp11String(&str);
   const char *name = GetUsername();
-  str.append(name, 16);
+  NQuad(static_cast<uint32_t>(strlen(name))).AppendToCpp11String(&str);
+  str.append(name);
   uint32_t content_size = GetContent().size();
-  str.append(NQuad(content_size).CStr(), NQS);
+  NQuad(content_size).AppendToCpp11String(&str);
   str.append(GetContent());
   return buf->Add(str);
 }

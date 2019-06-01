@@ -5,6 +5,8 @@
 
 #include <string>
 #include <list>
+#include <memory>
+#include <utility>
 
 #include "core/username.h"
 #include "core/write_buf.h"
@@ -46,6 +48,11 @@ class OutMessage {
   virtual SockId Sock();
 
   virtual int AddToBuf(WriteBuf *) = 0;
+
+  template <typename T>
+  static std::unique_ptr<OutMessage> UP(T *t) {
+    return std::move(std::unique_ptr<OutMessage>(t));
+  }
 };
 
 // template<typename T>

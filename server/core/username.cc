@@ -1,4 +1,4 @@
-// Copyright 2019 Piotrek
+// Copyright 2019 TIN
 
 #include "core/username.h"
 
@@ -152,7 +152,6 @@ int Username::Compare_(const Username &other) const {
   return q[0]->RawCompare_(*q[1]);
 }
 
-
 void Username::ZeroBad_() {
   if (state_ == BAD || state_ == BLANK) {
     c_[0] = '\0';
@@ -163,7 +162,9 @@ int Username::Len() const noexcept {
   if (!Good()) {
     return 0;
   }
-  return strnlen(c_, MAX_NAME_LEN);
+  int len = 0;
+  for (; len < MAX_NAME_LEN && c_[len] != '\0'; ++len) {}
+  return len;
 }
 
 }  // namespace tin
