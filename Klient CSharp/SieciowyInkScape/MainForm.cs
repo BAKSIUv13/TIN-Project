@@ -172,9 +172,12 @@ namespace SieciowyInkScape
         {
             if (e.KeyChar == '\r')
             {
-                client.clientMachine.SendChatMessage(messageBox.Text);
-               // ChatBoxWriteLine("Ja: " + messageBox.Text);
-                messageBox.Clear();
+                if(client.loggedIn)
+                {
+                    client.clientMachine.SendChatMessage(messageBox.Text);
+                    messageBox.Clear();
+                }
+                
             }
         }
 

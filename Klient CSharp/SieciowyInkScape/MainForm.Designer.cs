@@ -65,10 +65,13 @@
             // chatBox
             // 
             this.chatBox.BackColor = System.Drawing.Color.White;
-            this.chatBox.Enabled = false;
+            this.chatBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.chatBox.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.chatBox.ForeColor = System.Drawing.Color.Black;
             this.chatBox.Location = new System.Drawing.Point(3, 21);
             this.chatBox.Multiline = true;
             this.chatBox.Name = "chatBox";
+            this.chatBox.ReadOnly = true;
             this.chatBox.Size = new System.Drawing.Size(295, 339);
             this.chatBox.TabIndex = 0;
             // 
