@@ -77,13 +77,13 @@ struct NQuad {
     return *reinterpret_cast<const std::array<char, 4> *>(&raw_uint);
   }
 
-  void AppendToCpp11String(std::string *s) const {
+  void AppendToCppString(std::string *s) const {
     s->append(this->CStr(), sizeof(*this));
   }
 
   operator std::string() const {
     std::string s;
-    this->AppendToCpp11String(&s);
+    this->AppendToCppString(&s);
     return s;
   }
 

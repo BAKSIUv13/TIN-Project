@@ -114,25 +114,28 @@ class SocketStuff {
   }
 
   // Get int32 from socket.
-  int ReadQuad(int at, NQuad *dest) {
+  inline int ReadQuad(int at, NQuad *dest) {
     return ReadString(at, NQS, dest);
   }
 
-  int ReadDouble(int at, NDouble *dest) {
+  inline int ReadDouble(int at, NDouble *dest) {
     return ReadString(at, sizeof(NDouble), dest);
   }
 
+  inline int ReadByte(int at, uint8_t *dest) {
+    return ReadString(at, 1, dest);
+  }
+
   int ReadString(int start, int len, void *dest) {
+    int end = start + len;
+    if (cm_processed_ >= end) {
+      return 0;
+    }
     if (cm_processed_ < start) {
       LogM << "za daleko jest to, co chcemy skopiować\n";
       return -1;
     }
-    int cp_dest_start = cm_processed_ - start;\
-    int end = start + len;
-    if (cm_processed_ >= end) {
-      LogM << "za daleko już jesteśmy\n";
-      return -1;
-    }
+    int cp_dest_start = cm_processed_ - start;
     char *cp_src_ptr = &(reinterpret_cast<char *>(read_buf_)[msg_processed_]);
     char *cp_dest_ptr = dest != nullptr ?
       &(reinterpret_cast<char *>(dest)[cp_dest_start]) :
@@ -150,7 +153,7 @@ class SocketStuff {
     return 0;
   }
 
-  int ReadCpp11String(int start, int len, std::string *dest) {
+  int ReadCppString(int start, int len, std::string *dest) {
     if (cm_processed_ < start) {
       LogM << "za daleko jest to, co chcemy skopiować\n";
       return -1;

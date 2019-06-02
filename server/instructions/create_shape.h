@@ -16,6 +16,13 @@ class CreateShape : public InstrStruct {
  public:
   static constexpr int START = INSTR + NQS;
   static constexpr int SHAPE_THINGS = START + NQS;
+  static constexpr int RedOffset() {return SHAPE_THINGS + 0;}
+  static constexpr int GreenOffset() {return SHAPE_THINGS + 1;}
+  static constexpr int BlueOffset() {return SHAPE_THINGS + 2;}
+  static constexpr int RectLeft() {return BlueOffset() + 1;}
+  static constexpr int RectTop() {return RectLeft() + sizeof(NDouble);}
+  static constexpr int RectRight() {return RectTop() + sizeof(NDouble);}
+  static constexpr int RectBottom() {return RectRight() + sizeof(NDouble);}
 
   CreateShape() : shape_type_() {}
   virtual ~CreateShape() {}
@@ -34,8 +41,11 @@ class CreateShape : public InstrStruct {
   }
   // Username un_;
   NQuad shape_type_;
-  // std::string message_;
-  // bool len_is_read_;
+  uint8_t r_;
+  uint8_t g_;
+  uint8_t b_;
+
+  NDouble rl_, rt_, rr_, rb_;
 };
 
 }  // namespace tin

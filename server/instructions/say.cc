@@ -27,7 +27,7 @@ int Say::Fn(Server *server, SocketStuff *stuff, World *world,
     return -1;
   }
   if (stuff->CmProcessed() < End_()) {
-    pom = stuff->ReadCpp11String(Msg_(), len_, &message_);
+    pom = stuff->ReadCppString(Msg_(), len_, &message_);
     if (pom != 0) return pom;
   }
   if (!un_) {

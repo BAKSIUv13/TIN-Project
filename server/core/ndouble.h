@@ -47,7 +47,7 @@ struct NDouble {
     return Double();
   }
 
-  void AppendToCpp11String(std::string *s) const {
+  void AppendToCppString(std::string *s) const {
     s->append(this->CStr(), sizeof(*this));
   }
 

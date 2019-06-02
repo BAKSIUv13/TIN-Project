@@ -26,6 +26,20 @@ int CreateShape::Fn(Server *server, SocketStuff *stuff, World *world,
         case MQ::SHAPE_POLYGONAL_CHAIN:
           break;
         case MQ::SHAPE_RECTANGLE:
+          pom = stuff->ReadByte(RedOffset(), &r_);
+          if (pom) return pom;
+          pom = stuff->ReadByte(GreenOffset(), &g_);
+          if (pom) return pom;
+          pom = stuff->ReadByte(BlueOffset(), &b_);
+          if (pom) return pom;
+          pom = stuff->ReadDouble(RectLeft(), &rl_);
+          if (pom) return pom;
+          pom = stuff->ReadDouble(RectTop(), &rt_);
+          if (pom) return pom;
+          pom = stuff->ReadDouble(RectRight(), &rr_);
+          if (pom) return pom;
+          pom = stuff->ReadDouble(RectBottom(), &rb_);
+          if (pom) return pom;
           break;
         default:
           LogM << "bad shape\n";

@@ -24,7 +24,7 @@ int LogIn::Fn(Server *server, SocketStuff *stuff, World *, MsgPushFn push_fn) {
     return -1;
   }
   if (stuff->CmProcessed() < PwLen_()) {
-    pom = stuff->ReadCpp11String(Un_(), un_len_, &un_);
+    pom = stuff->ReadCppString(Un_(), un_len_, &un_);
     if (pom != 0) {
       return pom;
     }
@@ -41,7 +41,7 @@ int LogIn::Fn(Server *server, SocketStuff *stuff, World *, MsgPushFn push_fn) {
     return -1;
   }
   if (stuff->CmProcessed() < End_()) {
-    pom = stuff->ReadCpp11String(Pw_(), pw_len_, &pw_);
+    pom = stuff->ReadCppString(Pw_(), pw_len_, &pw_);
     if (pom != 0) {
       return pom;
     }
