@@ -33,7 +33,7 @@ namespace SieciowyInkScape
                             username = SocketReceiveString(usernameLength);
                             messageLength = SocketReceiveUInt32();
                             message = SocketReceiveString(messageLength);
-
+                            
                             mainForm.Invoke(new Action(() =>
                             {
                                 MessageInboundEventArgs args = new MessageInboundEventArgs(message, username);
@@ -43,15 +43,52 @@ namespace SieciowyInkScape
                         }
                         else if (messageType.Equals("MAUS"))
                         {
-                            UInt32 xpos = SocketReceiveUInt32();
-                            UInt32 ypos = SocketReceiveUInt32();
+                            double xpos = SocketReceiveDouble();
+                            double ypos = SocketReceiveDouble();
                             UInt32 usernameLength = SocketReceiveUInt32();
                             string username = SocketReceiveString(usernameLength);
 
                             clientMachine.drawingArea.Access();
-                            clientMachine.drawingArea.mousePositions[username] = new DrawingAreaState.MousePosition(xpos, ypos, username);
+                            clientMachine.drawingArea.mousePositions[username] = new DrawingAreaState.MousePosition((float)xpos, (float)ypos, username, DateTime.Now);
                             clientMachine.drawingArea.Exit();
                         }
+                        else if (messageType.Equals("NEWW"))
+                        {
+                            int ID = SocketReceiveInt32();
+                            string objectType = SocketReceiveString(4);
+
+                            if(objectType == "rect")
+                            {
+                                byte R = SocketReceiveByte();
+                                byte G = SocketReceiveByte();
+                                byte B = SocketReceiveByte();
+                                double xpos = SocketReceiveDouble();
+                                double ypos = SocketReceiveDouble();
+                                double width = SocketReceiveDouble();
+                                double height = SocketReceiveDouble();
+
+                                clientMachine.drawingArea.Access();
+                                clientMachine.drawingArea.objects.Add(new DrawingAreaState.RectangleObject((float)xpos, (float)ypos, (float)(width), (float)(height), 1, System.Drawing.Color.FromArgb(255, R, G, B)));
+                                clientMachine.drawingArea.Exit();
+                            }
+                            else if (objectType == "line")
+                            {
+                                byte R = SocketReceiveByte();
+                                byte G = SocketReceiveByte();
+                                byte B = SocketReceiveByte();
+                                double xpos = SocketReceiveDouble();
+                                double ypos = SocketReceiveDouble();
+                                double xpos2 = SocketReceiveDouble();
+                                double ypos2 = SocketReceiveDouble();
+
+                                clientMachine.drawingArea.Access();
+                                clientMachine.drawingArea.objects.Add(new DrawingAreaState.LineObject((float)xpos, (float)ypos, (float)(xpos2), (float)(ypos2), 1, System.Drawing.Color.FromArgb(255, R, G, B)));
+                                clientMachine.drawingArea.Exit();
+                            }
+
+                        }
+
+
                         else if (messageType.Equals("LGOK"))
                         {
                             loggedUsername = clientMachine.UsedNick;

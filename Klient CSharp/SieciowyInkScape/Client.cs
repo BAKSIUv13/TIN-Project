@@ -54,9 +54,9 @@ namespace SieciowyInkScape
             public ClientMachine(Client parent, Size areaSize)
             {
                 drawingArea = new DrawingAreaState(new Point(areaSize.Width, areaSize.Width));
-                drawingArea.mousePositions["nkpkiller"] = new DrawingAreaState.MousePosition(0.4f, 0.3f, "nkpkiller");
-                drawingArea.mousePositions["LubiePierogi"] = new DrawingAreaState.MousePosition(0.7f, 0.4f, "LubiePierogi");
-                drawingArea.mousePositions["Baksiu"] = new DrawingAreaState.MousePosition(0.1f, 0.8f, "Baksiu");
+               // drawingArea.mousePositions["nkpkiller"] = new DrawingAreaState.MousePosition(0.4f, 0.3f, "nkpkiller");
+                //drawingArea.mousePositions["LubiePierogi"] = new DrawingAreaState.MousePosition(0.7f, 0.4f, "LubiePierogi");
+               // drawingArea.mousePositions["Baksiu"] = new DrawingAreaState.MousePosition(0.1f, 0.8f, "Baksiu");
 
                 this.parent = parent;
             }
@@ -73,10 +73,10 @@ namespace SieciowyInkScape
             public void SendChatMessage(string message)
             {
                 List<byte> bytes = new List<byte>();
-
                 ListConcat(bytes, parent.SocketSetString("mesg"));
-                ListConcat(bytes, parent.SocketSetInt32(message.Length));
-                ListConcat(bytes, parent.SocketSetString(message));
+                byte[] messageArray = parent.SocketSetString(message);
+                ListConcat(bytes, parent.SocketSetInt32(messageArray.Length));
+                ListConcat(bytes, messageArray);
 
                 parent.SocketSend(bytes.ToArray());
             }
@@ -86,8 +86,44 @@ namespace SieciowyInkScape
                 List<byte> bytes = new List<byte>();
 
                 ListConcat(bytes, parent.SocketSetString("maus"));
-                ListConcat(bytes, parent.SocketSetDouble(position.X));
-                ListConcat(bytes, parent.SocketSetDouble(position.Y));
+                ListConcat(bytes, parent.SocketSetDouble((double)position.X));
+                ListConcat(bytes, parent.SocketSetDouble((double)position.Y));
+
+                parent.SocketSend(bytes.ToArray());
+            }
+
+            public void SendRectangle(DrawingAreaState.RectangleObject rect)
+            {
+                List<byte> bytes = new List<byte>();
+
+                ListConcat(bytes, parent.SocketSetString("crea"));
+                ListConcat(bytes, parent.SocketSetString("rect"));
+                ListConcat(bytes, parent.SocketSetByte(rect.color.R));
+                ListConcat(bytes, parent.SocketSetByte(rect.color.G));
+                ListConcat(bytes, parent.SocketSetByte(rect.color.B));
+                ListConcat(bytes, parent.SocketSetDouble((double)rect.xpos));
+                ListConcat(bytes, parent.SocketSetDouble((double)rect.ypos));
+                ListConcat(bytes, parent.SocketSetDouble((double)rect.width));
+                ListConcat(bytes, parent.SocketSetDouble((double)rect.height));
+
+
+                parent.SocketSend(bytes.ToArray());
+            }
+
+            public void SendLine(DrawingAreaState.LineObject line)
+            {
+                List<byte> bytes = new List<byte>();
+
+                ListConcat(bytes, parent.SocketSetString("crea"));
+                ListConcat(bytes, parent.SocketSetString("line"));
+                ListConcat(bytes, parent.SocketSetByte(line.color.R));
+                ListConcat(bytes, parent.SocketSetByte(line.color.G));
+                ListConcat(bytes, parent.SocketSetByte(line.color.B));
+                ListConcat(bytes, parent.SocketSetDouble((double)line.xpos));
+                ListConcat(bytes, parent.SocketSetDouble((double)line.ypos));
+                ListConcat(bytes, parent.SocketSetDouble((double)line.xpos2));
+                ListConcat(bytes, parent.SocketSetDouble((double)line.ypos2));
+
 
                 parent.SocketSend(bytes.ToArray());
             }
@@ -99,16 +135,21 @@ namespace SieciowyInkScape
                 List<byte> bytes = new List<byte>();
 
                 ListConcat(bytes, parent.SocketSetString("logo"));
-                ListConcat(bytes, parent.SocketSetInt32(login.Length));
-                ListConcat(bytes, parent.SocketSetString(login));
-                ListConcat(bytes, parent.SocketSetInt32(password.Length));
-                ListConcat(bytes, parent.SocketSetString(password));
+                byte[] loginArray = parent.SocketSetString(login);
+                ListConcat(bytes, parent.SocketSetInt32(loginArray.Length));
+                ListConcat(bytes, loginArray);
+                byte[] passArray = parent.SocketSetString(password);
+                ListConcat(bytes, parent.SocketSetInt32(passArray.Length));
+                ListConcat(bytes, passArray);
                                
                 parent.SocketSend(bytes.ToArray());
             }
 
             public void Logout()
             {
+                parent.loggedUsername = "";
+                parent.loggedIn = false;
+
                 List<byte> bytes = new List<byte>();
 
                 ListConcat(bytes, parent.SocketSetString("lout"));
@@ -258,6 +299,7 @@ namespace SieciowyInkScape
                 }
                 ));
                 Disconnect();
+                return;
             }
 
             while (size > buf.Length) buf = new byte[buf.Length * 2];
@@ -325,14 +367,14 @@ namespace SieciowyInkScape
             }
         }
 
-        byte[] SocketSetInt64(Int32 value)
+        byte[] SocketSetInt64(Int64 value)
         {
             byte[] toRet = System.BitConverter.GetBytes(value);
             if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
 
             return toRet;
         }
-        byte[] SocketSetUInt64(UInt32 value)
+        byte[] SocketSetUInt64(UInt64 value)
         {
             byte[] toRet = System.BitConverter.GetBytes(value);
             if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
@@ -353,17 +395,23 @@ namespace SieciowyInkScape
 
             return toRet;
         }
-        byte[] SocketSetInt16(Int32 value)
+        byte[] SocketSetInt16(Int16 value)
         {
             byte[] toRet = System.BitConverter.GetBytes(value);
             if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
 
             return toRet;
         }
-        byte[] SocketSetUInt16(UInt32 value)
+        byte[] SocketSetUInt16(UInt16 value)
         {
             byte[] toRet = System.BitConverter.GetBytes(value);
             if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
+
+            return toRet;
+        }
+        byte[] SocketSetByte(byte value)
+        {
+            byte[] toRet = System.BitConverter.GetBytes(value);
 
             return toRet;
         }
@@ -371,13 +419,13 @@ namespace SieciowyInkScape
         byte[] SocketSetDouble(double value)
         {
             byte[] toRet = System.BitConverter.GetBytes(value);
-            if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
+           // if (System.BitConverter.IsLittleEndian) Array.Reverse(toRet);
 
             return toRet;
         }
         byte[] SocketSetString(string value)
         {
-            byte[] toRet = Encoding.ASCII.GetBytes(value);
+            byte[] toRet = Encoding.UTF8.GetBytes(value);
 
             return toRet;
         }
@@ -418,16 +466,22 @@ namespace SieciowyInkScape
             if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 2);
             return System.BitConverter.ToUInt16(buf, 0);
         }
+        byte SocketReceiveByte()
+        {
+            SocketReceive(1);
+            return buf[0];
+        }
+
         double SocketReceiveDouble()
         {
             SocketReceive(8);
-            if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 8);
+            //if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 8);
             return System.BitConverter.ToDouble(buf, 0);
         }
         string SocketReceiveString(UInt32 size)
         {
             SocketReceive((int)size);
-            return Encoding.ASCII.GetString(buf, 0, (int)size);
+            return Encoding.UTF8.GetString(buf, 0, (int)size);
         }
 
        

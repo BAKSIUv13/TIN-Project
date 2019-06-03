@@ -17,8 +17,6 @@
 namespace tin {
 class World {
  public:
-  using ObjectId = ImageTypes::ObjectId;
-
   World() : next_msg_(chat_msgs_.end()) {}
 
   int AddArtist(const Username &);
