@@ -10,8 +10,7 @@
 #include "send_msgs/sig.h"
 
 namespace tin {
-int MoveMouse::Fn(Server *server, SocketStuff *stuff, World *world,
-    MsgPushFn push_fn) {
+int MoveMouse::Fn(Server *server, SocketStuff *stuff, World *world) {
   LogL << "Przesuwanie myszki.\n";
   un_ = server->SockToUn(stuff->GetId());
   int pom;
@@ -26,16 +25,14 @@ int MoveMouse::Fn(Server *server, SocketStuff *stuff, World *world,
   if (!un_) {
     LogM << "Gniazdo " << stuff->GetId() << " nie jest zalogowane, nie przesuni"
       "e myszki.\n";
-    (server->*push_fn)(OutMessage::UP(
-      new Sig(stuff->GetId(), MQ::ERR_NOT_LOGGED, false)));
-    return -1;
+    server->PushMsg<Sig>(stuff->GetId(), MQ::ERR_NOT_LOGGED, false);
+    return 0;
   }
 
-  LogM << "Ok, mam koordy: " << x_ << " " << y_
+  LogM << "Mam koordy: " << x_ << " " << y_
     << "\n";
   world->SetCursor(un_, x_.Double(), y_.Double());
-  (server->*push_fn)
-    (std::move(OutMessage::UP(new MouseMoved(un_, x_, y_))));
+  server->PushMsg<MouseMoved>(un_, x_, y_);
   return 0;
 }
 

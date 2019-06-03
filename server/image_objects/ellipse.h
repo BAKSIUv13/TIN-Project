@@ -4,6 +4,7 @@
 #define SERVER_IMAGE_OBJECTS_ELLIPSE_H_
 
 #include <vector>
+#include <memory>
 
 #include "image/basic_object.h"
 #include "core/mquads.h"
@@ -11,14 +12,17 @@
 namespace tin {
 
 struct Ellipse : BasicObject {
-  const char *GetType() {
+  const char *GetType() override {
     return "ellipse";
   }
-  NQuad GetQuad() {
-    return MQ::ELLIPSE;
+  NQuad GetQuad() override {
+    return MQ::SHAPE_ELLIPSE;
+  }
+  std::unique_ptr<BasicObject> CopyObject() override {
+    return std::unique_ptr<BasicObject>(new Ellipse(*this));
   }
   // Vec centrum;  // <-- nie potrzebne, jak mamy transform
-  Vec radii;
+  Vec2 radii;
 };  // struct Ellipse
 
 }  // namespace tin

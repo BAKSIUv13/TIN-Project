@@ -9,4 +9,6 @@ set(SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/mouse_moved.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/sig.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/sig.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/new_obj.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/new_obj.cc"
 )

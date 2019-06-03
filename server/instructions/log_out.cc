@@ -8,7 +8,7 @@
 
 namespace tin {
 
-int LogOut::Fn(Server *server, SocketStuff *stuff, World *, MsgPushFn push_fn) {
+int LogOut::Fn(Server *server, SocketStuff *stuff, World *) {
   int pom = server->LogOutUser(stuff->GetId(), true);
   if (pom < 0) {
     return 0;

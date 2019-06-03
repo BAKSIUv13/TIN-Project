@@ -45,6 +45,11 @@ get_directory_property(
   SOURCES_chat DIRECTORY chat DEFINITION SOURCES
 )
 
+add_subdirectory(image_objects)
+get_directory_property(
+  SOURCES_image_objects DIRECTORY image_objects DEFINITION SOURCES
+)
+
 add_executable(server
   main.cc
   "${SOURCES_core}"
@@ -54,6 +59,7 @@ add_executable(server
   "${SOURCES_instructions}"
   "${SOURCES_send_msgs}"
   "${SOURCES_chat}"
+  "${SOURCES_image_objects}"
 )
 
 target_link_libraries(server

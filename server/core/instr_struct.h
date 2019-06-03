@@ -26,7 +26,7 @@ class InstrStruct {
   static constexpr int INSTR = MAGIC + NQS;
   static constexpr int INSTR2 = INSTR + NQS;
 
-  using MsgPushFn = int(Server::*)(std::unique_ptr<OutMessage>);
+  // using MsgPushFn = int(Server::*)(std::unique_ptr<OutMessage>);
 
   template <typename T>
   static InstrSupp Supp() {
@@ -37,7 +37,7 @@ class InstrStruct {
 
   InstrStruct() {}
   virtual ~InstrStruct() {}
-  virtual int Fn(Server *, SocketStuff *, World *, MsgPushFn) = 0;
+  virtual int Fn(Server *, SocketStuff *, World *) = 0;
 };
 
 }  // namespace tin

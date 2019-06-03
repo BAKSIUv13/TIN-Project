@@ -4,6 +4,7 @@
 #define SERVER_IMAGE_OBJECTS_RECTANGLE_H_
 
 #include <vector>
+#include <memory>
 
 #include "image/basic_object.h"
 #include "core/mquads.h"
@@ -11,13 +12,16 @@
 namespace tin {
 
 struct Rectangle : BasicObject {
-  const char *GetType() {
-    return "recatangle";
+  const char *GetType() override {
+    return "rectangle";
   }
-  NQuad GetQuad() {
-    return MQ::RECTANGLE;
+  NQuad GetQuad() override {
+    return MQ::SHAPE_RECTANGLE;
   }
-  Vec size;
+  std::unique_ptr<BasicObject> CopyObject() override {
+    return std::unique_ptr<BasicObject>(new Rectangle(*this));
+  }
+  Vec2 dims;
 };  // struct Rectangle
 
 }  // namespace tin

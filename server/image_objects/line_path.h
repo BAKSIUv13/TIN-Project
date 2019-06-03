@@ -4,6 +4,7 @@
 #define SERVER_IMAGE_OBJECTS_LINE_PATH_H_
 
 #include <vector>
+#include <memory>
 
 #include "image/basic_object.h"
 #include "core/mquads.h"
@@ -11,13 +12,16 @@
 namespace tin {
 
 struct LinePath : BasicObject {
-  const char *GetType() {
+  const char *GetType() override {
     return "line_path";
   }
-  NQuad GetQuad() {
-    return MQ::POLYGONAL_CHAIN;
+  NQuad GetQuad() override {
+    return MQ::SHAPE_POLYGONAL_CHAIN;
   }
-  std::vector<Vec> points;
+  std::unique_ptr<BasicObject> CopyObject() override {
+    return std::unique_ptr<BasicObject>(new LinePath(*this));
+  }
+  std::vector<Vec2> points;
 };  // struct LinePath
 
 }  // namespace tin

@@ -77,16 +77,21 @@ struct NQuad {
     return *reinterpret_cast<const std::array<char, 4> *>(&raw_uint);
   }
 
-  void AppendToCpp11String(std::string *s) const {
+  void AppendToCppString(std::string *s) const {
     s->append(this->CStr(), sizeof(*this));
   }
 
   operator std::string() const {
     std::string s;
-    this->AppendToCpp11String(&s);
+    this->AppendToCppString(&s);
     return s;
   }
 
+  constexpr uint8_t operator[](size_t n) const {
+    return n < 4 ? reinterpret_cast<const uint8_t *>(this)[n] : '\0';
+  }
+
+  // Ostrożnie z tym, nie ma zera na końcu.
   const char *CStr() const {return reinterpret_cast<const char *>(&raw_uint);}
 };
 

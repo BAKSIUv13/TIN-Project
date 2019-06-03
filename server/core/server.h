@@ -66,6 +66,12 @@ class Server {
 
   int LogOutUser(SockId, bool generate_response);
 
+  template <typename T, typename... Args>
+  int PushMsg(Args &&... args) {
+    return PushMsg_
+      (std::unique_ptr<OutMessage>(new T(std::forward<Args>(args)...)));
+  }
+
  private:
   int PushMsg_(std::unique_ptr<OutMessage> msg);
   OutMessage *FirstMsg_();

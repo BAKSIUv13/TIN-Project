@@ -17,7 +17,7 @@ class LogIn : public InstrStruct {
 
   LogIn() {}
   virtual ~LogIn() {}
-  virtual int Fn(Server *, SocketStuff *, World *, MsgPushFn);
+  virtual int Fn(Server *, SocketStuff *, World *);
 
  private:
   constexpr int UnLen_() const {return START;}

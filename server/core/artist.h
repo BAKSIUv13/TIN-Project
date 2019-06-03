@@ -5,12 +5,14 @@
 
 #include <string>
 
+#include "image/image_types.h"
 #include "core/username.h"
 
 namespace tin {
 class Artist{
  public:
   using MousePosition = std::array<double, 2>;
+  using ObjectId = ImageTypes::ObjectId;
 
   explicit Artist(Username un) : un_(un) {}
 
@@ -18,9 +20,15 @@ class Artist{
     mouse_[0] = x;
     mouse_[1] = y;
   }
+
+  void Grab(ObjectId id) {
+    selected_object_ = id;
+  }
+
  private:
   Username un_;
   MousePosition mouse_;
+  ObjectId selected_object_;
 };  // class Artist
 }  // namespace tin
 
