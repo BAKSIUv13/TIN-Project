@@ -6,9 +6,9 @@
 #include <memory>
 
 namespace tin {
-class Server;
-class OutMessage;
-using MsgPushFn = int(Server::*)(std::unique_ptr<OutMessage>);
+// class Server;
+// class OutMessage;
+// using MsgPushFn = int(Server::*)(std::unique_ptr<OutMessage>);
 
 }  // namespace tin
 

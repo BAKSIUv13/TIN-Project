@@ -10,23 +10,20 @@
 #include <iostream>
 
 #include "core/logger.h"
+#include "image/image_types.h"
 #include "image/basic_object.h"
 
 namespace tin {
 class Image {
  public:
-  using Id = int32_t;
-  using Dist = BasicObject::Dist;
-  using Vec = BasicObject::Vec;
-  using Transform = BasicObject::Transform;
-
   Image()
     : next_new_id_(100) {}
 
   template <typename T>
-  T &NewObject() {
-    Id id = GetNewId_();
-    std::unique_ptr<BasicObject> x = new T();
+  std::pair<ObjectId, T &> NewObject() {
+    ObjectId id = GetNewId_();
+    T *obj = new T();
+    std::unique_ptr<BasicObject> x{obj};
     auto emplace_ret = objects_.emplace(id, std::move(x));
     if (!emplace_ret.second) {
       LogH << "Ojojoj, nie dodano obiektu :<\n";
@@ -34,10 +31,10 @@ class Image {
     }
     obj_order_.push_back(id);
     addr_to_id_.emplace(&*x, id);
-    return *x;
+    return std::pair<ObjectId, T &>(id, *obj);
   }
 
-  Id GetId(BasicObject *o) {
+  ObjectId GetId(BasicObject *o) {
     try {
       return addr_to_id_.at(o);
     }
@@ -46,16 +43,22 @@ class Image {
     }
   }
 
+  BasicObject *GetObject(ObjectId id) {
+    if (objects_.count(id) < 1)
+      return nullptr;
+    return &*objects_.at(id);
+  }
+
  private:
-  Id GetNewId_() {
+  ObjectId GetNewId_() {
     return next_new_id_++;
   }
 
-  Id next_new_id_;
+  ObjectId next_new_id_;
 
-  std::map<Id, std::unique_ptr<BasicObject> > objects_;
-  std::list<Id> obj_order_;
-  std::map<BasicObject *, Id> addr_to_id_;
+  std::map<ObjectId, std::unique_ptr<BasicObject> > objects_;
+  std::list<ObjectId> obj_order_;
+  std::map<BasicObject *, ObjectId> addr_to_id_;
 };
 }  // namespace tin
 

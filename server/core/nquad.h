@@ -87,6 +87,11 @@ struct NQuad {
     return s;
   }
 
+  constexpr uint8_t operator[](size_t n) const {
+    return n < 4 ? reinterpret_cast<const uint8_t *>(this)[n] : '\0';
+  }
+
+  // Ostrożnie z tym, nie ma zera na końcu.
   const char *CStr() const {return reinterpret_cast<const char *>(&raw_uint);}
 };
 

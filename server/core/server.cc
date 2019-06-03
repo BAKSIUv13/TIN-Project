@@ -160,7 +160,7 @@ int Server::DoWorldWork_() {
   Username un;
   const std::string *str_ptr;
   while (world_.NextMsg(&un, &str_ptr) == 0) {
-    PushMsg_(OutMessage::UP(new UserMsg(un, *str_ptr)));
+    PushMsg<UserMsg>(un, *str_ptr);
   }
   return 0;
 }
@@ -314,7 +314,7 @@ int Server::ReadClients_() {
       it->second.Remove();
       continue;
     }
-    int deal_ret = it->second.DealWithReadBuf(&world_, &Server::PushMsg_);
+    int deal_ret = it->second.DealWithReadBuf(&world_);
     if (deal_ret < 0) {
       LogM << "Jakiś błąd przy ogarnianiu rzeczy z socketu " << it->first
         << " i fd " << it->second.GetSocket().GetFD() << '\n';
@@ -379,34 +379,30 @@ int Server::LogInUser(const Username &un, const std::string &pw,
     LogM << "gniazdo o id " << sock_id << " i fd " <<
       client_socks_.at(sock_id).GetSocket().GetFD() << " jest już zalogowane\n";
     if (generate_response)
-      PushMsg_(std::unique_ptr<OutMessage>(
-        new Sig(sock_id, MQ::ERR_WAS_LOGGED, false,
-        "no już sie zalogowałes no")));
+      PushMsg<Sig>(sock_id, MQ::ERR_WAS_LOGGED, false,
+        "no już sie zalogowałes no");
     return -1;
   }
   if (!un.Good()) {
     LogM << "Podana nazwaw jest niepoprawna!!!\n";
     if (generate_response)
-      PushMsg_(std::unique_ptr<OutMessage>(
-        new Sig(sock_id, MQ::ERR_BAD_LOG, false,
-        "nie można mieć takiej nazwy")));
+      PushMsg<Sig>(sock_id, MQ::ERR_BAD_LOG, false,
+        "nie można mieć takiej nazwy");
     return -1;
   }
   auto it = users_.find(un);
   if (it != users_.end()) {
-    LogM << "user [[" << un << "]] jest zalogowany już\n"
-      << "[[" << it->first << "]]\n";
+    LogM << "user [" << un << "] jest zalogowany już\n"
+      << "[" << it->first << "]\n";
     if (generate_response)
-      PushMsg_(std::unique_ptr<OutMessage>(
-        new Sig(sock_id, MQ::ERR_ACC_OCCUPIED, false)));
+      PushMsg<Sig>(sock_id, MQ::ERR_ACC_OCCUPIED, false);
     return -1;
   }
   auto emplace_ret = users_.emplace(un, std::move(LoggedUser(un, sock_id)));
   if (emplace_ret.second == false) {
-    LogH << "ojej, nie udało się dodać usera do mapy :\n";
+    LogH << "ojej, nie udało się dodać usera do mapy :<\n";
     if (generate_response)
-      PushMsg_(std::unique_ptr<OutMessage>(
-        new Sig(sock_id, MQ::ERR_OTHER, false)));
+      PushMsg<Sig>(sock_id, MQ::ERR_OTHER, false);
     return -1;
   }
   LoggedUser *lu = &emplace_ret.first->second;
@@ -416,15 +412,14 @@ int Server::LogInUser(const Username &un, const std::string &pw,
       "userem :<\n";
     auto rm = users_.erase(un);
     if (generate_response)
-      PushMsg_(std::unique_ptr<OutMessage>(
-        new Sig(sock_id, MQ::ERR_OTHER, false)));
+      PushMsg<Sig>(sock_id, MQ::ERR_OTHER, false);
     assert(rm == 1);
     return -1;
   }
-  LogM << "zalogowano [[" << un << "]]\n";
+  LogM << "zalogowano [" << un << "]\n";
   world_.AddArtist(un);
   if (generate_response)
-    PushMsg_(std::unique_ptr<OutMessage>(new LogOk(sock_id)));
+    PushMsg<LogOk>(sock_id);
   return 0;
 }
 
@@ -436,8 +431,7 @@ int Server::LogOutUser(SockId id, bool generate_response) {
       LogM << "Nawet go nie ma xd\n";
     }
     if (generate_response)
-      PushMsg_(std::unique_ptr<OutMessage>(
-        new Sig(id, MQ::ERR_NOT_LOGGED, false)));
+      PushMsg<Sig>(id, MQ::ERR_NOT_LOGGED, false);
     return -1;
   }
   Username un = socks_to_users_.at(id)->GetName();
@@ -447,7 +441,7 @@ int Server::LogOutUser(SockId id, bool generate_response) {
   assert(rm == 1);
   LogM << "Na tym sockecie był zalogowany [[" << un << "]]\n";
   if (generate_response)
-    PushMsg_(std::unique_ptr<OutMessage>(new LogOff(id)));
+    PushMsg<LogOff>(id);
   return 0;
 }
 
@@ -465,11 +459,6 @@ int Server::DeleteMarkedSocks_() {
   return 0;
 }
 
-int Server::PushMsg_(std::unique_ptr<OutMessage> msg) {
-  messages_to_send_.emplace_back(std::move(msg));
-  return 0;
-}
-
 OutMessage *Server::FirstMsg_() {
   if (messages_to_send_.size() < 1) return nullptr;
   return &*messages_to_send_.front();
@@ -477,6 +466,11 @@ OutMessage *Server::FirstMsg_() {
 
 int Server::PopMsg_() {
   messages_to_send_.erase(messages_to_send_.begin());
+  return 0;
+}
+
+int Server::PushMsg_(std::unique_ptr<OutMessage> msg) {
+  messages_to_send_.emplace_back(std::move(msg));
   return 0;
 }
 

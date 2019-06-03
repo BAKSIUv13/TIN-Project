@@ -33,6 +33,7 @@ constexpr NQuad
   SERV_LOG_OUT {"LOFF"},
   SERV_MOUSE {"MAUS"},
   SERV_MESG {"MESG"},
+  SERV_NEW_OBJECT {"NEWW"},
 
   SERV_SIGL {"SIGL"},
   SERV_SIGH {"SIGH"},

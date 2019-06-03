@@ -19,7 +19,7 @@ class Say : public InstrStruct {
 
   Say() : len_is_read_(false) {}
   virtual ~Say() {}
-  virtual int Fn(Server *, SocketStuff *, World *, MsgPushFn);
+  virtual int Fn(Server *, SocketStuff *, World *);
 
  private:
   constexpr int MsgLen_() const {return START;}

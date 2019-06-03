@@ -19,7 +19,7 @@ class MoveMouse : public InstrStruct {
 
   MoveMouse() {}
   virtual ~MoveMouse() {}
-  virtual int Fn(Server *, SocketStuff *, World *, MsgPushFn);
+  virtual int Fn(Server *, SocketStuff *, World *);
 
  private:
   Username un_;

@@ -19,7 +19,7 @@ class LogOut : public InstrStruct {
 
   LogOut() {}
   virtual ~LogOut() {}
-  virtual int Fn(Server *, SocketStuff *, World *, MsgPushFn);
+  virtual int Fn(Server *, SocketStuff *, World *);
 };
 
 }  // namespace tin

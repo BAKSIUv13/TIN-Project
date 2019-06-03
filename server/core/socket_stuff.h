@@ -227,7 +227,7 @@ class SocketStuff {
     return 0;
   }
 
-  int DealWithReadBuf(World *w, MsgPushFn push_fn) {
+  int DealWithReadBuf(World *w) {
     LogM << "int DealWithReadBuf()\n";
     LogM << "Gniazdo o id " << id_ << " i fd " <<
       GetSocket().GetFD() << '\n';
@@ -266,7 +266,7 @@ class SocketStuff {
           return pom;
         }
       }
-      pom = strct_->Fn(serv_, this, w, push_fn);
+      pom = strct_->Fn(serv_, this, w);
       if (pom > 0) {
         LogM << "ExecInstr nieee fn zwróciło >0 xd\n";
         return 0;

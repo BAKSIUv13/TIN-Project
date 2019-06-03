@@ -11,19 +11,15 @@
 #include "send_msgs/sig.h"
 
 namespace tin {
-int Say::Fn(Server *server, SocketStuff *stuff, World *world,
-    MsgPushFn push_fn) {
+int Say::Fn(Server *server, SocketStuff *stuff, World *world) {
   un_ = server->SockToUn(stuff->GetId());
   int pom;
   if (stuff->CmProcessed() < Msg_()) {
     pom = stuff->ReadQuad(MsgLen_(), &len_);
-    if (pom != 0) {
-      return pom;
-    }
+    if (pom) return pom;
   }
   if (len_ > LEN_CUT) {
-    (server->*push_fn)(OutMessage::UP(
-      new Sig(stuff->GetId(), MQ::ERRR_LONG_MSG, true)));
+    server->PushMsg<Sig>(stuff->GetId(), MQ::ERRR_LONG_MSG, true);
     return -1;
   }
   if (stuff->CmProcessed() < End_()) {
@@ -33,8 +29,7 @@ int Say::Fn(Server *server, SocketStuff *stuff, World *world,
   if (!un_) {
     LogM << "Gniazdo " << stuff->GetId() << " nie jest zalogowane, nie wyśle "
       << "wiadomości.\n";
-    (server->*push_fn)(std::unique_ptr<OutMessage>(
-      new Sig(stuff->GetId(), MQ::ERR_NOT_LOGGED, false)));
+    server->PushMsg<Sig>(stuff->GetId(), MQ::ERR_NOT_LOGGED, false);
     return 0;
   }
   ChatMsg cmsg(un_, std::move(message_));
