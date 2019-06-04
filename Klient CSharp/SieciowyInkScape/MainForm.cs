@@ -193,10 +193,14 @@ namespace SieciowyInkScape
                     break;
                 case DrawingAreaState.DrawingObject.ObjectType.RECTANGLE:
                     DrawingAreaState.RectangleObject rect = (DrawingAreaState.RectangleObject)obj;
-                    gr.DrawRectangle(new Pen(new SolidBrush(rect.color), rect.thickness),
+                    gr.FillRectangle(new SolidBrush(rect.BGColor),
+                    (rect.xpos + rect.thickness / 2.0f) * state.areaSize.X, (rect.ypos + rect.thickness / 2.0f) * state.areaSize.Y,
+                    (rect.width - rect.thickness) * state.areaSize.X, (rect.height - rect.thickness) * state.areaSize.Y);
+                    gr.DrawRectangle(new Pen(new SolidBrush(rect.color), (float)(rect.thickness * (double)state.areaSize.X)),
                         rect.xpos * state.areaSize.X, rect.ypos * state.areaSize.Y,
                         rect.width * state.areaSize.X, rect.height * state.areaSize.Y);
-                       
+                    
+
                     break;
             }
         }
@@ -280,7 +284,7 @@ namespace SieciowyInkScape
                         (float)(e.X) / (float)drawingArea.areaSize.X,
                         (float)(e.Y) / (float)drawingArea.areaSize.Y,
                         (float)0,
-                        (float)0, 1, Color.Black);
+                        (float)0, drawingArea.thickness, drawingArea.ForegroundColor, drawingArea.BackgroundColor);
                         DrawingAreaState.RectangleObject temp = (DrawingAreaState.RectangleObject)drawingArea.tempObject;
 
                         break;
@@ -465,6 +469,57 @@ namespace SieciowyInkScape
         private void messageBox_TextChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void FGColorButton_Click(object sender, EventArgs e)
+        {
+            FGColor.ShowDialog();
+
+            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+
+            drawingArea.Access();
+            drawingArea.ForegroundColor = Color.FromArgb(drawingArea.ForegroundColor.A, FGColor.Color);
+            drawingArea.Exit();
+
+            FGColorButton.BackColor = FGColor.Color;
+        }
+
+        private void BGColorButton_Click(object sender, EventArgs e)
+        {
+            BGColor.ShowDialog();
+
+            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+
+            drawingArea.Access();
+            drawingArea.BackgroundColor = Color.FromArgb(drawingArea.BackgroundColor.A, BGColor.Color);
+            drawingArea.Exit();
+
+            BGColorButton.BackColor = BGColor.Color;
+        }
+
+        private void FGAlphaBar_Scroll(object sender, EventArgs e)
+        {
+            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+            drawingArea.ForegroundColor = Color.FromArgb(FGAlphaBar.Value, drawingArea.ForegroundColor);
+            FGAlphaLabel.Text = "Alpha: " + FGAlphaBar.Value.ToString();
+        }
+
+        private void BGAlphaBar_Scroll(object sender, EventArgs e)
+        {
+            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+            drawingArea.BackgroundColor = Color.FromArgb(BGAlphaBar.Value, drawingArea.BackgroundColor);
+            BGAlphaLabel.Text = "Alpha: " + BGAlphaBar.Value.ToString();
+        }
+
+        private void ThicknessBar_Scroll(object sender, EventArgs e)
+        {
+            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+
+            drawingArea.Access();
+            drawingArea.thickness = (float)ThicknessBar.Value / 1000.0f;
+            drawingArea.Exit();
+
+            ThicknessLabel.Text = "Grubość: " + drawingArea.thickness.ToString("0.000");
         }
     }
 }

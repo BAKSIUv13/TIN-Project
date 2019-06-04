@@ -98,9 +98,15 @@ namespace SieciowyInkScape
 
                 ListConcat(bytes, parent.SocketSetString("crea"));
                 ListConcat(bytes, parent.SocketSetString("rect"));
+                ListConcat(bytes, parent.SocketSetByte(rect.BGColor.R));
+                ListConcat(bytes, parent.SocketSetByte(rect.BGColor.G));
+                ListConcat(bytes, parent.SocketSetByte(rect.BGColor.B));
+                ListConcat(bytes, parent.SocketSetByte(rect.BGColor.A));
                 ListConcat(bytes, parent.SocketSetByte(rect.color.R));
                 ListConcat(bytes, parent.SocketSetByte(rect.color.G));
                 ListConcat(bytes, parent.SocketSetByte(rect.color.B));
+                ListConcat(bytes, parent.SocketSetByte(rect.color.A));
+                ListConcat(bytes, parent.SocketSetDouble((double)rect.thickness));
                 ListConcat(bytes, parent.SocketSetDouble((double)rect.xpos));
                 ListConcat(bytes, parent.SocketSetDouble((double)rect.ypos));
                 ListConcat(bytes, parent.SocketSetDouble((double)rect.width));
@@ -411,7 +417,9 @@ namespace SieciowyInkScape
         }
         byte[] SocketSetByte(byte value)
         {
-            byte[] toRet = System.BitConverter.GetBytes(value);
+            byte[] toRet = new byte[1];
+            toRet[0] = value;
+            //byte[] toRet = System.BitConverter.GetBytes(value);
 
             return toRet;
         }

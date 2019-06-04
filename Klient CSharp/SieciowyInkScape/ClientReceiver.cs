@@ -55,20 +55,32 @@ namespace SieciowyInkScape
                         else if (messageType.Equals("NEWW"))
                         {
                             int ID = SocketReceiveInt32();
+                            UInt32 usernameLength = SocketReceiveUInt32();
+                            string username = SocketReceiveString(usernameLength);
+
                             string objectType = SocketReceiveString(4);
 
                             if(objectType == "rect")
                             {
-                                byte R = SocketReceiveByte();
-                                byte G = SocketReceiveByte();
-                                byte B = SocketReceiveByte();
+                                byte B_R = SocketReceiveByte();
+                                byte B_G = SocketReceiveByte();
+                                byte B_B = SocketReceiveByte();
+                                byte B_A = SocketReceiveByte();
+                                byte F_R = SocketReceiveByte();
+                                byte F_G = SocketReceiveByte();
+                                byte F_B = SocketReceiveByte();
+                                byte F_A = SocketReceiveByte();
+
+                                //F_A = 255;
+                                double thickness = SocketReceiveDouble();
+
                                 double xpos = SocketReceiveDouble();
                                 double ypos = SocketReceiveDouble();
                                 double width = SocketReceiveDouble();
                                 double height = SocketReceiveDouble();
 
                                 clientMachine.drawingArea.Access();
-                                clientMachine.drawingArea.objects.Add(new DrawingAreaState.RectangleObject((float)xpos, (float)ypos, (float)(width), (float)(height), 1, System.Drawing.Color.FromArgb(255, R, G, B)));
+                                clientMachine.drawingArea.objects.Add(new DrawingAreaState.RectangleObject((float)xpos, (float)ypos, (float)(width), (float)(height), (float)thickness, System.Drawing.Color.FromArgb(F_A, F_R, F_G, F_B), System.Drawing.Color.FromArgb(B_A, B_R, B_G, B_B)));
                                 clientMachine.drawingArea.Exit();
                             }
                             else if (objectType == "line")
