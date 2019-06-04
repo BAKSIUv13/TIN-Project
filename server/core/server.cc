@@ -446,7 +446,7 @@ int Server::LogInUser(const Username &un, const std::string &pw,
   return 0;
 }
 
-int Server:w:LogOutUser(SockId id, bool generate_response) {
+int Server::LogOutUser(SockId id, bool generate_response) {
   LogM << "Wylogowywanie sock' " << id << '\n';
   if (socks_to_users_.count(id) < 1) {
     LogM << "Sock' nie jest log'\n";
