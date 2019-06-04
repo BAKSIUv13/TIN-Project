@@ -13,7 +13,7 @@ int UserStatus::AddToBuf(WriteBuf *buf) {
   MQ::OWO.AppendToCppString(&str);
   MQ::SERV_USER_STATUS.AppendToCppString(&str);
   what_.AppendToCppString(&str);
-  const char *name = GetUsername();
+  NQuad(GetUsername().Len());
   str.append(GetUsername());
   return buf->Add(str);
 }

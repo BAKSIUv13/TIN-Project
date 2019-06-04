@@ -21,9 +21,11 @@ struct NQuad {
   constexpr explicit NQuad(const char tab[4])
     : raw_uint {
       #if __BYTE_ORDER == __LITTLE_ENDIAN
-        (((((
-          ((uint32_t)0 | tab[3]) << 8)
-            | tab[2]) << 8) | tab[1]) << 8) | tab[0]
+        (uint32_t)0
+        | ((uint8_t)tab[0] << 0)
+        | ((uint8_t)tab[1] << 8)
+        | ((uint8_t)tab[2] << 16)
+        | ((uint8_t)tab[3] << 24)
       #elif __BYTE_ORDER == __BIG_ENDIAN
         (((((
           ((uint32_t)0 | tab[0]) << 8)
