@@ -15,9 +15,8 @@ int MouseMoved::AddToBuf(WriteBuf *buf) {
   MQ::SERV_MOUSE.AppendToCppString(&str);
   NDouble(x()).AppendToCppString(&str);
   NDouble(y()).AppendToCppString(&str);
-  const char *name = GetUsername();
-  NQuad(static_cast<uint32_t>(strlen(name))).AppendToCppString(&str);
-  str.append(name);
+  NQuad(GetUsername().Len()).AppendToCppString(&str);
+  str.append(GetUsername());
   return buf->Add(str);
 }
 }  // namespace tin

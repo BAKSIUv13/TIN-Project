@@ -19,7 +19,7 @@ int NewObj::AddToBuf(WriteBuf *buf) {
   NQuad(id_).AppendToCppString(&str);
   int un_len = username_.Len();
   NQuad(un_len).AppendToCppString(&str);
-  str.append(username_.operator const char *(), un_len);
+  str.append(username_, un_len);
   str.append(shape_code_);
   return buf->Add(str);
 }
