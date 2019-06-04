@@ -610,7 +610,7 @@ namespace SieciowyInkScape
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            client.Disconnect();
+           if(client.connected) client.Disconnect();
         }
     }
 }

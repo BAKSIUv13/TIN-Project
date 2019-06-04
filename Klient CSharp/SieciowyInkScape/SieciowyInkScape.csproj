@@ -90,8 +90,11 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="VORBIS\CaramelHeaven.dat" />
     <None Include="VORBIS\CaramelHeaven.ogg" />
+    <None Include="VORBIS\Meow.dat" />
     <None Include="VORBIS\Meow.ogg" />
+    <None Include="VORBIS\Monosugoi Space Shuttle de Koishi ga Monosugoi uta.dat" />
     <None Include="VORBIS\Monosugoi Space Shuttle de Koishi ga Monosugoi uta.ogg" />
   </ItemGroup>
   <ItemGroup>
