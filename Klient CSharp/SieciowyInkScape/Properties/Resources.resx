@@ -127,4 +127,7 @@
   <data name="Meow" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\VORBIS\Meow.ogg;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Monosugoi_Space_Shuttle_de_Koishi_ga_Monosugoi_uta" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\VORBIS\Monosugoi Space Shuttle de Koishi ga Monosugoi uta.ogg;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

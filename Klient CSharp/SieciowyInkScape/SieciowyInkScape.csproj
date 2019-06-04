@@ -92,6 +92,7 @@
     </Compile>
     <None Include="VORBIS\CaramelHeaven.ogg" />
     <None Include="VORBIS\Meow.ogg" />
+    <None Include="VORBIS\Monosugoi Space Shuttle de Koishi ga Monosugoi uta.ogg" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

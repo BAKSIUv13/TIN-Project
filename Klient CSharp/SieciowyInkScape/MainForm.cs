@@ -194,6 +194,14 @@ namespace SieciowyInkScape
                 waveOut.Init(ogg);
                 waveOut.Play();
             }
+            if (e.message.ToUpper().Contains("MONOSUGOI"))
+            {
+                if (!(waveOut is null)) waveOut.Dispose();
+                waveOut = new WaveOutEvent();
+                NAudio.Vorbis.VorbisWaveReader ogg = new NAudio.Vorbis.VorbisWaveReader(new System.IO.MemoryStream(Properties.Resources.Monosugoi_Space_Shuttle_de_Koishi_ga_Monosugoi_uta));
+                waveOut.Init(ogg);
+                waveOut.Play();
+            }
             if (e.message.ToUpper().Contains("STOP"))
             {
                 if (!(waveOut is null)) waveOut.Dispose();

@@ -89,5 +89,15 @@ namespace SieciowyInkScape.Properties {
                 return ((byte[])(obj));
             }
         }
+        
+        /// <summary>
+        ///   Wyszukuje zlokalizowany zasób typu System.Byte[].
+        /// </summary>
+        internal static byte[] Monosugoi_Space_Shuttle_de_Koishi_ga_Monosugoi_uta {
+            get {
+                object obj = ResourceManager.GetObject("Monosugoi_Space_Shuttle_de_Koishi_ga_Monosugoi_uta", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }
