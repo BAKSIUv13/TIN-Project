@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NAudio.Wave;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -23,12 +24,15 @@ namespace SieciowyInkScape
         int framesCounted = 0;
         int FPS = 0;
 
+        WaveOutEvent waveOut;
+
         public MainForm()
         {
             InitializeComponent();
             
             client = new Client(this, drawing.Size);
             client.MessageInbound += OnMessageInbound;
+            client.ServerMessageInbound += OnServerMessageInbound;
             client.ConnectionFailed += OnConnectionFailed;
             client.ConnectionSucceeded += OnConnectionSucceeded;
             client.LoginCompleted += OnLoginSucceeded;
@@ -59,6 +63,8 @@ namespace SieciowyInkScape
             Show();
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
             SetDoubleBuffered(drawing);
+            client.clientMachine.drawingArea.areaSize.X = drawing.Size.Width;
+            client.clientMachine.drawingArea.areaSize.Y = drawing.Size.Height;
 
         }
 
@@ -151,13 +157,60 @@ namespace SieciowyInkScape
         }
         void OnLogicError(object sender, Client.LogicErrorEventArgs e)
         {
-            ChatBoxWriteLine("Błąd logiki programu: " + e.error.ToString("g"));
+            if(e.critical)
+            {
+                ChatBoxWriteLine("Krytyczny błąd logiki programu: " + e.error.ToString("g"));
+
+                buttonConnect.Enabled = true;
+                buttonLogin.Enabled = false;
+                buttonLogout.Enabled = false;
+                buttonDisconnect.Enabled = false;
+
+                textBoxHostname.Enabled = true;
+                textBoxPort.Enabled = true;
+                textBoxUsername.Enabled = true;
+                textBoxPassword.Enabled = true;
+
+            }
+            else ChatBoxWriteLine("Błąd logiki programu: " + e.error.ToString("g"));
         }
         void OnMessageInbound(object sender, Client.MessageInboundEventArgs e)
         {
             ChatBoxWriteLine(e.username + ": " + e.message);
+
+            if(e.message.ToUpper().Contains("CARAMEL"))
+            {
+                if (!(waveOut is null)) waveOut.Dispose();
+                waveOut = new WaveOutEvent();
+                NAudio.Vorbis.VorbisWaveReader ogg = new NAudio.Vorbis.VorbisWaveReader(new System.IO.MemoryStream(Properties.Resources.CaramelHeaven));
+                waveOut.Init(ogg);
+                waveOut.Play();
+            }
+            if (e.message.ToUpper().Contains("MIAU") || e.message.ToUpper().Contains("MEOW"))
+            {
+                if (!(waveOut is null)) waveOut.Dispose();
+                waveOut = new WaveOutEvent();
+                NAudio.Vorbis.VorbisWaveReader ogg = new NAudio.Vorbis.VorbisWaveReader(new System.IO.MemoryStream(Properties.Resources.Meow));
+                waveOut.Init(ogg);
+                waveOut.Play();
+            }
+            if (e.message.ToUpper().Contains("MONOSUGOI"))
+            {
+                if (!(waveOut is null)) waveOut.Dispose();
+                waveOut = new WaveOutEvent();
+                NAudio.Vorbis.VorbisWaveReader ogg = new NAudio.Vorbis.VorbisWaveReader(new System.IO.MemoryStream(Properties.Resources.Monosugoi_Space_Shuttle_de_Koishi_ga_Monosugoi_uta));
+                waveOut.Init(ogg);
+                waveOut.Play();
+            }
+            if (e.message.ToUpper().Contains("STOP"))
+            {
+                if (!(waveOut is null)) waveOut.Dispose();
+            }
         }
-      
+        void OnServerMessageInbound(object sender, Client.ServerMessageInboundEventArgs e)
+        {
+            ChatBoxWriteLine("> SERWER: " + e.message);
+        }
 
         void ChatBoxWriteLine(string text)
         {
@@ -174,8 +227,32 @@ namespace SieciowyInkScape
             {
                 if(client.loggedIn)
                 {
-                    client.clientMachine.SendChatMessage(messageBox.Text);
-                    messageBox.Clear();
+                    if(messageBox.Text != "MEOOW")
+                    {
+                        client.clientMachine.SendChatMessage(messageBox.Text);
+                        messageBox.Clear();
+                    }
+                    else
+                    {
+                        Bitmap cat = Properties.Resources.CAT;
+
+                        for(int y = 0; y < cat.Height; y += 3)
+                        {
+                            for (int x = 0; x < cat.Width; x += 3)
+                            {
+                                client.clientMachine.SendRectangle(new DrawingAreaState.RectangleObject(
+                                    (float)x / 600.0f + 0.300f,
+                                    (float)y / 520.0f + 0.125f,
+                                    4.0f / 600.0f,
+                                    4.0f / 520.0f,
+                                    0.000001f,
+                                    Color.FromArgb(255, cat.GetPixel(x, y)),
+                                    Color.FromArgb(255, cat.GetPixel(x, y))
+                                    ));
+                            }
+                            Application.DoEvents();
+                        }
+                    }
                 }
                 
             }
@@ -193,10 +270,14 @@ namespace SieciowyInkScape
                     break;
                 case DrawingAreaState.DrawingObject.ObjectType.RECTANGLE:
                     DrawingAreaState.RectangleObject rect = (DrawingAreaState.RectangleObject)obj;
-                    gr.DrawRectangle(new Pen(new SolidBrush(rect.color), rect.thickness),
+                    gr.FillRectangle(new SolidBrush(rect.BGColor),
+                    (rect.xpos + rect.thickness / 2.0f) * state.areaSize.X, (rect.ypos + rect.thickness / 2.0f) * state.areaSize.Y,
+                    (rect.width - rect.thickness) * state.areaSize.X, (rect.height - rect.thickness) * state.areaSize.Y);
+                    gr.DrawRectangle(new Pen(new SolidBrush(rect.color), (float)(rect.thickness * (double)state.areaSize.X)),
                         rect.xpos * state.areaSize.X, rect.ypos * state.areaSize.Y,
                         rect.width * state.areaSize.X, rect.height * state.areaSize.Y);
-                       
+                    
+
                     break;
             }
         }
@@ -213,7 +294,11 @@ namespace SieciowyInkScape
                 drawingArea.Access();
 
                 Graphics graphics = e.Graphics;
-                graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
+               // graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+               // graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighSpeed;
+               // graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Low;
+
                 graphics.Clear(Color.White);
                 
 
@@ -280,7 +365,7 @@ namespace SieciowyInkScape
                         (float)(e.X) / (float)drawingArea.areaSize.X,
                         (float)(e.Y) / (float)drawingArea.areaSize.Y,
                         (float)0,
-                        (float)0, 1, Color.Black);
+                        (float)0, drawingArea.thickness, drawingArea.ForegroundColor, drawingArea.BackgroundColor);
                         DrawingAreaState.RectangleObject temp = (DrawingAreaState.RectangleObject)drawingArea.tempObject;
 
                         break;
@@ -462,9 +547,70 @@ namespace SieciowyInkScape
             client.clientMachine.drawingArea.ChangeAreaSize(drawing.Size);
         }
 
+        private void FGColorButton_Click(object sender, EventArgs e)
+        {
+            FGColor.ShowDialog();
+
+            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+
+            drawingArea.Access();
+            drawingArea.ForegroundColor = Color.FromArgb(drawingArea.ForegroundColor.A, FGColor.Color);
+            drawingArea.Exit();
+
+            FGColorButton.BackColor = FGColor.Color;
+        }
+
+        private void BGColorButton_Click(object sender, EventArgs e)
+        {
+            BGColor.ShowDialog();
+
+            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+
+            drawingArea.Access();
+            drawingArea.BackgroundColor = Color.FromArgb(drawingArea.BackgroundColor.A, BGColor.Color);
+            drawingArea.Exit();
+
+            BGColorButton.BackColor = BGColor.Color;
+        }
+
+        private void FGAlphaBar_Scroll(object sender, EventArgs e)
+        {
+            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+            drawingArea.ForegroundColor = Color.FromArgb(FGAlphaBar.Value, drawingArea.ForegroundColor);
+            FGAlphaLabel.Text = "Alpha: " + FGAlphaBar.Value.ToString();
+        }
+
+        private void BGAlphaBar_Scroll(object sender, EventArgs e)
+        {
+            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+            drawingArea.BackgroundColor = Color.FromArgb(BGAlphaBar.Value, drawingArea.BackgroundColor);
+            BGAlphaLabel.Text = "Alpha: " + BGAlphaBar.Value.ToString();
+        }
+
+        private void ThicknessBar_Scroll(object sender, EventArgs e)
+        {
+            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+
+            drawingArea.Access();
+            drawingArea.thickness = (float)ThicknessBar.Value / 1000.0f;
+            drawingArea.Exit();
+
+            ThicknessLabel.Text = "Grubość: " + drawingArea.thickness.ToString("0.000");
+        }
+
         private void messageBox_TextChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+           if(client.connected) client.Disconnect();
         }
     }
 }

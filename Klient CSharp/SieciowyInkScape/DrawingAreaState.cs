@@ -15,7 +15,7 @@ namespace SieciowyInkScape
         
 
         
-        public int drawingAckTime_ms = 500;
+        public int drawingAckTime_ms = 250;
         public int mousePositionTimeOut_s = 30;
 
 
@@ -143,9 +143,11 @@ namespace SieciowyInkScape
             public float width;
             public float height;
 
-            public int thickness;
+            public float thickness;
 
-            public RectangleObject(float xpos, float ypos, float width, float height, int thickness, Color color)
+            public Color BGColor;
+
+            public RectangleObject(float xpos, float ypos, float width, float height, float thickness, Color FGcolor, Color BGColor)
             {
                 this.objectType = ObjectType.RECTANGLE;
                 this.xpos = xpos;
@@ -153,7 +155,8 @@ namespace SieciowyInkScape
                 this.width = width;
                 this.height = height;
                 this.thickness = thickness;
-                this.color = color;
+                this.color = FGcolor;
+                this.BGColor = BGColor;
             }
             public RectangleObject()
             {
@@ -188,5 +191,10 @@ namespace SieciowyInkScape
         public Point mousepos_start;
         public Point mousepos_now;
         public Tools selectedTool;
+
+        public Color ForegroundColor = Color.Black;
+        public Color BackgroundColor = Color.FromArgb(0, Color.White);
+        public float thickness = 0.001f;
+
     }
 }

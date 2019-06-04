@@ -55,20 +55,40 @@ namespace SieciowyInkScape
                         else if (messageType.Equals("NEWW"))
                         {
                             int ID = SocketReceiveInt32();
+                            UInt32 usernameLength = SocketReceiveUInt32();
+                            string username = SocketReceiveString(usernameLength);
+
+                            if(username == loggedUsername)
+                            {
+                                clientMachine.drawingArea.Access();
+                                if (clientMachine.drawingArea.pendingObjects.Count > 0)
+                                    clientMachine.drawingArea.pendingObjects.Dequeue();
+                                clientMachine.drawingArea.Exit();
+                            }
+
                             string objectType = SocketReceiveString(4);
 
                             if(objectType == "rect")
                             {
-                                byte R = SocketReceiveByte();
-                                byte G = SocketReceiveByte();
-                                byte B = SocketReceiveByte();
+                                byte B_R = SocketReceiveByte();
+                                byte B_G = SocketReceiveByte();
+                                byte B_B = SocketReceiveByte();
+                                byte B_A = SocketReceiveByte();
+                                byte F_R = SocketReceiveByte();
+                                byte F_G = SocketReceiveByte();
+                                byte F_B = SocketReceiveByte();
+                                byte F_A = SocketReceiveByte();
+
+                                //F_A = 255;
+                                double thickness = SocketReceiveDouble();
+
                                 double xpos = SocketReceiveDouble();
                                 double ypos = SocketReceiveDouble();
                                 double width = SocketReceiveDouble();
                                 double height = SocketReceiveDouble();
 
                                 clientMachine.drawingArea.Access();
-                                clientMachine.drawingArea.objects.Add(new DrawingAreaState.RectangleObject((float)xpos, (float)ypos, (float)(width), (float)(height), 1, System.Drawing.Color.FromArgb(255, R, G, B)));
+                                clientMachine.drawingArea.objects.Add(new DrawingAreaState.RectangleObject((float)xpos, (float)ypos, (float)(width), (float)(height), (float)thickness, System.Drawing.Color.FromArgb(F_A, F_R, F_G, F_B), System.Drawing.Color.FromArgb(B_A, B_R, B_G, B_B)));
                                 clientMachine.drawingArea.Exit();
                             }
                             else if (objectType == "line")
@@ -85,7 +105,45 @@ namespace SieciowyInkScape
                                 clientMachine.drawingArea.objects.Add(new DrawingAreaState.LineObject((float)xpos, (float)ypos, (float)(xpos2), (float)(ypos2), 1, System.Drawing.Color.FromArgb(255, R, G, B)));
                                 clientMachine.drawingArea.Exit();
                             }
+                        }
+                        else if (messageType.Equals("USER"))
+                        {
+                            string USER_type;
+                            USER_type = SocketReceiveString(4);
 
+                            if (USER_type == "Ulin")
+                            {
+                                UInt32 usernameLength;
+                                string username;
+
+                                usernameLength = SocketReceiveUInt32();
+                                username = SocketReceiveString(usernameLength);
+                              //  username = SocketReceiveString(6);
+                                mainForm.Invoke(new Action(() =>
+                                {
+                                    ServerMessageInboundEventArgs args = new ServerMessageInboundEventArgs(username + " połączył się.");
+                                    ServerMessageInbound(this, args);
+                                }
+                                ));
+                            }
+                            else if (USER_type == "Ulof")
+                            {
+                                UInt32 usernameLength;
+                                string username;
+
+                                 usernameLength = SocketReceiveUInt32();
+                                 username = SocketReceiveString(usernameLength);
+                             //   username = SocketReceiveString(6);
+
+                                mainForm.Invoke(new Action(() =>
+                                {
+                                    ServerMessageInboundEventArgs args = new ServerMessageInboundEventArgs(username + " odłączył się.");
+                                    ServerMessageInbound(this, args);
+                                }
+                                ));
+                            }
+
+                           
                         }
 
 
@@ -136,7 +194,7 @@ namespace SieciowyInkScape
                         {
                             mainForm.Invoke(new Action(() =>
                             {
-                                LogicErrorEventArgs arg = new LogicErrorEventArgs(LogicErrorEventArgs.Errors.BAD_DATA, false);
+                                LogicErrorEventArgs arg = new LogicErrorEventArgs(LogicErrorEventArgs.Errors.BAD_DATA, true);
                                 LogicErrorHappened(this, arg);
                             }
                             ));
@@ -148,7 +206,7 @@ namespace SieciowyInkScape
                     {
                         mainForm.Invoke(new Action(() =>
                         {
-                            LogicErrorEventArgs arg = new LogicErrorEventArgs(LogicErrorEventArgs.Errors.BAD_HEADER, false);
+                            LogicErrorEventArgs arg = new LogicErrorEventArgs(LogicErrorEventArgs.Errors.BAD_HEADER, true);
                             LogicErrorHappened(this, arg);
                         }
                         ));

@@ -30,7 +30,7 @@ namespace SieciowyInkScape
         {
             public enum ConnectionFailReasons
             {
-                socketException, otherException, socketNotCreated, alreadyConnected, alreadyConnecting, criticalLogicErrorHappened
+                socketException, otherException, socketNotCreated, alreadyConnected, alreadyConnecting,  /* disconnected, */ criticalLogicErrorHappened
             }
 
             public ConnectionFailedEventArgs(System.Net.Sockets.SocketException socketException)
@@ -93,5 +93,16 @@ namespace SieciowyInkScape
         }
         public delegate void OnMessageInbound(object sender, MessageInboundEventArgs e);
         public event OnMessageInbound MessageInbound;
+
+        public class ServerMessageInboundEventArgs : EventArgs
+        {
+            public ServerMessageInboundEventArgs(string message)
+            {
+                this.message = message;
+            }
+            public string message;
+        }
+        public delegate void OnServerMessageInbound(object sender, ServerMessageInboundEventArgs e);
+        public event OnServerMessageInbound ServerMessageInbound;
     }
 }

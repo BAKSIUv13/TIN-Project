@@ -98,9 +98,15 @@ namespace SieciowyInkScape
 
                 ListConcat(bytes, parent.SocketSetString("crea"));
                 ListConcat(bytes, parent.SocketSetString("rect"));
+                ListConcat(bytes, parent.SocketSetByte(rect.BGColor.R));
+                ListConcat(bytes, parent.SocketSetByte(rect.BGColor.G));
+                ListConcat(bytes, parent.SocketSetByte(rect.BGColor.B));
+                ListConcat(bytes, parent.SocketSetByte(rect.BGColor.A));
                 ListConcat(bytes, parent.SocketSetByte(rect.color.R));
                 ListConcat(bytes, parent.SocketSetByte(rect.color.G));
                 ListConcat(bytes, parent.SocketSetByte(rect.color.B));
+                ListConcat(bytes, parent.SocketSetByte(rect.color.A));
+                ListConcat(bytes, parent.SocketSetDouble((double)rect.thickness));
                 ListConcat(bytes, parent.SocketSetDouble((double)rect.xpos));
                 ListConcat(bytes, parent.SocketSetDouble((double)rect.ypos));
                 ListConcat(bytes, parent.SocketSetDouble((double)rect.width));
@@ -197,6 +203,9 @@ namespace SieciowyInkScape
         {
             loggedIn = false;
             connected = false;
+
+           // ConnectionFailedEventArgs arg = new ConnectionFailedEventArgs(ConnectionFailedEventArgs.ConnectionFailReasons.disconnected);
+           // ConnectionFailed(this, arg);
 
             socket.Close();
         }
@@ -341,29 +350,44 @@ namespace SieciowyInkScape
 
         public void SocketSend(byte[] message)
         {
-            byte[] toSend = new byte[4 + message.Length];
-            Array.Copy(SocketSetString("OwO!"), 0, toSend, 0, 4);
-            Array.Copy(message, 0, toSend, 4, message.Length);
-
-            int sent = 0;
-            while (toSend.Length != sent)
+            try
             {
-                int ret = socket.Send(toSend, sent, toSend.Length - sent, SocketFlags.None);
-                if (ret <= 0)
+                byte[] toSend = new byte[4 + message.Length];
+                Array.Copy(SocketSetString("OwO!"), 0, toSend, 0, 4);
+                Array.Copy(message, 0, toSend, 4, message.Length);
+
+                int sent = 0;
+                while (toSend.Length != sent)
                 {
-                    mainForm.Invoke(new Action(() =>
+                    int ret = socket.Send(toSend, sent, toSend.Length - sent, SocketFlags.None);
+                    if (ret <= 0)
                     {
-                        LogicErrorEventArgs arg = new LogicErrorEventArgs(LogicErrorEventArgs.Errors.SEND_FAILURE, true);
-                        LogicErrorHappened(this, arg);
-                        ConnectionFailedEventArgs arg2 = new ConnectionFailedEventArgs(ConnectionFailedEventArgs.ConnectionFailReasons.criticalLogicErrorHappened);
-                        ConnectionFailed(this, arg2);
+                        mainForm.Invoke(new Action(() =>
+                        {
+                            LogicErrorEventArgs arg = new LogicErrorEventArgs(LogicErrorEventArgs.Errors.SEND_FAILURE, true);
+                            LogicErrorHappened(this, arg);
+                            ConnectionFailedEventArgs arg2 = new ConnectionFailedEventArgs(ConnectionFailedEventArgs.ConnectionFailReasons.criticalLogicErrorHappened);
+                            ConnectionFailed(this, arg2);
+                        }
+                        ));
+                        Disconnect();
                     }
-                    ));
-                    Disconnect();
+
+                    sent += ret;
+
                 }
-
-                sent += ret;
-
+            }
+            catch
+            {
+                mainForm.Invoke(new Action(() =>
+                {
+                    LogicErrorEventArgs arg = new LogicErrorEventArgs(LogicErrorEventArgs.Errors.SEND_FAILURE, true);
+                    LogicErrorHappened(this, arg);
+                    ConnectionFailedEventArgs arg2 = new ConnectionFailedEventArgs(ConnectionFailedEventArgs.ConnectionFailReasons.criticalLogicErrorHappened);
+                    ConnectionFailed(this, arg2);
+                }
+                ));
+                Disconnect();
             }
         }
 
@@ -411,7 +435,9 @@ namespace SieciowyInkScape
         }
         byte[] SocketSetByte(byte value)
         {
-            byte[] toRet = System.BitConverter.GetBytes(value);
+            byte[] toRet = new byte[1];
+            toRet[0] = value;
+            //byte[] toRet = System.BitConverter.GetBytes(value);
 
             return toRet;
         }

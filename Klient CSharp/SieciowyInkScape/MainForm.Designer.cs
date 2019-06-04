@@ -31,11 +31,22 @@
             this.components = new System.ComponentModel.Container();
             this.chatBox = new System.Windows.Forms.TextBox();
             this.chatPanel = new System.Windows.Forms.Panel();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.ThicknessLabel = new System.Windows.Forms.Label();
+            this.ThicknessBar = new System.Windows.Forms.TrackBar();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.BGAlphaLabel = new System.Windows.Forms.Label();
+            this.BGColorButton = new System.Windows.Forms.Button();
+            this.BGAlphaBar = new System.Windows.Forms.TrackBar();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.FGAlphaLabel = new System.Windows.Forms.Label();
+            this.FGColorButton = new System.Windows.Forms.Button();
+            this.FGAlphaBar = new System.Windows.Forms.TrackBar();
             this.messageBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.button3 = new System.Windows.Forms.Button();
             this.rectangleButton = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.lineButton = new System.Windows.Forms.Button();
             this.drawing = new System.Windows.Forms.Panel();
@@ -56,7 +67,15 @@
             this.textBoxUsername = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.FGColor = new System.Windows.Forms.ColorDialog();
+            this.BGColor = new System.Windows.Forms.ColorDialog();
             this.chatPanel.SuspendLayout();
+            this.groupBox5.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ThicknessBar)).BeginInit();
+            this.groupBox4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.BGAlphaBar)).BeginInit();
+            this.groupBox3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.FGAlphaBar)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -77,11 +96,12 @@
             // 
             // chatPanel
             // 
+            this.chatPanel.Controls.Add(this.groupBox5);
+            this.chatPanel.Controls.Add(this.groupBox4);
+            this.chatPanel.Controls.Add(this.groupBox3);
             this.chatPanel.Controls.Add(this.messageBox);
             this.chatPanel.Controls.Add(this.label2);
-            this.chatPanel.Controls.Add(this.button3);
             this.chatPanel.Controls.Add(this.rectangleButton);
-            this.chatPanel.Controls.Add(this.button2);
             this.chatPanel.Controls.Add(this.label1);
             this.chatPanel.Controls.Add(this.chatBox);
             this.chatPanel.Controls.Add(this.lineButton);
@@ -90,6 +110,149 @@
             this.chatPanel.Name = "chatPanel";
             this.chatPanel.Size = new System.Drawing.Size(301, 682);
             this.chatPanel.TabIndex = 1;
+            // 
+            // groupBox5
+            // 
+            this.groupBox5.Controls.Add(this.ThicknessLabel);
+            this.groupBox5.Controls.Add(this.ThicknessBar);
+            this.groupBox5.Location = new System.Drawing.Point(197, 405);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(92, 125);
+            this.groupBox5.TabIndex = 12;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "Parametry";
+            // 
+            // ThicknessLabel
+            // 
+            this.ThicknessLabel.AutoSize = true;
+            this.ThicknessLabel.Location = new System.Drawing.Point(6, 16);
+            this.ThicknessLabel.Name = "ThicknessLabel";
+            this.ThicknessLabel.Size = new System.Drawing.Size(80, 13);
+            this.ThicknessLabel.TabIndex = 9;
+            this.ThicknessLabel.Text = "Grubość: 0,001";
+            // 
+            // ThicknessBar
+            // 
+            this.ThicknessBar.LargeChange = 10;
+            this.ThicknessBar.Location = new System.Drawing.Point(9, 32);
+            this.ThicknessBar.Maximum = 25;
+            this.ThicknessBar.Minimum = 1;
+            this.ThicknessBar.Name = "ThicknessBar";
+            this.ThicknessBar.Orientation = System.Windows.Forms.Orientation.Vertical;
+            this.ThicknessBar.Size = new System.Drawing.Size(45, 78);
+            this.ThicknessBar.TabIndex = 7;
+            this.ThicknessBar.TickStyle = System.Windows.Forms.TickStyle.None;
+            this.ThicknessBar.Value = 1;
+            this.ThicknessBar.Scroll += new System.EventHandler(this.ThicknessBar_Scroll);
+            // 
+            // groupBox4
+            // 
+            this.groupBox4.Controls.Add(this.label9);
+            this.groupBox4.Controls.Add(this.BGAlphaLabel);
+            this.groupBox4.Controls.Add(this.BGColorButton);
+            this.groupBox4.Controls.Add(this.BGAlphaBar);
+            this.groupBox4.Location = new System.Drawing.Point(6, 545);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(142, 125);
+            this.groupBox4.TabIndex = 11;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "Kolor tła";
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(88, 16);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(48, 13);
+            this.label9.TabIndex = 10;
+            this.label9.Text = "Wybierz:";
+            // 
+            // BGAlphaLabel
+            // 
+            this.BGAlphaLabel.AutoSize = true;
+            this.BGAlphaLabel.Location = new System.Drawing.Point(6, 16);
+            this.BGAlphaLabel.Name = "BGAlphaLabel";
+            this.BGAlphaLabel.Size = new System.Drawing.Size(46, 13);
+            this.BGAlphaLabel.TabIndex = 9;
+            this.BGAlphaLabel.Text = "Alpha: 0";
+            // 
+            // BGColorButton
+            // 
+            this.BGColorButton.BackColor = System.Drawing.Color.White;
+            this.BGColorButton.Location = new System.Drawing.Point(61, 32);
+            this.BGColorButton.Name = "BGColorButton";
+            this.BGColorButton.Size = new System.Drawing.Size(75, 23);
+            this.BGColorButton.TabIndex = 8;
+            this.BGColorButton.Text = "Wybierz...";
+            this.BGColorButton.UseVisualStyleBackColor = false;
+            this.BGColorButton.Click += new System.EventHandler(this.BGColorButton_Click);
+            // 
+            // BGAlphaBar
+            // 
+            this.BGAlphaBar.LargeChange = 25;
+            this.BGAlphaBar.Location = new System.Drawing.Point(9, 32);
+            this.BGAlphaBar.Maximum = 255;
+            this.BGAlphaBar.Name = "BGAlphaBar";
+            this.BGAlphaBar.Orientation = System.Windows.Forms.Orientation.Vertical;
+            this.BGAlphaBar.Size = new System.Drawing.Size(45, 78);
+            this.BGAlphaBar.TabIndex = 7;
+            this.BGAlphaBar.TickStyle = System.Windows.Forms.TickStyle.None;
+            this.BGAlphaBar.Scroll += new System.EventHandler(this.BGAlphaBar_Scroll);
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.label8);
+            this.groupBox3.Controls.Add(this.FGAlphaLabel);
+            this.groupBox3.Controls.Add(this.FGColorButton);
+            this.groupBox3.Controls.Add(this.FGAlphaBar);
+            this.groupBox3.Location = new System.Drawing.Point(154, 545);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(135, 125);
+            this.groupBox3.TabIndex = 8;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Kolor pierwszego planu";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(81, 16);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(48, 13);
+            this.label8.TabIndex = 10;
+            this.label8.Text = "Wybierz:";
+            // 
+            // FGAlphaLabel
+            // 
+            this.FGAlphaLabel.AutoSize = true;
+            this.FGAlphaLabel.Location = new System.Drawing.Point(6, 16);
+            this.FGAlphaLabel.Name = "FGAlphaLabel";
+            this.FGAlphaLabel.Size = new System.Drawing.Size(58, 13);
+            this.FGAlphaLabel.TabIndex = 9;
+            this.FGAlphaLabel.Text = "Alpha: 255";
+            // 
+            // FGColorButton
+            // 
+            this.FGColorButton.BackColor = System.Drawing.Color.Black;
+            this.FGColorButton.Location = new System.Drawing.Point(54, 32);
+            this.FGColorButton.Name = "FGColorButton";
+            this.FGColorButton.Size = new System.Drawing.Size(75, 23);
+            this.FGColorButton.TabIndex = 8;
+            this.FGColorButton.Text = "Wybierz...";
+            this.FGColorButton.UseVisualStyleBackColor = false;
+            this.FGColorButton.Click += new System.EventHandler(this.FGColorButton_Click);
+            // 
+            // FGAlphaBar
+            // 
+            this.FGAlphaBar.LargeChange = 25;
+            this.FGAlphaBar.Location = new System.Drawing.Point(9, 32);
+            this.FGAlphaBar.Maximum = 255;
+            this.FGAlphaBar.Name = "FGAlphaBar";
+            this.FGAlphaBar.Orientation = System.Windows.Forms.Orientation.Vertical;
+            this.FGAlphaBar.Size = new System.Drawing.Size(45, 78);
+            this.FGAlphaBar.TabIndex = 7;
+            this.FGAlphaBar.TickStyle = System.Windows.Forms.TickStyle.None;
+            this.FGAlphaBar.Value = 255;
+            this.FGAlphaBar.Scroll += new System.EventHandler(this.FGAlphaBar_Scroll);
             // 
             // messageBox
             // 
@@ -109,15 +272,6 @@
             this.label2.TabIndex = 2;
             this.label2.Text = "Napisz wiadomość:";
             // 
-            // button3
-            // 
-            this.button3.Location = new System.Drawing.Point(87, 488);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(75, 23);
-            this.button3.TabIndex = 5;
-            this.button3.Text = "Czerwony";
-            this.button3.UseVisualStyleBackColor = true;
-            // 
             // rectangleButton
             // 
             this.rectangleButton.Location = new System.Drawing.Point(87, 415);
@@ -127,15 +281,6 @@
             this.rectangleButton.Text = "Prostokąt";
             this.rectangleButton.UseVisualStyleBackColor = true;
             this.rectangleButton.Click += new System.EventHandler(this.rectangleButton_Click);
-            // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(6, 488);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 4;
-            this.button2.Text = "Czarny";
-            this.button2.UseVisualStyleBackColor = true;
             // 
             // label1
             // 
@@ -335,6 +480,11 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(963, 79);
             this.panel1.TabIndex = 9;
+            this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
+            // 
+            // BGColor
+            // 
+            this.BGColor.Color = System.Drawing.Color.White;
             // 
             // MainForm
             // 
@@ -349,9 +499,19 @@
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Sieciowy InkScape - Norbert Pietrucha-Kacprowicz";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.chatPanel.ResumeLayout(false);
             this.chatPanel.PerformLayout();
+            this.groupBox5.ResumeLayout(false);
+            this.groupBox5.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ThicknessBar)).EndInit();
+            this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.BGAlphaBar)).EndInit();
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.FGAlphaBar)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
@@ -369,8 +529,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Panel drawing;
         private System.Windows.Forms.Button lineButton;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button3;
         private System.Windows.Forms.Timer RefreshTimer;
         private System.Windows.Forms.Timer FPSTimer;
         private System.Windows.Forms.Button rectangleButton;
@@ -390,6 +548,21 @@
         private System.Windows.Forms.TextBox textBoxUsername;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.TrackBar FGAlphaBar;
+        private System.Windows.Forms.ColorDialog FGColor;
+        private System.Windows.Forms.ColorDialog BGColor;
+        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label BGAlphaLabel;
+        private System.Windows.Forms.Button BGColorButton;
+        private System.Windows.Forms.TrackBar BGAlphaBar;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label FGAlphaLabel;
+        private System.Windows.Forms.Button FGColorButton;
+        private System.Windows.Forms.GroupBox groupBox5;
+        private System.Windows.Forms.Label ThicknessLabel;
+        private System.Windows.Forms.TrackBar ThicknessBar;
     }
 }
 
