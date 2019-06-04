@@ -123,8 +123,9 @@ namespace SieciowyInkScape
                                 UInt32 usernameLength;
                                 string username;
 
-                                usernameLength = SocketReceiveUInt32();
-                                username = SocketReceiveString(usernameLength);
+                                // usernameLength = SocketReceiveUInt32();
+                                // username = SocketReceiveString(usernameLength);
+                                username = SocketReceiveString(6);
 
                                 mainForm.Invoke(new Action(() =>
                                 {
