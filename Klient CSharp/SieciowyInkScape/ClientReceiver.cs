@@ -97,7 +97,44 @@ namespace SieciowyInkScape
                                 clientMachine.drawingArea.objects.Add(new DrawingAreaState.LineObject((float)xpos, (float)ypos, (float)(xpos2), (float)(ypos2), 1, System.Drawing.Color.FromArgb(255, R, G, B)));
                                 clientMachine.drawingArea.Exit();
                             }
+                        }
+                        else if (messageType.Equals("USER"))
+                        {
+                            string USER_type;
+                            USER_type = SocketReceiveString(4);
 
+                            if (USER_type == "Ulin")
+                            {
+                                UInt32 usernameLength;
+                                string username;
+
+                                usernameLength = SocketReceiveUInt32();
+                                username = SocketReceiveString(usernameLength);
+
+                                mainForm.Invoke(new Action(() =>
+                                {
+                                    ServerMessageInboundEventArgs args = new ServerMessageInboundEventArgs(username + " połączył się.");
+                                    ServerMessageInbound(this, args);
+                                }
+                                ));
+                            }
+                            else if (USER_type == "Ulof")
+                            {
+                                UInt32 usernameLength;
+                                string username;
+
+                                usernameLength = SocketReceiveUInt32();
+                                username = SocketReceiveString(usernameLength);
+
+                                mainForm.Invoke(new Action(() =>
+                                {
+                                    ServerMessageInboundEventArgs args = new ServerMessageInboundEventArgs(username + " odłączył się.");
+                                    ServerMessageInbound(this, args);
+                                }
+                                ));
+                            }
+
+                           
                         }
 
 
@@ -148,7 +185,7 @@ namespace SieciowyInkScape
                         {
                             mainForm.Invoke(new Action(() =>
                             {
-                                LogicErrorEventArgs arg = new LogicErrorEventArgs(LogicErrorEventArgs.Errors.BAD_DATA, false);
+                                LogicErrorEventArgs arg = new LogicErrorEventArgs(LogicErrorEventArgs.Errors.BAD_DATA, true);
                                 LogicErrorHappened(this, arg);
                             }
                             ));
@@ -160,7 +197,7 @@ namespace SieciowyInkScape
                     {
                         mainForm.Invoke(new Action(() =>
                         {
-                            LogicErrorEventArgs arg = new LogicErrorEventArgs(LogicErrorEventArgs.Errors.BAD_HEADER, false);
+                            LogicErrorEventArgs arg = new LogicErrorEventArgs(LogicErrorEventArgs.Errors.BAD_HEADER, true);
                             LogicErrorHappened(this, arg);
                         }
                         ));

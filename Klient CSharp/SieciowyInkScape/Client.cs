@@ -204,6 +204,9 @@ namespace SieciowyInkScape
             loggedIn = false;
             connected = false;
 
+           // ConnectionFailedEventArgs arg = new ConnectionFailedEventArgs(ConnectionFailedEventArgs.ConnectionFailReasons.disconnected);
+           // ConnectionFailed(this, arg);
+
             socket.Close();
         }
 

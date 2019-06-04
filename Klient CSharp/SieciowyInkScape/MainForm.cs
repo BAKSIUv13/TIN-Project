@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NAudio.Wave;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -23,12 +24,15 @@ namespace SieciowyInkScape
         int framesCounted = 0;
         int FPS = 0;
 
+        WaveOutEvent waveOut;
+
         public MainForm()
         {
             InitializeComponent();
             
             client = new Client(this, drawing.Size);
             client.MessageInbound += OnMessageInbound;
+            client.ServerMessageInbound += OnServerMessageInbound;
             client.ConnectionFailed += OnConnectionFailed;
             client.ConnectionSucceeded += OnConnectionSucceeded;
             client.LoginCompleted += OnLoginSucceeded;
@@ -151,13 +155,48 @@ namespace SieciowyInkScape
         }
         void OnLogicError(object sender, Client.LogicErrorEventArgs e)
         {
-            ChatBoxWriteLine("Błąd logiki programu: " + e.error.ToString("g"));
+            if(e.critical)
+            {
+                ChatBoxWriteLine("Krytyczny błąd logiki programu: " + e.error.ToString("g"));
+
+                buttonConnect.Enabled = true;
+                buttonLogin.Enabled = false;
+                buttonLogout.Enabled = false;
+                buttonDisconnect.Enabled = false;
+
+                textBoxHostname.Enabled = true;
+                textBoxPort.Enabled = true;
+                textBoxUsername.Enabled = true;
+                textBoxPassword.Enabled = true;
+
+            }
+            else ChatBoxWriteLine("Błąd logiki programu: " + e.error.ToString("g"));
         }
         void OnMessageInbound(object sender, Client.MessageInboundEventArgs e)
         {
             ChatBoxWriteLine(e.username + ": " + e.message);
+
+            if(e.message.ToUpper().Contains("CARAMEL"))
+            {
+                if (!(waveOut is null)) waveOut.Dispose();
+                waveOut = new WaveOutEvent();
+                NAudio.Vorbis.VorbisWaveReader ogg = new NAudio.Vorbis.VorbisWaveReader(new System.IO.MemoryStream(Properties.Resources.CaramelHeaven));
+                waveOut.Init(ogg);
+                waveOut.Play();
+            }
+            if (e.message.ToUpper().Contains("MIAU") || e.message.ToUpper().Contains("MEOW"))
+            {
+                if (!(waveOut is null)) waveOut.Dispose();
+                waveOut = new WaveOutEvent();
+                NAudio.Vorbis.VorbisWaveReader ogg = new NAudio.Vorbis.VorbisWaveReader(new System.IO.MemoryStream(Properties.Resources.Meow));
+                waveOut.Init(ogg);
+                waveOut.Play();
+            }
         }
-      
+        void OnServerMessageInbound(object sender, Client.ServerMessageInboundEventArgs e)
+        {
+            ChatBoxWriteLine("> SERWER: " + e.message);
+        }
 
         void ChatBoxWriteLine(string text)
         {
@@ -464,11 +503,6 @@ namespace SieciowyInkScape
         private void drawing_Resize(object sender, EventArgs e)
         {
             client.clientMachine.drawingArea.ChangeAreaSize(drawing.Size);
-        }
-
-        private void messageBox_TextChanged(object sender, EventArgs e)
-        {
-
         }
 
         private void FGColorButton_Click(object sender, EventArgs e)

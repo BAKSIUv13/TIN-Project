@@ -31,6 +31,9 @@
             this.components = new System.ComponentModel.Container();
             this.chatBox = new System.Windows.Forms.TextBox();
             this.chatPanel = new System.Windows.Forms.Panel();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.ThicknessLabel = new System.Windows.Forms.Label();
+            this.ThicknessBar = new System.Windows.Forms.TrackBar();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.label9 = new System.Windows.Forms.Label();
             this.BGAlphaLabel = new System.Windows.Forms.Label();
@@ -66,10 +69,9 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.FGColor = new System.Windows.Forms.ColorDialog();
             this.BGColor = new System.Windows.Forms.ColorDialog();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.ThicknessLabel = new System.Windows.Forms.Label();
-            this.ThicknessBar = new System.Windows.Forms.TrackBar();
             this.chatPanel.SuspendLayout();
+            this.groupBox5.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ThicknessBar)).BeginInit();
             this.groupBox4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.BGAlphaBar)).BeginInit();
             this.groupBox3.SuspendLayout();
@@ -77,8 +79,6 @@
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.panel1.SuspendLayout();
-            this.groupBox5.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.ThicknessBar)).BeginInit();
             this.SuspendLayout();
             // 
             // chatBox
@@ -110,6 +110,40 @@
             this.chatPanel.Name = "chatPanel";
             this.chatPanel.Size = new System.Drawing.Size(301, 682);
             this.chatPanel.TabIndex = 1;
+            // 
+            // groupBox5
+            // 
+            this.groupBox5.Controls.Add(this.ThicknessLabel);
+            this.groupBox5.Controls.Add(this.ThicknessBar);
+            this.groupBox5.Location = new System.Drawing.Point(197, 405);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(92, 125);
+            this.groupBox5.TabIndex = 12;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "Parametry";
+            // 
+            // ThicknessLabel
+            // 
+            this.ThicknessLabel.AutoSize = true;
+            this.ThicknessLabel.Location = new System.Drawing.Point(6, 16);
+            this.ThicknessLabel.Name = "ThicknessLabel";
+            this.ThicknessLabel.Size = new System.Drawing.Size(80, 13);
+            this.ThicknessLabel.TabIndex = 9;
+            this.ThicknessLabel.Text = "Grubość: 0,001";
+            // 
+            // ThicknessBar
+            // 
+            this.ThicknessBar.LargeChange = 10;
+            this.ThicknessBar.Location = new System.Drawing.Point(9, 32);
+            this.ThicknessBar.Maximum = 25;
+            this.ThicknessBar.Minimum = 1;
+            this.ThicknessBar.Name = "ThicknessBar";
+            this.ThicknessBar.Orientation = System.Windows.Forms.Orientation.Vertical;
+            this.ThicknessBar.Size = new System.Drawing.Size(45, 78);
+            this.ThicknessBar.TabIndex = 7;
+            this.ThicknessBar.TickStyle = System.Windows.Forms.TickStyle.None;
+            this.ThicknessBar.Value = 1;
+            this.ThicknessBar.Scroll += new System.EventHandler(this.ThicknessBar_Scroll);
             // 
             // groupBox4
             // 
@@ -226,7 +260,6 @@
             this.messageBox.Name = "messageBox";
             this.messageBox.Size = new System.Drawing.Size(295, 20);
             this.messageBox.TabIndex = 3;
-            this.messageBox.TextChanged += new System.EventHandler(this.messageBox_TextChanged);
             this.messageBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.messageBox_KeyPressed);
             // 
             // label2
@@ -286,7 +319,6 @@
             // 
             // RefreshTimer
             // 
-            this.RefreshTimer.Enabled = true;
             this.RefreshTimer.Tick += new System.EventHandler(this.RefreshTimer_Tick);
             // 
             // FPSTimer
@@ -451,40 +483,6 @@
             // 
             this.BGColor.Color = System.Drawing.Color.White;
             // 
-            // groupBox5
-            // 
-            this.groupBox5.Controls.Add(this.ThicknessLabel);
-            this.groupBox5.Controls.Add(this.ThicknessBar);
-            this.groupBox5.Location = new System.Drawing.Point(197, 405);
-            this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(92, 125);
-            this.groupBox5.TabIndex = 12;
-            this.groupBox5.TabStop = false;
-            this.groupBox5.Text = "Parametry";
-            // 
-            // ThicknessLabel
-            // 
-            this.ThicknessLabel.AutoSize = true;
-            this.ThicknessLabel.Location = new System.Drawing.Point(6, 16);
-            this.ThicknessLabel.Name = "ThicknessLabel";
-            this.ThicknessLabel.Size = new System.Drawing.Size(80, 13);
-            this.ThicknessLabel.TabIndex = 9;
-            this.ThicknessLabel.Text = "Grubość: 0,001";
-            // 
-            // ThicknessBar
-            // 
-            this.ThicknessBar.LargeChange = 10;
-            this.ThicknessBar.Location = new System.Drawing.Point(9, 32);
-            this.ThicknessBar.Maximum = 25;
-            this.ThicknessBar.Minimum = 1;
-            this.ThicknessBar.Name = "ThicknessBar";
-            this.ThicknessBar.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this.ThicknessBar.Size = new System.Drawing.Size(45, 78);
-            this.ThicknessBar.TabIndex = 7;
-            this.ThicknessBar.TickStyle = System.Windows.Forms.TickStyle.None;
-            this.ThicknessBar.Value = 1;
-            this.ThicknessBar.Scroll += new System.EventHandler(this.ThicknessBar_Scroll);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -501,6 +499,9 @@
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.chatPanel.ResumeLayout(false);
             this.chatPanel.PerformLayout();
+            this.groupBox5.ResumeLayout(false);
+            this.groupBox5.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ThicknessBar)).EndInit();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.BGAlphaBar)).EndInit();
@@ -512,9 +513,6 @@
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.panel1.ResumeLayout(false);
-            this.groupBox5.ResumeLayout(false);
-            this.groupBox5.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.ThicknessBar)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
