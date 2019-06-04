@@ -45,15 +45,17 @@ int CreateShape::Fn(Server *server, SocketStuff *stuff, World *world) {
           pom = stuff->ReadDouble(HEIGHT_OFFSET, &height_);
           if (pom) return pom;
           if (un_) {
+            std::string logogo = colors_[0].GetHexStr()+colors_[1].GetHexStr();
+            LogH << "jabko " << logogo << '\n';
             auto obj = world->AddObject<Rectangle>(un_);
-            Utility::InitRectangle(
+            Rectangle::InitRectangle(
               obj.second,
               Utility::quad_to_color(colors_[0]),
               Utility::quad_to_color(colors_[1]),
               stroke_width_,
               Vec2(x_, y_),
               Vec2(width_, height_));
-            server->PushMsg<NewObj>(un_, obj.first, obj.second->CopyObject());
+            server->PushMsg<NewObj>(un_, obj.first, obj.second->GetCppString());
           } else {
             LogM << "Niezalog' gn' próbowało rysować prostokąt\n";
             server->PushMsg<Sig>(stuff->GetId(), MQ::ERR_NOT_LOGGED, false);

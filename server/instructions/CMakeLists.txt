@@ -9,4 +9,6 @@ set(SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/move_mouse.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/create_shape.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/create_shape.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/user_status.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/user_status.h"
 )

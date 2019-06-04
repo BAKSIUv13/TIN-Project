@@ -16,8 +16,9 @@
 namespace tin {
 class Image {
  public:
+  static constexpr ObjectId INIT_NEXT_ID = 100;
   Image()
-    : next_new_id_(100) {}
+    : next_new_id_(INIT_NEXT_ID) {}
 
   template <typename T>
   std::pair<ObjectId, T &> NewObject() {
@@ -47,6 +48,13 @@ class Image {
     if (objects_.count(id) < 1)
       return nullptr;
     return &*objects_.at(id);
+  }
+
+  void Clear() {
+    objects_.clear();
+    obj_order_.clear();
+    addr_to_id_.clear();
+    next_new_id_ = INIT_NEXT_ID;
   }
 
  private:

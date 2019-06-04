@@ -9,7 +9,7 @@
 #include "core/username.h"
 
 namespace tin {
-class Artist{
+class Artist {
  public:
   using MousePosition = std::array<double, 2>;
   using ObjectId = ImageTypes::ObjectId;
@@ -21,14 +21,15 @@ class Artist{
     mouse_[1] = y;
   }
 
-  void Grab(ObjectId id) {
-    selected_object_ = id;
-  }
+  // void Grab(ObjectId id) {
+  //   selected_object_ = id;
+  // }
 
  private:
   Username un_;
   MousePosition mouse_;
-  ObjectId selected_object_;
+  // This will not be implemented yet.
+  // ObjectId selected_object_;
 };  // class Artist
 }  // namespace tin
 

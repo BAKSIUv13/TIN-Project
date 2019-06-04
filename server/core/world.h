@@ -33,8 +33,8 @@ class World {
     }
     auto obj = image_.NewObject<T>();
     // TO DO usunąć stare zaznaczenie!!!
-    artists_.at(un).Grab(obj.first);
-    grabs_.emplace(obj.first, un);
+    // artists_.at(un).Grab(obj.first);
+    // grabs_.emplace(obj.first, un);
     return std::make_pair(obj.first, &obj.second);
   }
 
@@ -53,6 +53,10 @@ class World {
     return image_.GetObject(id);
   }
 
+  void CleaImage() {
+    return image_.Clear();
+  }
+
  private:
   // To jest tylko dodatkowa struktura z myszką i tak dalej.
   std::map<Username, Artist> artists_;
@@ -61,7 +65,7 @@ class World {
   std::list<ChatMsg> chat_msgs_;
   decltype(chat_msgs_)::iterator next_msg_;  // to send
 
-  std::map<ObjectId, Username> grabs_;
+  // std::map<ObjectId, Username> grabs_;
 };  // class World
 }  // namespace tin
 

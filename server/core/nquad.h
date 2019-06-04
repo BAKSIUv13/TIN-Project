@@ -87,6 +87,16 @@ struct NQuad {
     return s;
   }
 
+  std::string GetHexStr() {
+    std::string s;
+    char c[3];
+    for (size_t i = 0; i < 4; ++i) {
+      snprintf(c, sizeof(c), "%02x", operator[](i));
+      s.append(c, 2);
+    }
+    return s;
+  }
+
   constexpr uint8_t operator[](size_t n) const {
     return n < 4 ? reinterpret_cast<const uint8_t *>(this)[n] : '\0';
   }
