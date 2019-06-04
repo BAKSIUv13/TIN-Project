@@ -35,26 +35,21 @@ class World {
     // TO DO usunąć stare zaznaczenie!!!
     // artists_.at(un).Grab(obj.first);
     // grabs_.emplace(obj.first, un);
-    return std::make_pair(obj.first, &obj.second);
+    return obj;
   }
 
   int RemoveObject(ObjectId);
-/*
-  template <typename T>
-  T *GetObject(ObjectId id) {
-    if (decltype(int) == decltype(int)) {
-      return nullptr;
-    }
-  }
-
-*/
 
   BasicObject *GetObject(ObjectId id) {
     return image_.GetObject(id);
   }
 
-  void CleaImage() {
+  void ClearImage() {
     return image_.Clear();
+  }
+
+  std::array<Image::ShapeIterator, 2> GetShapeIterators() {
+    return std::array<Image::ShapeIterator, 2>{image_.cbegin(), image_.cend()};
   }
 
  private:

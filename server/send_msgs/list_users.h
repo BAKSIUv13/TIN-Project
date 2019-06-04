@@ -27,10 +27,6 @@ class ListUsers : public OutMessage {
     users_.push_back(un);
   }
 
-  const std::list<Username> GetUsers() {
-    return users_;
-  }
-
   Username User() override {
     return username_;
   }

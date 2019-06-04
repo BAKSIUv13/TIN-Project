@@ -9,25 +9,27 @@
 #include "core/out_message.h"
 #include "core/write_buf.h"
 #include "image/basic_object.h"
+#include "image/image.h"
 
 namespace tin {
 
 class ListShapes : public OutMessage {
  public:
+  using ShapeIt = Image::ShapeIterator;
   ListShapes() {}
-  explicit ListShapes(const Username &un)
-      : username_(un) {}
+  explicit ListShapes(const Username &un, std::array<ShapeIt, 2> iterators)
+      : username_(un) {
+    for (auto it = iterators[0]; it != iterators[1]; ++it) {
+      ++shapes_count_;
+      it->WriteToCppString(&shapes_string_);
+    }
+  }
 
   virtual ~ListShapes() {}
 
   virtual std::string GetTypeName() {return "ListShapes";}
 
   virtual int Audience() {return ONE_U;}
-
-  void AddShape(const BasicObject &shape) {
-    ++shapes_count_;
-    shape.WriteToCppString(&shapes_string_);
-  }
 
   Username User() override {
     return username_;

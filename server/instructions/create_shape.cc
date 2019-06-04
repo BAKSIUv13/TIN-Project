@@ -45,9 +45,12 @@ int CreateShape::Fn(Server *server, SocketStuff *stuff, World *world) {
           pom = stuff->ReadDouble(HEIGHT_OFFSET, &height_);
           if (pom) return pom;
           if (un_) {
-            std::string logogo = colors_[0].GetHexStr()+colors_[1].GetHexStr();
-            LogH << "jabko " << logogo << '\n';
             auto obj = world->AddObject<Rectangle>(un_);
+            if (obj.first <= 0) {
+              server->PushMsg<Sig>(stuff->GetId(), MQ::ERR_OTHER, false,
+                "could not add object");
+              return 0;
+            }
             Rectangle::InitRectangle(
               obj.second,
               Utility::quad_to_color(colors_[0]),
