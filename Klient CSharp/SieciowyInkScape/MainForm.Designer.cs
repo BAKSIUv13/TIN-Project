@@ -260,6 +260,7 @@
             this.messageBox.Name = "messageBox";
             this.messageBox.Size = new System.Drawing.Size(295, 20);
             this.messageBox.TabIndex = 3;
+            this.messageBox.TextChanged += new System.EventHandler(this.messageBox_TextChanged);
             this.messageBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.messageBox_KeyPressed);
             // 
             // label2
@@ -319,6 +320,7 @@
             // 
             // RefreshTimer
             // 
+            this.RefreshTimer.Enabled = true;
             this.RefreshTimer.Tick += new System.EventHandler(this.RefreshTimer_Tick);
             // 
             // FPSTimer
@@ -478,6 +480,7 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(963, 79);
             this.panel1.TabIndex = 9;
+            this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
             // 
             // BGColor
             // 

@@ -350,29 +350,44 @@ namespace SieciowyInkScape
 
         public void SocketSend(byte[] message)
         {
-            byte[] toSend = new byte[4 + message.Length];
-            Array.Copy(SocketSetString("OwO!"), 0, toSend, 0, 4);
-            Array.Copy(message, 0, toSend, 4, message.Length);
-
-            int sent = 0;
-            while (toSend.Length != sent)
+            try
             {
-                int ret = socket.Send(toSend, sent, toSend.Length - sent, SocketFlags.None);
-                if (ret <= 0)
+                byte[] toSend = new byte[4 + message.Length];
+                Array.Copy(SocketSetString("OwO!"), 0, toSend, 0, 4);
+                Array.Copy(message, 0, toSend, 4, message.Length);
+
+                int sent = 0;
+                while (toSend.Length != sent)
                 {
-                    mainForm.Invoke(new Action(() =>
+                    int ret = socket.Send(toSend, sent, toSend.Length - sent, SocketFlags.None);
+                    if (ret <= 0)
                     {
-                        LogicErrorEventArgs arg = new LogicErrorEventArgs(LogicErrorEventArgs.Errors.SEND_FAILURE, true);
-                        LogicErrorHappened(this, arg);
-                        ConnectionFailedEventArgs arg2 = new ConnectionFailedEventArgs(ConnectionFailedEventArgs.ConnectionFailReasons.criticalLogicErrorHappened);
-                        ConnectionFailed(this, arg2);
+                        mainForm.Invoke(new Action(() =>
+                        {
+                            LogicErrorEventArgs arg = new LogicErrorEventArgs(LogicErrorEventArgs.Errors.SEND_FAILURE, true);
+                            LogicErrorHappened(this, arg);
+                            ConnectionFailedEventArgs arg2 = new ConnectionFailedEventArgs(ConnectionFailedEventArgs.ConnectionFailReasons.criticalLogicErrorHappened);
+                            ConnectionFailed(this, arg2);
+                        }
+                        ));
+                        Disconnect();
                     }
-                    ));
-                    Disconnect();
+
+                    sent += ret;
+
                 }
-
-                sent += ret;
-
+            }
+            catch
+            {
+                mainForm.Invoke(new Action(() =>
+                {
+                    LogicErrorEventArgs arg = new LogicErrorEventArgs(LogicErrorEventArgs.Errors.SEND_FAILURE, true);
+                    LogicErrorHappened(this, arg);
+                    ConnectionFailedEventArgs arg2 = new ConnectionFailedEventArgs(ConnectionFailedEventArgs.ConnectionFailReasons.criticalLogicErrorHappened);
+                    ConnectionFailed(this, arg2);
+                }
+                ));
+                Disconnect();
             }
         }
 

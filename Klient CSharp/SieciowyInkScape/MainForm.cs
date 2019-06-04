@@ -63,6 +63,8 @@ namespace SieciowyInkScape
             Show();
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
             SetDoubleBuffered(drawing);
+            client.clientMachine.drawingArea.areaSize.X = drawing.Size.Width;
+            client.clientMachine.drawingArea.areaSize.Y = drawing.Size.Height;
 
         }
 
@@ -192,6 +194,10 @@ namespace SieciowyInkScape
                 waveOut.Init(ogg);
                 waveOut.Play();
             }
+            if (e.message.ToUpper().Contains("STOP"))
+            {
+                if (!(waveOut is null)) waveOut.Dispose();
+            }
         }
         void OnServerMessageInbound(object sender, Client.ServerMessageInboundEventArgs e)
         {
@@ -213,8 +219,32 @@ namespace SieciowyInkScape
             {
                 if(client.loggedIn)
                 {
-                    client.clientMachine.SendChatMessage(messageBox.Text);
-                    messageBox.Clear();
+                    if(messageBox.Text != "MEOOW")
+                    {
+                        client.clientMachine.SendChatMessage(messageBox.Text);
+                        messageBox.Clear();
+                    }
+                    else
+                    {
+                        Bitmap cat = Properties.Resources.CAT;
+
+                        for(int y = 0; y < cat.Height; y += 3)
+                        {
+                            for (int x = 0; x < cat.Width; x += 3)
+                            {
+                                client.clientMachine.SendRectangle(new DrawingAreaState.RectangleObject(
+                                    (float)x / 600.0f + 0.300f,
+                                    (float)y / 520.0f + 0.125f,
+                                    4.0f / 600.0f,
+                                    4.0f / 520.0f,
+                                    0.000001f,
+                                    Color.FromArgb(255, cat.GetPixel(x, y)),
+                                    Color.FromArgb(255, cat.GetPixel(x, y))
+                                    ));
+                            }
+                            Application.DoEvents();
+                        }
+                    }
                 }
                 
             }
@@ -554,6 +584,16 @@ namespace SieciowyInkScape
             drawingArea.Exit();
 
             ThicknessLabel.Text = "Grubość: " + drawingArea.thickness.ToString("0.000");
+        }
+
+        private void messageBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }
