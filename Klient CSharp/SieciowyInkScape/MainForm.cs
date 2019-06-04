@@ -270,9 +270,12 @@ namespace SieciowyInkScape
                     break;
                 case DrawingAreaState.DrawingObject.ObjectType.RECTANGLE:
                     DrawingAreaState.RectangleObject rect = (DrawingAreaState.RectangleObject)obj;
-                    gr.FillRectangle(new SolidBrush(rect.BGColor),
-                    (rect.xpos + rect.thickness / 2.0f) * state.areaSize.X, (rect.ypos + rect.thickness / 2.0f) * state.areaSize.Y,
-                    (rect.width - rect.thickness) * state.areaSize.X, (rect.height - rect.thickness) * state.areaSize.Y);
+                    if(rect.BGColor.A > 0)
+                    {
+                        gr.FillRectangle(new SolidBrush(rect.BGColor),
+                            (rect.xpos + rect.thickness / 2.0f) * state.areaSize.X, (rect.ypos + rect.thickness / 2.0f) * state.areaSize.Y,
+                            (rect.width - rect.thickness) * state.areaSize.X, (rect.height - rect.thickness) * state.areaSize.Y);
+                    }
                     gr.DrawRectangle(new Pen(new SolidBrush(rect.color), (float)(rect.thickness * (double)state.areaSize.X)),
                         rect.xpos * state.areaSize.X, rect.ypos * state.areaSize.Y,
                         rect.width * state.areaSize.X, rect.height * state.areaSize.Y);
@@ -374,6 +377,7 @@ namespace SieciowyInkScape
             drawingArea.Exit();
 
             drawing.Refresh();
+          //  RefreshTimer.Interval = 33;
         }
 
         private void drawing_MouseMove(object sender, MouseEventArgs e)
@@ -384,6 +388,7 @@ namespace SieciowyInkScape
             drawingArea.mousePosition.X = (float)e.Location.X / (float)drawingArea.areaSize.X;
             drawingArea.mousePosition.Y = (float)e.Location.Y / (float)drawingArea.areaSize.Y;
 
+            DrawingAreaState.State drawingAreaState = drawingArea.state;
             if (drawingArea.state == DrawingAreaState.State.DRAWING)
             {
                 drawingArea.mousepos_now = new Point(e.X, e.Y);
@@ -407,9 +412,10 @@ namespace SieciowyInkScape
                         rect.height = (mn.Y - ms.Y) > 0 ? ((float)(mn.Y - ms.Y) / (float)drawingArea.areaSize.Y) : ((float)(ms.Y - mn.Y) / (float)drawingArea.areaSize.Y);
                         break;
                 }
-               
             }
             drawingArea.Exit();
+
+            if (drawingAreaState == DrawingAreaState.State.DRAWING || drawingAreaState == DrawingAreaState.State.EDITING) drawing.Refresh();
 
             /*
             drawingArea.Access();
@@ -417,8 +423,8 @@ namespace SieciowyInkScape
             drawingArea.Exit();
             */
 
-
-            drawing.Refresh();
+            Application.DoEvents();
+            // drawing.Refresh();
         }
 
         private void drawing_MouseUp(object sender, MouseEventArgs e)
@@ -453,33 +459,12 @@ namespace SieciowyInkScape
 
 
             drawing.Refresh();
+           // RefreshTimer.Interval = 100;
         }
 
         private void RefreshTimer_Tick(object sender, EventArgs e)
         {
-            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
-
-
-            if (!(drawingArea is null))
-            {
-                if(client.loggedIn)
-                {
-                    PointF mousePosition;
-
-                    drawingArea.Access();
-                    mousePosition = new PointF(drawingArea.mousePosition.X, drawingArea.mousePosition.Y);
-                    drawingArea.CheckPendingMousePositions();
-                    drawingArea.Exit();
-
-                    client.clientMachine.SendMousePosition(mousePosition);
-                }
-
-                drawingArea.Access();
-                drawingArea.CheckPendingObjects();
-                drawingArea.Exit();
-            }
-
-
+           
 
             drawing.Refresh();
         }
@@ -611,6 +596,36 @@ namespace SieciowyInkScape
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
            if(client.connected) client.Disconnect();
+        }
+
+        private void updateMousePositionTimer_Tick(object sender, EventArgs e)
+        {
+            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+
+
+            if (!(drawingArea is null))
+            {
+                if (client.loggedIn)
+                {
+                    PointF mousePosition;
+
+                    drawingArea.Access();
+                    mousePosition = new PointF(drawingArea.mousePosition.X, drawingArea.mousePosition.Y);
+                    drawingArea.CheckPendingMousePositions();
+                    drawingArea.Exit();
+
+                    client.clientMachine.SendMousePosition(mousePosition);
+                }
+
+                drawingArea.Access();
+                drawingArea.CheckPendingObjects();
+                drawingArea.Exit();
+            }
+        }
+
+        private void elementHost1_ChildChanged(object sender, System.Windows.Forms.Integration.ChildChangedEventArgs e)
+        {
+
         }
     }
 }

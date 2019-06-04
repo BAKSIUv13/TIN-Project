@@ -69,6 +69,7 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.FGColor = new System.Windows.Forms.ColorDialog();
             this.BGColor = new System.Windows.Forms.ColorDialog();
+            this.updateMousePositionTimer = new System.Windows.Forms.Timer(this.components);
             this.chatPanel.SuspendLayout();
             this.groupBox5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ThicknessBar)).BeginInit();
@@ -486,6 +487,11 @@
             // 
             this.BGColor.Color = System.Drawing.Color.White;
             // 
+            // updateMousePositionTimer
+            // 
+            this.updateMousePositionTimer.Enabled = true;
+            this.updateMousePositionTimer.Tick += new System.EventHandler(this.updateMousePositionTimer_Tick);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -563,6 +569,7 @@
         private System.Windows.Forms.GroupBox groupBox5;
         private System.Windows.Forms.Label ThicknessLabel;
         private System.Windows.Forms.TrackBar ThicknessBar;
+        private System.Windows.Forms.Timer updateMousePositionTimer;
     }
 }
 
