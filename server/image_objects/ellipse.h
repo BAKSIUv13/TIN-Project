@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <memory>
+#include <string>
 
 #include "image/basic_object.h"
 #include "core/mquads.h"
@@ -12,14 +13,19 @@
 namespace tin {
 
 struct Ellipse : BasicObject {
-  const char *GetType() override {
+  virtual ~Ellipse() = default;
+  const char *GetType() const override {
     return "ellipse";
   }
-  NQuad GetQuad() override {
+  NQuad GetQuad() const override {
     return MQ::SHAPE_ELLIPSE;
   }
-  std::unique_ptr<BasicObject> CopyObject() override {
+  std::unique_ptr<BasicObject> CopyObject() const override {
     return std::unique_ptr<BasicObject>(new Ellipse(*this));
+  }
+  void WriteToCppString(std::string *str) const override {
+    if (str == nullptr) return;
+    GetQuad().AppendToCppString(str);
   }
   // Vec centrum;  // <-- nie potrzebne, jak mamy transform
   Vec2 radii;

@@ -8,7 +8,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "image/image_types.h"
-#include "image_objects/rectangle.h"
 
 namespace tin {
 
@@ -33,21 +32,25 @@ namespace Utility {
       static_cast<char>(color.x),
       static_cast<char>(color.y),
       static_cast<char>(color.z),
-      static_cast<char>(color.t),
+      static_cast<char>(color.w),
     };
     return NQuad{x};
   }
 
-  inline void InitRectangle(Rectangle *rect, Color fill, Color stroke_c,
-      Dist stroke_w,
-      Vec2 offset, Vec2 dims) {
-    if (rect == nullptr) return;
-    rect->dims = dims;
-    rect->fill_color = fill;
-    rect->stroke_color = stroke_c;
-    rect->stroke_width = stroke_w;
-    rect->transform = translate(Transform(1.0), offset);
+  inline std::string color_to_hex_str(Color color) {
+    std::string s;
+    char c[9];
+    snprintf(&c[0], 3, "%02x", color.x);
+    s.append(&c[0], 2);
+    snprintf(&c[2], 3, "%02x", color.y);
+    s.append(&c[2], 2);
+    snprintf(&c[4], 3, "%02x", color.z);
+    s.append(&c[4], 2);
+    snprintf(&c[6], 3, "%02x", color.w);
+    s.append(&c[6], 2);
+    return s;
   }
+
 }  // namespace Utility
 
 }  // namespace tin

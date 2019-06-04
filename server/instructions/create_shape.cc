@@ -46,14 +46,19 @@ int CreateShape::Fn(Server *server, SocketStuff *stuff, World *world) {
           if (pom) return pom;
           if (un_) {
             auto obj = world->AddObject<Rectangle>(un_);
-            Utility::InitRectangle(
+            if (obj.first <= 0) {
+              server->PushMsg<Sig>(stuff->GetId(), MQ::ERR_OTHER, false,
+                "could not add object");
+              return 0;
+            }
+            Rectangle::InitRectangle(
               obj.second,
               Utility::quad_to_color(colors_[0]),
               Utility::quad_to_color(colors_[1]),
               stroke_width_,
               Vec2(x_, y_),
               Vec2(width_, height_));
-            server->PushMsg<NewObj>(un_, obj.first, obj.second->CopyObject());
+            server->PushMsg<NewObj>(un_, obj.first, obj.second->GetCppString());
           } else {
             LogM << "Niezalog' gn' próbowało rysować prostokąt\n";
             server->PushMsg<Sig>(stuff->GetId(), MQ::ERR_NOT_LOGGED, false);

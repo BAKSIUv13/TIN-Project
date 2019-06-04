@@ -9,7 +9,7 @@ namespace tin {
   std::string Logger::GenerateTime_() {
     std::time_t t = std::time(nullptr);
     std::stringstream s;
-    s << std::put_time(std::localtime(&t), "[%F %T %Z]%n");
+    s << std::put_time(std::localtime(&t), "%Y%m%d %H%M%S %Z:\n");
     return s.str();
   }
 

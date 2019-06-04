@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <memory>
+#include <string>
 
 #include "image/basic_object.h"
 #include "core/mquads.h"
@@ -12,14 +13,19 @@
 namespace tin {
 
 struct LinePath : BasicObject {
-  const char *GetType() override {
+  virtual ~LinePath() = default;
+  const char *GetType() const override {
     return "line_path";
   }
-  NQuad GetQuad() override {
+  NQuad GetQuad() const override {
     return MQ::SHAPE_POLYGONAL_CHAIN;
   }
-  std::unique_ptr<BasicObject> CopyObject() override {
+  std::unique_ptr<BasicObject> CopyObject() const override {
     return std::unique_ptr<BasicObject>(new LinePath(*this));
+  }
+  void WriteToCppString(std::string *str) const override {
+    if (str == nullptr) return;
+    GetQuad().AppendToCppString(str);
   }
   std::vector<Vec2> points;
 };  // struct LinePath

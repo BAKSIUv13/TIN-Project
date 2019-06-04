@@ -20,6 +20,7 @@
 #include "send_msgs/log_ok.h"
 #include "send_msgs/log_off.h"
 #include "send_msgs/user_msg.h"
+#include "send_msgs/user_status.h"
 
 static constexpr int STDIN_FD = STDIN_FILENO;
 
@@ -287,8 +288,22 @@ int Server::MsgsToBufs_() {
         }
         break;
       case OutMessage::ONE_U:
-        LogH << "OutMessage::ONE_U jeszcze nie działa xd\n";
-        throw std::runtime_error("OutMessage::ONE_U not implemented");
+        Username un = msg->User();
+        if (users_.count(un) < 1) {
+          LogH << "nie ma gniazda usera [[" << un << "]]\n";
+          return -1;
+        }
+        SockId id = users_.at(un).GetSockId();
+        SocketStuff *stuff = &client_socks_.at(id);
+        added_to_buf = msg->AddToBuf(&stuff->WrBuf());
+        if (added_to_buf < 0) {
+          LogH << "Błąd przy dodawaniu wiadomości do bufora. :<\n" <<
+            "Socket o id " << stuff->GetId() << " i fd " <<
+            stuff->GetSocket().GetFD() << "\nuser: " << un << '\n';
+          stuff->ForceRemove();
+          // :>
+        }
+        break;
     }
     PopMsg_();
   }
@@ -311,6 +326,7 @@ int Server::ReadClients_() {
     } else if (read_chars == 0) {
       LogM << "Zamykanko przyszło " << it->first <<
         " i fd " << it->second.GetSocket().GetFD() << '\n';
+      LogOutUser(it->first, false);
       it->second.Remove();
       continue;
     }
@@ -334,10 +350,13 @@ int Server::DropSock_(SockId id) {
   }
   if (socks_to_users_.count(id) > 0) {
     Username un = socks_to_users_.at(id)->GetName();
-    LogM << "Na tym gnioeździe jest ktoś zalogowany\n"
-      << "[[" << un << "]]\n";
+    LogH << "Na tym gnioeździe jest ktoś zalogowany\n"
+      << "[[" << un << "]], nie powinno tak być.\n"
+      << "zostanie wyrzucony, ale inni klienci mogą być powiadomieni"
+      << "z opóźnieniem\n";
     users_.erase(un);
     socks_to_users_.erase(id);
+    PushMsg<UserStatus>(un, MQ::USER_LOGGED_OFF);
   }
   client_socks_.erase(id);
   LogM << "drop: ok, wychodzonko\n";
@@ -375,6 +394,7 @@ int Server::LoopTick_() {
 
 int Server::LogInUser(const Username &un, const std::string &pw,
     SockId sock_id, bool generate_response) {
+  // Generate response - chodzi o odpowiedź dokłądnie temu, kto sie zalogował.
   if (socks_to_users_.count(sock_id) > 0) {
     LogM << "gniazdo o id " << sock_id << " i fd " <<
       client_socks_.at(sock_id).GetSocket().GetFD() << " jest już zalogowane\n";
@@ -420,6 +440,7 @@ int Server::LogInUser(const Username &un, const std::string &pw,
   world_.AddArtist(un);
   if (generate_response)
     PushMsg<LogOk>(sock_id);
+  PushMsg<UserStatus>(un, MQ::USER_LOGGED_IN);
   return 0;
 }
 
@@ -442,6 +463,7 @@ int Server::LogOutUser(SockId id, bool generate_response) {
   LogM << "Na tym sockecie był zalogowany [[" << un << "]]\n";
   if (generate_response)
     PushMsg<LogOff>(id);
+  PushMsg<UserStatus>(un, MQ::USER_LOGGED_OFF);
   return 0;
 }
 
@@ -469,9 +491,5 @@ int Server::PopMsg_() {
   return 0;
 }
 
-int Server::PushMsg_(std::unique_ptr<OutMessage> msg) {
-  messages_to_send_.emplace_back(std::move(msg));
-  return 0;
-}
 
 }  // namespace tin
