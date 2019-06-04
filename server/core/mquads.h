@@ -46,7 +46,7 @@ constexpr NQuad
   SERV_SIGH {"SIGH"},
 
   USER_LOGGED_IN {"Ulin"},
-  USER_LOGGED_IN {"Ulof"},
+  USER_LOGGED_OFF {"Ulof"},
 
   SHAPE_RECTANGLE {"rect"},
   SHAPE_ELLIPSE {"elip"},

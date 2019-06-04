@@ -14,16 +14,16 @@ namespace tin {
 
 struct Ellipse : BasicObject {
   virtual ~Ellipse() = default;
-  const char *GetType() override {
+  const char *GetType() const override {
     return "ellipse";
   }
-  NQuad GetQuad() override {
+  NQuad GetQuad() const override {
     return MQ::SHAPE_ELLIPSE;
   }
-  std::unique_ptr<BasicObject> CopyObject() override {
+  std::unique_ptr<BasicObject> CopyObject() const override {
     return std::unique_ptr<BasicObject>(new Ellipse(*this));
   }
-  void WriteToCppString(std::string *str) override {
+  void WriteToCppString(std::string *str) const override {
     if (str == nullptr) return;
     GetQuad().AppendToCppString(str);
   }

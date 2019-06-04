@@ -20,6 +20,7 @@
 #include "send_msgs/log_ok.h"
 #include "send_msgs/log_off.h"
 #include "send_msgs/user_msg.h"
+#include "send_msgs/user_status.h"
 
 static constexpr int STDIN_FD = STDIN_FILENO;
 
@@ -338,6 +339,7 @@ int Server::DropSock_(SockId id) {
       << "[[" << un << "]]\n";
     users_.erase(un);
     socks_to_users_.erase(id);
+    PushMsg<UserStatus>(un, MQ::USER_LOGGED_OFF);
   }
   client_socks_.erase(id);
   LogM << "drop: ok, wychodzonko\n";
@@ -375,6 +377,7 @@ int Server::LoopTick_() {
 
 int Server::LogInUser(const Username &un, const std::string &pw,
     SockId sock_id, bool generate_response) {
+  // Generate response - chodzi o odpowiedź dokłądnie temu, kto sie zalogował.
   if (socks_to_users_.count(sock_id) > 0) {
     LogM << "gniazdo o id " << sock_id << " i fd " <<
       client_socks_.at(sock_id).GetSocket().GetFD() << " jest już zalogowane\n";
@@ -418,6 +421,7 @@ int Server::LogInUser(const Username &un, const std::string &pw,
   }
   LogM << "zalogowano [" << un << "]\n";
   world_.AddArtist(un);
+  PushMsg<UserStatus>(un, MQ::USER_LOGGED_IN);
   if (generate_response)
     PushMsg<LogOk>(sock_id);
   return 0;
@@ -442,6 +446,7 @@ int Server::LogOutUser(SockId id, bool generate_response) {
   LogM << "Na tym sockecie był zalogowany [[" << un << "]]\n";
   if (generate_response)
     PushMsg<LogOff>(id);
+  PushMsg<UserStatus>(un, MQ::USER_LOGGED_OFF);
   return 0;
 }
 
