@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             this.chatBox = new System.Windows.Forms.TextBox();
             this.chatPanel = new System.Windows.Forms.Panel();
+            this.elementHost1 = new System.Windows.Forms.Integration.ElementHost();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.ThicknessLabel = new System.Windows.Forms.Label();
             this.ThicknessBar = new System.Windows.Forms.TrackBar();
@@ -97,6 +98,7 @@
             // 
             // chatPanel
             // 
+            this.chatPanel.Controls.Add(this.elementHost1);
             this.chatPanel.Controls.Add(this.groupBox5);
             this.chatPanel.Controls.Add(this.groupBox4);
             this.chatPanel.Controls.Add(this.groupBox3);
@@ -111,6 +113,15 @@
             this.chatPanel.Name = "chatPanel";
             this.chatPanel.Size = new System.Drawing.Size(301, 682);
             this.chatPanel.TabIndex = 1;
+            // 
+            // elementHost1
+            // 
+            this.elementHost1.Location = new System.Drawing.Point(31, 110);
+            this.elementHost1.Name = "elementHost1";
+            this.elementHost1.Size = new System.Drawing.Size(200, 100);
+            this.elementHost1.TabIndex = 13;
+            this.elementHost1.Text = "elementHost1";
+            this.elementHost1.Child = null;
             // 
             // groupBox5
             // 
@@ -570,6 +581,7 @@
         private System.Windows.Forms.Label ThicknessLabel;
         private System.Windows.Forms.TrackBar ThicknessBar;
         private System.Windows.Forms.Timer updateMousePositionTimer;
+        private System.Windows.Forms.Integration.ElementHost elementHost1;
     }
 }
 
