@@ -286,7 +286,11 @@ namespace SieciowyInkScape
                 drawingArea.Access();
 
                 Graphics graphics = e.Graphics;
-                graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
+               // graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+               // graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighSpeed;
+               // graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Low;
+
                 graphics.Clear(Color.White);
                 
 
@@ -594,6 +598,11 @@ namespace SieciowyInkScape
         private void panel1_Paint(object sender, PaintEventArgs e)
         {
 
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            client.Disconnect();
         }
     }
 }

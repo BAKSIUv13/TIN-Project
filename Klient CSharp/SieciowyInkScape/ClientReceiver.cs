@@ -58,6 +58,14 @@ namespace SieciowyInkScape
                             UInt32 usernameLength = SocketReceiveUInt32();
                             string username = SocketReceiveString(usernameLength);
 
+                            if(username == loggedUsername)
+                            {
+                                clientMachine.drawingArea.Access();
+                                if (clientMachine.drawingArea.pendingObjects.Count > 0)
+                                    clientMachine.drawingArea.pendingObjects.Dequeue();
+                                clientMachine.drawingArea.Exit();
+                            }
+
                             string objectType = SocketReceiveString(4);
 
                             if(objectType == "rect")
