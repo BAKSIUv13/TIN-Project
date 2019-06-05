@@ -18,7 +18,7 @@ class ListShapes : public OutMessage {
   using ShapeIt = Image::ShapeIterator;
   ListShapes() : shapes_count_(0) {}
   explicit ListShapes(const Username &un, std::array<ShapeIt, 2> iterators)
-      : username_(un) {
+      : username_(un), shapes_count_(0) {
     for (auto it = iterators[0]; it != iterators[1]; ++it) {
       ++shapes_count_;
       it->WriteToCppString(&shapes_string_);
