@@ -6,24 +6,35 @@
 #include <fstream>
 #include <string>
 
+#include "core/username.h"
+
 namespace tin {
 class AccountManager {
  public:
+  enum UserType {
+    GUEST,
+    NORMAL,
+    ADMIN,
+  };
+
   AccountManager() {}
   ~AccountManager() {}
 
-  void AttachFile() {}
+  void AttachFile(const char *) {}
   void DetachFile() {}
 
-  void UserAdd(std::string name, std::string passwd, bool admin = false) {}
-  void UserDel(std::string name) {}
-  void UserChPass(std::string name, std::string passwd) {}
-  void UserChPerm(std::string name, bool admin) {}
+  UserType GetUserInfo(const Username &);
 
-  bool Authenticate(std::string name, std::string pass) {return false;}
+  void UserAdd(Username, std::string passwd) {}
+  void UserDel(Username) {}
+  void UserChPass(Username, std::string passwd) {}
+  void UserChPerm(Username, bool admin) {}
+
+  bool Authenticate(const Username &, std::string pass) {return false;}
 
   /// Tells if user is an admin.
-  bool Authorize(std::string name) {return false;}
+  bool Authorize(const Username &) {return false;}
+
  private:
   void ReadUser_() {}
   std::fstream the_file_;
