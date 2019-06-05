@@ -343,13 +343,22 @@ namespace SieciowyInkScape
             }
             catch (SocketException sEx)
             {
-                mainForm.Invoke(new Action(() =>
+                try
                 {
-                    ConnectionFailedEventArgs arg = new ConnectionFailedEventArgs(sEx);
-                    ConnectionFailed(this, arg);
+                    // dirty fix :C
+                    mainForm.Invoke(new Action(() =>
+                    {
+                        ConnectionFailedEventArgs arg = new ConnectionFailedEventArgs(sEx);
+                        ConnectionFailed(this, arg);
+                    }
+                    ));
+                    Disconnect();
                 }
-                ));
-                Disconnect();
+                catch(System.ComponentModel.InvalidAsynchronousStateException)
+                {
+
+                }
+                
             }
             catch (Exception ex)
             {
