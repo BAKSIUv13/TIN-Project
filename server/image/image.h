@@ -82,6 +82,7 @@ class Image {
       ++it_;
       return *this;
     }
+    /*
     const BasicObject *operator->() {
       return image_ ?
         &*image_->objects_.at(*it_) : nullptr;
@@ -89,9 +90,20 @@ class Image {
     const BasicObject &operator*() {
       return *operator->();
     }
+    */
+
+    ObjectId GetId() const {
+      return *it_;
+    }
+
+    const BasicObject &GetShape() {
+      return *image_->objects_.at(*it_);
+    }
+
     bool operator!=(const ShapeIterator &other) const {
       return image_ != other.image_ || it_ != other.it_;
     }
+
    private:
     Image *image_;
     std::list<ObjectId>::const_iterator it_;
