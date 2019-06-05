@@ -218,7 +218,42 @@ namespace SieciowyInkScape
 
                                 usernameLength = SocketReceiveUInt32();
                                 username = SocketReceiveString(usernameLength);
-                                //   username = SocketReceiveString(6);
+
+                                mainForm.Invoke(new Action(() =>
+                                {
+                                    ServerMessageInboundEventArgs args = new ServerMessageInboundEventArgs(username + " odłączył się.");
+                                    ServerMessageInbound(this, args);
+                                }
+                                ));
+                            }
+                        }
+                        else if (messageType.Equals("USER"))
+                        {
+                            string USER_type;
+                            USER_type = SocketReceiveString(4);
+
+                            if (USER_type == "Ulin")
+                            {
+                                UInt32 usernameLength;
+                                string username;
+
+                                usernameLength = SocketReceiveUInt32();
+                                username = SocketReceiveString(usernameLength);
+
+                                mainForm.Invoke(new Action(() =>
+                                {
+                                    ServerMessageInboundEventArgs args = new ServerMessageInboundEventArgs(username + " połączył się.");
+                                    ServerMessageInbound(this, args);
+                                }
+                                ));
+                            }
+                            else if (USER_type == "Ulof")
+                            {
+                                UInt32 usernameLength;
+                                string username;
+
+                                 usernameLength = SocketReceiveUInt32();
+                                 username = SocketReceiveString(usernameLength);
 
                                 mainForm.Invoke(new Action(() =>
                                 {

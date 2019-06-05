@@ -21,8 +21,8 @@ class NewObj : public OutMessage {
   using ObjectId = ImageTypes::ObjectId;
 
   NewObj() {}
-  NewObj(const Username &un, ObjectId id, std::unique_ptr<BasicObject> &&obj)
-      : OutMessage(), username_(un), id_(id), shape_copy_(std::move(obj)) {}
+  NewObj(const Username &un, ObjectId id, const std::string &str)
+      : OutMessage(), username_(un), id_(id), shape_code_(str) {}
 
   virtual ~NewObj();
 
@@ -32,13 +32,14 @@ class NewObj : public OutMessage {
 
   Username GetUsername() const {return username_;}
   constexpr ObjectId Id() const {return id_;}
-  const BasicObject *Shape() const {return &*shape_copy_;}
+  const std::string &Code() const {return shape_code_;}
 
   virtual int AddToBuf(WriteBuf *buf);
  private:
   Username username_;
   ObjectId id_;
-  std::unique_ptr<BasicObject> shape_copy_;
+  std::string shape_code_;
+  // std::unique_ptr<BasicObject> shape_copy_;
 };  // class MouseMoved
 }  // namespace tin
 

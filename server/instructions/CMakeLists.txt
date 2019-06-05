@@ -9,4 +9,8 @@ set(SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/move_mouse.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/create_shape.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/create_shape.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/req_ls_shapes.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/req_ls_shapes.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/req_ls_users.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/req_ls_users.h"
 )

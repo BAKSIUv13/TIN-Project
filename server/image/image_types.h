@@ -13,8 +13,15 @@ inline namespace ImageTypes {
 
   using Dist = double;
   using Vec2 = glm::vec<2, Dist>;
+  using Vec3 = glm::vec<3, Dist>;
   using Transform = glm::mat<3, 3, Dist>;
   using Color = glm::vec<4, uint8_t>;
+
+  enum ImageErr : ObjectId {
+    IMG_ERR_MAX_COUNT = -1,
+    IMG_ERR_MAX_ID = -2,
+    IMG_ERR_OTHER = -3,
+  };
 }
 
 }  // namespace tin

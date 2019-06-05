@@ -34,7 +34,6 @@ class Server {
   static constexpr int MAX_PW_LEN = 32;
 
   static const std::map<InstrId, InstrSupp> instructions;
-  
 
   Server();
   Server(const Server &) = delete;
@@ -67,9 +66,53 @@ class Server {
   int LogOutUser(SockId, bool generate_response);
 
   template <typename T, typename... Args>
-  int PushMsg(Args &&... args) {
-    return PushMsg_
-      (std::unique_ptr<OutMessage>(new T(std::forward<Args>(args)...)));
+  T *PushMsg(Args &&... args) {
+    T *x = new T(std::forward<Args>(args)...);
+    std::unique_ptr<OutMessage> u(std::move(x));
+    try {
+      messages_to_send_.emplace_back(std::move(u));
+    } catch (std::bad_alloc &e) {
+      return nullptr;
+    }
+    return x;
+  }
+
+
+  class UserIterator {
+   public:
+    UserIterator() : server_(nullptr) {}
+    UserIterator &operator++() {
+      ++it_;
+      return *this;
+    }
+    const Username *operator->() {
+      return server_ ?
+        &it_->first : nullptr;
+    }
+    const Username &operator*() {
+      return *operator->();
+    }
+    bool operator!=(const UserIterator &other) const {
+      return server_ != other.server_ || it_ != other.it_;
+    }
+   private:
+    Server *server_;
+    std::map<Username, LoggedUser>::const_iterator it_;
+    friend class Server;
+  };
+
+  UserIterator usercbegin() {
+    UserIterator it;
+    it.server_ = this;
+    it.it_ = users_.cbegin();
+    return it;
+  }
+
+  UserIterator usercend() {
+    UserIterator it;
+    it.server_ = this;
+    it.it_ = users_.cend();
+    return it;
   }
 
  private:

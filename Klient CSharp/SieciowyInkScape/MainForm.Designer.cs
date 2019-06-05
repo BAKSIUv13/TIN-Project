@@ -75,6 +75,7 @@
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.elipseButton = new System.Windows.Forms.Button();
             this.rectangleButton = new System.Windows.Forms.Button();
+
             this.chatPanel.SuspendLayout();
             this.groupBox5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ThicknessBar)).BeginInit();
@@ -643,6 +644,7 @@
         private System.Windows.Forms.Button rectangleButton;
         private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.Button penButton;
+
     }
 }
 

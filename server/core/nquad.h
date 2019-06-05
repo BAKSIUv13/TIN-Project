@@ -21,9 +21,11 @@ struct NQuad {
   constexpr explicit NQuad(const char tab[4])
     : raw_uint {
       #if __BYTE_ORDER == __LITTLE_ENDIAN
-        (((((
-          ((uint32_t)0 | tab[3]) << 8)
-            | tab[2]) << 8) | tab[1]) << 8) | tab[0]
+        (uint32_t)0
+        | ((uint8_t)tab[0] << 0)
+        | ((uint8_t)tab[1] << 8)
+        | ((uint8_t)tab[2] << 16)
+        | ((uint8_t)tab[3] << 24)
       #elif __BYTE_ORDER == __BIG_ENDIAN
         (((((
           ((uint32_t)0 | tab[0]) << 8)
@@ -84,6 +86,16 @@ struct NQuad {
   operator std::string() const {
     std::string s;
     this->AppendToCppString(&s);
+    return s;
+  }
+
+  std::string GetHexStr() {
+    std::string s;
+    char c[3];
+    for (size_t i = 0; i < 4; ++i) {
+      snprintf(c, sizeof(c), "%02x", operator[](i));
+      s.append(c, 2);
+    }
     return s;
   }
 

@@ -305,6 +305,7 @@ namespace SieciowyInkScape
 
                 case DrawingAreaState.DrawingObject.ObjectType.RECTANGLE:
                     DrawingAreaState.RectangleObject rect = (DrawingAreaState.RectangleObject)obj;
+
                     if(rect.BGColor.A > 0)
                     {
                         /*gr.FillRectangle(new SolidBrush(rect.BGColor),
@@ -420,7 +421,6 @@ namespace SieciowyInkScape
                         (float)(e.Y) / (float)drawingArea.areaSize.Y,
                         new List<float>(),
                         new List<float>(), drawingArea.thickness, drawingArea.ForegroundColor);
-
                         break;
 
                     case DrawingAreaState.Tools.RECTANGLE:
@@ -430,6 +430,7 @@ namespace SieciowyInkScape
                         (float)0,
                         (float)0, drawingArea.thickness, drawingArea.ForegroundColor, drawingArea.BackgroundColor);
                         break;
+
 
                     case DrawingAreaState.Tools.OVAL:
                         drawingArea.tempObject = new DrawingAreaState.OvalObject(-1,
@@ -730,6 +731,5 @@ namespace SieciowyInkScape
             drawingArea.selectedTool = DrawingAreaState.Tools.PENCIL;
             drawingArea.Exit();
         }
-
     }
 }

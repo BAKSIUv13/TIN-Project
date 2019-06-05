@@ -33,24 +33,23 @@ class World {
     }
     auto obj = image_.NewObject<T>();
     // TO DO usunąć stare zaznaczenie!!!
-    artists_.at(un).Grab(obj.first);
-    grabs_.emplace(obj.first, un);
-    return std::make_pair(obj.first, &obj.second);
+    // artists_.at(un).Grab(obj.first);
+    // grabs_.emplace(obj.first, un);
+    return obj;
   }
 
   int RemoveObject(ObjectId);
-/*
-  template <typename T>
-  T *GetObject(ObjectId id) {
-    if (decltype(int) == decltype(int)) {
-      return nullptr;
-    }
-  }
-
-*/
 
   BasicObject *GetObject(ObjectId id) {
     return image_.GetObject(id);
+  }
+
+  void ClearImage() {
+    return image_.Clear();
+  }
+
+  std::array<Image::ShapeIterator, 2> GetShapeIterators() {
+    return std::array<Image::ShapeIterator, 2>{image_.cbegin(), image_.cend()};
   }
 
  private:
@@ -61,7 +60,7 @@ class World {
   std::list<ChatMsg> chat_msgs_;
   decltype(chat_msgs_)::iterator next_msg_;  // to send
 
-  std::map<ObjectId, Username> grabs_;
+  // std::map<ObjectId, Username> grabs_;
 };  // class World
 }  // namespace tin
 
