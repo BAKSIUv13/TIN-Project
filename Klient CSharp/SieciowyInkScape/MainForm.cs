@@ -16,7 +16,10 @@ namespace SieciowyInkScape
 {
     public partial class MainForm : Form
     {
-
+        DateTime mousePositionLastSentTime = new DateTime(0);
+        int mousePositionSendInterval_ms = 100;
+        DateTime pencilLastSentTime = new DateTime(0);
+        int pencilSendInterval_ms = 33;
 
         Client client;
 
@@ -39,6 +42,7 @@ namespace SieciowyInkScape
             client.LoginFailed += OnLoginFailed;
             client.LogoutCompleted += OnLogout;
             client.LogicErrorHappened += OnLogicError;
+            client.UserListInbound += OnUserListInbound;
             Show();
         }
 
@@ -63,9 +67,11 @@ namespace SieciowyInkScape
             Show();
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
             SetDoubleBuffered(drawing);
+
             client.clientMachine.drawingArea.areaSize.X = drawing.Size.Width;
             client.clientMachine.drawingArea.areaSize.Y = drawing.Size.Height;
 
+            drawing.Cursor = new Cursor(new System.IO.MemoryStream(Properties.Resources.mspaint_pencil_8bit));
         }
 
         void OnLogout(object sender, EventArgs e)
@@ -211,6 +217,16 @@ namespace SieciowyInkScape
         {
             ChatBoxWriteLine("> SERWER: " + e.message);
         }
+        void OnUserListInbound(object sender, Client.UserListInboundEventArgs e)
+        {
+            string output = "";
+            for(int x = 0; x < e.userList.Count; ++x)
+            {
+                output += e.userList[x] + "\n";
+            }
+
+            UserListWrite(output);
+        }
 
         void ChatBoxWriteLine(string text)
         {
@@ -218,6 +234,14 @@ namespace SieciowyInkScape
             {
                 //chatBox.Text += text + Environment.NewLine;
                 chatBox.AppendText(text + Environment.NewLine);
+            }));
+        }
+
+        void UserListWrite(string text)
+        {
+            chatBox.Invoke(new System.Windows.Forms.MethodInvoker(delegate ()
+            {
+                userListBox.Text = text;
             }));
         }
 
@@ -240,7 +264,7 @@ namespace SieciowyInkScape
                         {
                             for (int x = 0; x < cat.Width; x += 3)
                             {
-                                client.clientMachine.SendRectangle(new DrawingAreaState.RectangleObject(
+                                client.clientMachine.SendRectangle(new DrawingAreaState.RectangleObject(-1,
                                     (float)x / 600.0f + 0.300f,
                                     (float)y / 520.0f + 0.125f,
                                     4.0f / 600.0f,
@@ -262,22 +286,54 @@ namespace SieciowyInkScape
         {
             switch(obj.objectType)
             {
-                case DrawingAreaState.DrawingObject.ObjectType.LINE:
-                    DrawingAreaState.LineObject line = (DrawingAreaState.LineObject)obj;
-                    gr.DrawLine(new Pen(new SolidBrush(line.color), line.thickness),
-                        line.xpos * state.areaSize.X, line.ypos * state.areaSize.Y,
-                        line.xpos2 * state.areaSize.X, line.ypos2 * state.areaSize.Y);
+                case DrawingAreaState.DrawingObject.ObjectType.PATH:
+                    DrawingAreaState.PathObject path = (DrawingAreaState.PathObject)obj;
+
+                    List<PointF> points = new List<PointF>();
+                    List<byte> pointsType = new List<byte>();
+
+                    points.Add(new PointF(path.xpos * state.areaSize.X, path.ypos * state.areaSize.Y));
+                    pointsType.Add((byte)System.Drawing.Drawing2D.PathPointType.Start);
+
+                    for (int i = 0; i < path.anotherXposs.Count(); ++i)
+                    {
+                        points.Add(new PointF(path.anotherXposs[i] * state.areaSize.X, path.anotherYposs[i] * state.areaSize.Y));
+                        pointsType.Add((byte)System.Drawing.Drawing2D.PathPointType.Line);
+                    }
+
+                    gr.DrawPath(new Pen(new SolidBrush(path.color), path.thickness * (float)state.areaSize.X), new System.Drawing.Drawing2D.GraphicsPath(points.ToArray(), pointsType.ToArray()));
+
                     break;
+
                 case DrawingAreaState.DrawingObject.ObjectType.RECTANGLE:
                     DrawingAreaState.RectangleObject rect = (DrawingAreaState.RectangleObject)obj;
-                    gr.FillRectangle(new SolidBrush(rect.BGColor),
-                    (rect.xpos + rect.thickness / 2.0f) * state.areaSize.X, (rect.ypos + rect.thickness / 2.0f) * state.areaSize.Y,
-                    (rect.width - rect.thickness) * state.areaSize.X, (rect.height - rect.thickness) * state.areaSize.Y);
+
+                    if(rect.BGColor.A > 0)
+                    {
+                        /*gr.FillRectangle(new SolidBrush(rect.BGColor),
+                            (rect.xpos + rect.thickness / 2.0f) * state.areaSize.X, (rect.ypos + rect.thickness / 2.0f) * state.areaSize.Y,
+                            (rect.width - rect.thickness) * state.areaSize.X, (rect.height - rect.thickness) * state.areaSize.Y); */
+
+                        gr.FillRectangle(new SolidBrush(rect.BGColor),
+                            (rect.xpos) * state.areaSize.X, (rect.ypos) * state.areaSize.Y,
+                            (rect.width) * state.areaSize.X, (rect.height) * state.areaSize.Y);
+                    }
                     gr.DrawRectangle(new Pen(new SolidBrush(rect.color), (float)(rect.thickness * (double)state.areaSize.X)),
                         rect.xpos * state.areaSize.X, rect.ypos * state.areaSize.Y,
                         rect.width * state.areaSize.X, rect.height * state.areaSize.Y);
-                    
+                    break;
 
+                case DrawingAreaState.DrawingObject.ObjectType.OVAL:
+                    DrawingAreaState.OvalObject oval = (DrawingAreaState.OvalObject)obj;
+                    if (oval.BGColor.A > 0)
+                    {
+                        gr.FillEllipse(new SolidBrush(oval.BGColor),
+                            (oval.xpos) * state.areaSize.X, (oval.ypos) * state.areaSize.Y,
+                            (oval.width) * state.areaSize.X, (oval.height) * state.areaSize.Y);
+                    }
+                    gr.DrawEllipse(new Pen(new SolidBrush(oval.color), (float)(oval.thickness * (double)state.areaSize.X)),
+                        oval.xpos * state.areaSize.X, oval.ypos * state.areaSize.Y,
+                        oval.width * state.areaSize.X, oval.height * state.areaSize.Y);
                     break;
             }
         }
@@ -354,26 +410,43 @@ namespace SieciowyInkScape
                 switch (drawingArea.selectedTool)
                 {
                     case DrawingAreaState.Tools.LINE:
-                        drawingArea.tempObject = new DrawingAreaState.LineObject(
+                        drawingArea.tempObject = new DrawingAreaState.PathObject(-1,
                         (float)(e.X) / (float)drawingArea.areaSize.X,
                         (float)(e.Y) / (float)drawingArea.areaSize.Y,
-                        (float)(e.X) / (float)drawingArea.areaSize.X,
-                        (float)(e.Y) / (float)drawingArea.areaSize.Y, 1, Color.Black);
+                        new List<float>(),
+                        new List<float>(), drawingArea.thickness, drawingArea.ForegroundColor);
                         break;
+
+                    case DrawingAreaState.Tools.PENCIL:
+                        drawingArea.tempObject = new DrawingAreaState.PathObject(-1,
+                        (float)(e.X) / (float)drawingArea.areaSize.X,
+                        (float)(e.Y) / (float)drawingArea.areaSize.Y,
+                        new List<float>(),
+                        new List<float>(), drawingArea.thickness, drawingArea.ForegroundColor);
+                        break;
+
                     case DrawingAreaState.Tools.RECTANGLE:
-                        drawingArea.tempObject = new DrawingAreaState.RectangleObject(
+                        drawingArea.tempObject = new DrawingAreaState.RectangleObject(-1,
                         (float)(e.X) / (float)drawingArea.areaSize.X,
                         (float)(e.Y) / (float)drawingArea.areaSize.Y,
                         (float)0,
                         (float)0, drawingArea.thickness, drawingArea.ForegroundColor, drawingArea.BackgroundColor);
-                        DrawingAreaState.RectangleObject temp = (DrawingAreaState.RectangleObject)drawingArea.tempObject;
+                        break;
 
+
+                    case DrawingAreaState.Tools.OVAL:
+                        drawingArea.tempObject = new DrawingAreaState.OvalObject(-1,
+                        (float)(e.X) / (float)drawingArea.areaSize.X,
+                        (float)(e.Y) / (float)drawingArea.areaSize.Y,
+                        (float)0,
+                        (float)0, drawingArea.thickness, drawingArea.ForegroundColor, drawingArea.BackgroundColor);
                         break;
                 }
             }
             drawingArea.Exit();
 
             drawing.Refresh();
+          //  RefreshTimer.Interval = 33;
         }
 
         private void drawing_MouseMove(object sender, MouseEventArgs e)
@@ -384,6 +457,18 @@ namespace SieciowyInkScape
             drawingArea.mousePosition.X = (float)e.Location.X / (float)drawingArea.areaSize.X;
             drawingArea.mousePosition.Y = (float)e.Location.Y / (float)drawingArea.areaSize.Y;
 
+            if(client.loggedIn)
+            {
+                if (mousePositionLastSentTime + new TimeSpan(0, 0, 0, 0, mousePositionSendInterval_ms) < DateTime.Now)
+                {
+                    mousePositionLastSentTime = DateTime.Now;
+
+                    client.clientMachine.SendMousePosition(drawingArea.mousePosition);
+                }
+            }
+            
+
+            DrawingAreaState.State drawingAreaState = drawingArea.state;
             if (drawingArea.state == DrawingAreaState.State.DRAWING)
             {
                 drawingArea.mousepos_now = new Point(e.X, e.Y);
@@ -391,25 +476,49 @@ namespace SieciowyInkScape
                 Point mn = drawingArea.mousepos_now;
 
                 DrawingAreaState.DrawingObject obj = drawingArea.tempObject;
-                switch (obj.objectType)
+                switch (drawingArea.selectedTool)
                 {
-                    case DrawingAreaState.DrawingObject.ObjectType.LINE:
-                        DrawingAreaState.LineObject line = (DrawingAreaState.LineObject)obj;
-                        line.xpos2 = (float)(mn.X) / (float)drawingArea.areaSize.X;
-                        line.ypos2 = (float)(mn.Y) / (float)drawingArea.areaSize.Y;
+                    case DrawingAreaState.Tools.LINE:
+                        DrawingAreaState.PathObject line = (DrawingAreaState.PathObject)obj;
+                        line.anotherXposs.Clear();
+                        line.anotherYposs.Clear();
+                        line.anotherXposs.Add((float)(mn.X) / (float)drawingArea.areaSize.X);
+                        line.anotherYposs.Add((float)(mn.Y) / (float)drawingArea.areaSize.Y);
+                        break;
+
+                    case DrawingAreaState.Tools.PENCIL:
+                        if (pencilLastSentTime + new TimeSpan(0, 0, 0, 0, pencilSendInterval_ms) < DateTime.Now)
+                        {
+                            pencilLastSentTime = DateTime.Now;
+
+                            DrawingAreaState.PathObject path = (DrawingAreaState.PathObject)obj;
+                            path.anotherXposs.Add((float)(mn.X) / (float)drawingArea.areaSize.X);
+                            path.anotherYposs.Add((float)(mn.Y) / (float)drawingArea.areaSize.Y);
+                        }
+
 
                         break;
-                    case DrawingAreaState.DrawingObject.ObjectType.RECTANGLE:
+
+                    case DrawingAreaState.Tools.RECTANGLE:
                         DrawingAreaState.RectangleObject rect = (DrawingAreaState.RectangleObject)obj;
                         rect.xpos = (mn.X - ms.X) > 0 ? ((float)ms.X / (float)drawingArea.areaSize.X) : ((float)mn.X / (float)drawingArea.areaSize.X);
                         rect.ypos = (mn.Y - ms.Y) > 0 ? ((float)ms.Y / (float)drawingArea.areaSize.Y) : ((float)mn.Y / (float)drawingArea.areaSize.Y);
                         rect.width = (mn.X - ms.X) > 0 ? ((float)(mn.X - ms.X) / (float)drawingArea.areaSize.X) : ((float)(ms.X - mn.X) / (float)drawingArea.areaSize.X);
                         rect.height = (mn.Y - ms.Y) > 0 ? ((float)(mn.Y - ms.Y) / (float)drawingArea.areaSize.Y) : ((float)(ms.Y - mn.Y) / (float)drawingArea.areaSize.Y);
                         break;
+
+                    case DrawingAreaState.Tools.OVAL:
+                        DrawingAreaState.OvalObject oval = (DrawingAreaState.OvalObject)obj;
+                        oval.xpos = (mn.X - ms.X) > 0 ? ((float)ms.X / (float)drawingArea.areaSize.X) : ((float)mn.X / (float)drawingArea.areaSize.X);
+                        oval.ypos = (mn.Y - ms.Y) > 0 ? ((float)ms.Y / (float)drawingArea.areaSize.Y) : ((float)mn.Y / (float)drawingArea.areaSize.Y);
+                        oval.width = (mn.X - ms.X) > 0 ? ((float)(mn.X - ms.X) / (float)drawingArea.areaSize.X) : ((float)(ms.X - mn.X) / (float)drawingArea.areaSize.X);
+                        oval.height = (mn.Y - ms.Y) > 0 ? ((float)(mn.Y - ms.Y) / (float)drawingArea.areaSize.Y) : ((float)(ms.Y - mn.Y) / (float)drawingArea.areaSize.Y);
+                        break;
                 }
-               
             }
             drawingArea.Exit();
+
+            if (drawingAreaState == DrawingAreaState.State.DRAWING || drawingAreaState == DrawingAreaState.State.EDITING) drawing.Refresh();
 
             /*
             drawingArea.Access();
@@ -417,8 +526,8 @@ namespace SieciowyInkScape
             drawingArea.Exit();
             */
 
-
-            drawing.Refresh();
+            Application.DoEvents();
+            // drawing.Refresh();
         }
 
         private void drawing_MouseUp(object sender, MouseEventArgs e)
@@ -434,13 +543,28 @@ namespace SieciowyInkScape
                 {
                     drawingArea.FinalizeObject(this, drawingArea.tempObject);
 
-                    if (obj is DrawingAreaState.RectangleObject)
+                    switch (drawingArea.selectedTool)
                     {
-                        client.clientMachine.SendRectangle((DrawingAreaState.RectangleObject)obj);
-                    }
-                    else if (obj is DrawingAreaState.LineObject)
-                    {
-                        client.clientMachine.SendLine((DrawingAreaState.LineObject)obj);
+                        case DrawingAreaState.Tools.RECTANGLE:
+                            client.clientMachine.SendRectangle((DrawingAreaState.RectangleObject)obj);
+                            break;
+                        case DrawingAreaState.Tools.OVAL:
+                            client.clientMachine.SendOval((DrawingAreaState.OvalObject)obj);
+                            break;
+                        case DrawingAreaState.Tools.PENCIL:
+                            // add one more point to end
+                            Point ms = drawingArea.mousepos_start;
+                            Point mn = drawingArea.mousepos_now;
+
+                            DrawingAreaState.PathObject path = (DrawingAreaState.PathObject)obj;
+                            path.anotherXposs.Add((float)(mn.X) / (float)drawingArea.areaSize.X);
+                            path.anotherYposs.Add((float)(mn.Y) / (float)drawingArea.areaSize.Y);
+
+                            client.clientMachine.SendPath((DrawingAreaState.PathObject)obj);
+                            break;
+                        case DrawingAreaState.Tools.LINE:
+                            client.clientMachine.SendPath((DrawingAreaState.PathObject)obj);
+                            break;
                     }
                 }
 
@@ -453,33 +577,12 @@ namespace SieciowyInkScape
 
 
             drawing.Refresh();
+           // RefreshTimer.Interval = 100;
         }
 
         private void RefreshTimer_Tick(object sender, EventArgs e)
         {
-            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
-
-
-            if (!(drawingArea is null))
-            {
-                if(client.loggedIn)
-                {
-                    PointF mousePosition;
-
-                    drawingArea.Access();
-                    mousePosition = new PointF(drawingArea.mousePosition.X, drawingArea.mousePosition.Y);
-                    drawingArea.CheckPendingMousePositions();
-                    drawingArea.Exit();
-
-                    client.clientMachine.SendMousePosition(mousePosition);
-                }
-
-                drawingArea.Access();
-                drawingArea.CheckPendingObjects();
-                drawingArea.Exit();
-            }
-
-
+           
 
             drawing.Refresh();
         }
@@ -497,6 +600,8 @@ namespace SieciowyInkScape
             drawingArea.Access();
             drawingArea.selectedTool = DrawingAreaState.Tools.RECTANGLE;
             drawingArea.Exit();
+
+            drawing.Cursor = new Cursor(new System.IO.MemoryStream(Properties.Resources.cross));
         }
 
         private void lineButton_Click(object sender, EventArgs e)
@@ -506,6 +611,8 @@ namespace SieciowyInkScape
             drawingArea.Access();
             drawingArea.selectedTool = DrawingAreaState.Tools.LINE;
             drawingArea.Exit();
+
+            drawing.Cursor = new Cursor(new System.IO.MemoryStream(Properties.Resources.cross));
         }
 
         private void buttonDisconnect_Click(object sender, EventArgs e)
@@ -611,6 +718,33 @@ namespace SieciowyInkScape
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
            if(client.connected) client.Disconnect();
+        }
+
+        private void elipseButton_Click(object sender, EventArgs e)
+        {
+            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+
+            drawingArea.Access();
+            drawingArea.selectedTool = DrawingAreaState.Tools.OVAL;
+            drawingArea.Exit();
+
+            drawing.Cursor = new Cursor(new System.IO.MemoryStream(Properties.Resources.cross));
+        }
+
+        private void penButton_Click(object sender, EventArgs e)
+        {
+            DrawingAreaState drawingArea = client.clientMachine.drawingArea;
+
+            drawingArea.Access();
+            drawingArea.selectedTool = DrawingAreaState.Tools.PENCIL;
+            drawingArea.Exit();
+
+            drawing.Cursor = new Cursor(new System.IO.MemoryStream(Properties.Resources.mspaint_pencil_8bit));
+        }
+
+        private void groupBox2_Enter(object sender, EventArgs e)
+        {
+
         }
     }
 }

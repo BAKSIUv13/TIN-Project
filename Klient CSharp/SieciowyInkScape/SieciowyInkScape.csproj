@@ -103,5 +103,14 @@
   <ItemGroup>
     <None Include="VORBIS\CAT.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CURSORS\mspaint_pencil.cur" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CURSORS\mspaint_pencil_8bit.cur" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CURSORS\cross.cur" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

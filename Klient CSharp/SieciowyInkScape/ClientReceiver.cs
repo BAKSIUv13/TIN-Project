@@ -10,6 +10,85 @@ namespace SieciowyInkScape
 {
     partial class Client
     {
+        void ReadShape(int IDToAppend)
+        {
+            string objectType = SocketReceiveString(4);
+
+            if (objectType == "rect")
+            {
+                byte B_R = SocketReceiveByte();
+                byte B_G = SocketReceiveByte();
+                byte B_B = SocketReceiveByte();
+                byte B_A = SocketReceiveByte();
+                byte F_R = SocketReceiveByte();
+                byte F_G = SocketReceiveByte();
+                byte F_B = SocketReceiveByte();
+                byte F_A = SocketReceiveByte();
+
+                double thickness = SocketReceiveDouble();
+
+                double xpos = SocketReceiveDouble();
+                double ypos = SocketReceiveDouble();
+                double width = SocketReceiveDouble();
+                double height = SocketReceiveDouble();
+
+                clientMachine.drawingArea.Access();
+                clientMachine.drawingArea.objects.Add(new DrawingAreaState.RectangleObject(IDToAppend, (float)xpos, (float)ypos, (float)(width), (float)(height), (float)thickness, System.Drawing.Color.FromArgb(F_A, F_R, F_G, F_B), System.Drawing.Color.FromArgb(B_A, B_R, B_G, B_B)));
+                clientMachine.drawingArea.Exit();
+            }
+            else if (objectType == "oval")
+            {
+                byte B_R = SocketReceiveByte();
+                byte B_G = SocketReceiveByte();
+                byte B_B = SocketReceiveByte();
+                byte B_A = SocketReceiveByte();
+                byte F_R = SocketReceiveByte();
+                byte F_G = SocketReceiveByte();
+                byte F_B = SocketReceiveByte();
+                byte F_A = SocketReceiveByte();
+
+                double thickness = SocketReceiveDouble();
+
+                double xpos = SocketReceiveDouble();
+                double ypos = SocketReceiveDouble();
+                double width = SocketReceiveDouble();
+                double height = SocketReceiveDouble();
+
+                clientMachine.drawingArea.Access();
+                clientMachine.drawingArea.objects.Add(new DrawingAreaState.OvalObject(IDToAppend, (float)xpos, (float)ypos, (float)(width), (float)(height), (float)thickness, System.Drawing.Color.FromArgb(F_A, F_R, F_G, F_B), System.Drawing.Color.FromArgb(B_A, B_R, B_G, B_B)));
+                clientMachine.drawingArea.Exit();
+            }
+            else if (objectType == "path")
+            {
+                byte R = SocketReceiveByte();
+                byte G = SocketReceiveByte();
+                byte B = SocketReceiveByte();
+                byte A = SocketReceiveByte();
+
+                double thickness = SocketReceiveDouble();
+
+                UInt32 pointCount;
+                pointCount = SocketReceiveUInt32();
+
+                double xpos = SocketReceiveDouble();
+                double ypos = SocketReceiveDouble();
+                pointCount--;
+
+                List<float> anotherXposs = new List<float>();
+                List<float> anotherYposs = new List<float>();
+
+                while (pointCount-- > 0)
+                {
+                    anotherXposs.Add((float)SocketReceiveDouble());
+                    anotherYposs.Add((float)SocketReceiveDouble());
+                }
+                
+
+                clientMachine.drawingArea.Access();
+                clientMachine.drawingArea.objects.Add(new DrawingAreaState.PathObject(IDToAppend, (float)xpos, (float)ypos, anotherXposs, anotherYposs, (float)thickness, System.Drawing.Color.FromArgb(A, R, G, B)));
+                clientMachine.drawingArea.Exit();
+            }
+        }
         void SocketReceiverThread()
         {
             try
@@ -41,6 +120,31 @@ namespace SieciowyInkScape
                             }
                             ));
                         }
+                        else if (messageType.Equals("LSUS"))
+                        {
+                            List<string> userList = new List<string>();
+
+                            UInt32 userCount;
+                            userCount = SocketReceiveUInt32();
+
+                            while (userCount-- > 0)
+                            {
+                                UInt32 usernameLength;
+                                string username;
+
+                                usernameLength = SocketReceiveUInt32();
+                                username = SocketReceiveString(usernameLength);
+
+                                userList.Add(username);
+                            }
+
+                            mainForm.Invoke(new Action(() =>
+                            {
+                                UserListInboundEventArgs args = new UserListInboundEventArgs(userList);
+                                UserListInbound(this, args);
+                            }
+                            ));
+                        }
                         else if (messageType.Equals("MAUS"))
                         {
                             double xpos = SocketReceiveDouble();
@@ -52,13 +156,26 @@ namespace SieciowyInkScape
                             clientMachine.drawingArea.mousePositions[username] = new DrawingAreaState.MousePosition((float)xpos, (float)ypos, username, DateTime.Now);
                             clientMachine.drawingArea.Exit();
                         }
+                        else if (messageType.Equals("LSSH"))
+                        {
+                            UInt32 shapeCount;
+                            shapeCount = SocketReceiveUInt32();
+
+                            while (shapeCount-- > 0)
+                            {
+                                int ID = SocketReceiveInt32();
+
+                                ReadShape(ID);
+                            }
+
+                        }
                         else if (messageType.Equals("NEWW"))
                         {
                             int ID = SocketReceiveInt32();
                             UInt32 usernameLength = SocketReceiveUInt32();
                             string username = SocketReceiveString(usernameLength);
 
-                            if(username == loggedUsername)
+                            if (username == loggedUsername)
                             {
                                 clientMachine.drawingArea.Access();
                                 if (clientMachine.drawingArea.pendingObjects.Count > 0)
@@ -66,44 +183,48 @@ namespace SieciowyInkScape
                                 clientMachine.drawingArea.Exit();
                             }
 
-                            string objectType = SocketReceiveString(4);
+                            ReadShape(ID);
+                        }
+                        else if (messageType.Equals("CLRR"))
+                        {
+                            clientMachine.drawingArea.Access();
+                            clientMachine.drawingArea.objects.Clear();
+                            clientMachine.drawingArea.Exit();
+                        }
+                        else if (messageType.Equals("USER"))
+                        {
+                            string USER_type;
+                            USER_type = SocketReceiveString(4);
 
-                            if(objectType == "rect")
+                            if (USER_type == "Ulin")
                             {
-                                byte B_R = SocketReceiveByte();
-                                byte B_G = SocketReceiveByte();
-                                byte B_B = SocketReceiveByte();
-                                byte B_A = SocketReceiveByte();
-                                byte F_R = SocketReceiveByte();
-                                byte F_G = SocketReceiveByte();
-                                byte F_B = SocketReceiveByte();
-                                byte F_A = SocketReceiveByte();
+                                UInt32 usernameLength;
+                                string username;
 
-                                //F_A = 255;
-                                double thickness = SocketReceiveDouble();
-
-                                double xpos = SocketReceiveDouble();
-                                double ypos = SocketReceiveDouble();
-                                double width = SocketReceiveDouble();
-                                double height = SocketReceiveDouble();
-
-                                clientMachine.drawingArea.Access();
-                                clientMachine.drawingArea.objects.Add(new DrawingAreaState.RectangleObject((float)xpos, (float)ypos, (float)(width), (float)(height), (float)thickness, System.Drawing.Color.FromArgb(F_A, F_R, F_G, F_B), System.Drawing.Color.FromArgb(B_A, B_R, B_G, B_B)));
-                                clientMachine.drawingArea.Exit();
+                                usernameLength = SocketReceiveUInt32();
+                                username = SocketReceiveString(usernameLength);
+                                //  username = SocketReceiveString(6);
+                                mainForm.Invoke(new Action(() =>
+                                {
+                                    ServerMessageInboundEventArgs args = new ServerMessageInboundEventArgs(username + " połączył się.");
+                                    ServerMessageInbound(this, args);
+                                }
+                                ));
                             }
-                            else if (objectType == "line")
+                            else if (USER_type == "Ulof")
                             {
-                                byte R = SocketReceiveByte();
-                                byte G = SocketReceiveByte();
-                                byte B = SocketReceiveByte();
-                                double xpos = SocketReceiveDouble();
-                                double ypos = SocketReceiveDouble();
-                                double xpos2 = SocketReceiveDouble();
-                                double ypos2 = SocketReceiveDouble();
+                                UInt32 usernameLength;
+                                string username;
 
-                                clientMachine.drawingArea.Access();
-                                clientMachine.drawingArea.objects.Add(new DrawingAreaState.LineObject((float)xpos, (float)ypos, (float)(xpos2), (float)(ypos2), 1, System.Drawing.Color.FromArgb(255, R, G, B)));
-                                clientMachine.drawingArea.Exit();
+                                usernameLength = SocketReceiveUInt32();
+                                username = SocketReceiveString(usernameLength);
+
+                                mainForm.Invoke(new Action(() =>
+                                {
+                                    ServerMessageInboundEventArgs args = new ServerMessageInboundEventArgs(username + " odłączył się.");
+                                    ServerMessageInbound(this, args);
+                                }
+                                ));
                             }
                         }
                         else if (messageType.Equals("USER"))
@@ -118,7 +239,7 @@ namespace SieciowyInkScape
 
                                 usernameLength = SocketReceiveUInt32();
                                 username = SocketReceiveString(usernameLength);
-                              //  username = SocketReceiveString(6);
+
                                 mainForm.Invoke(new Action(() =>
                                 {
                                     ServerMessageInboundEventArgs args = new ServerMessageInboundEventArgs(username + " połączył się.");
@@ -133,7 +254,6 @@ namespace SieciowyInkScape
 
                                  usernameLength = SocketReceiveUInt32();
                                  username = SocketReceiveString(usernameLength);
-                             //   username = SocketReceiveString(6);
 
                                 mainForm.Invoke(new Action(() =>
                                 {
@@ -143,7 +263,7 @@ namespace SieciowyInkScape
                                 ));
                             }
 
-                           
+                            clientMachine.SendUserListRequest();
                         }
 
 
@@ -151,6 +271,12 @@ namespace SieciowyInkScape
                         {
                             loggedUsername = clientMachine.UsedNick;
                             loggedIn = true;
+
+                            clientMachine.drawingArea.Access();
+                            clientMachine.drawingArea.objects.Clear();
+                            clientMachine.drawingArea.Exit();
+
+                            clientMachine.SendShapeListRequest();
 
                             mainForm.Invoke(new Action(() =>
                             {
@@ -217,13 +343,22 @@ namespace SieciowyInkScape
             }
             catch (SocketException sEx)
             {
-                mainForm.Invoke(new Action(() =>
+                try
                 {
-                    ConnectionFailedEventArgs arg = new ConnectionFailedEventArgs(sEx);
-                    ConnectionFailed(this, arg);
+                    // dirty fix :C
+                    mainForm.Invoke(new Action(() =>
+                    {
+                        ConnectionFailedEventArgs arg = new ConnectionFailedEventArgs(sEx);
+                        ConnectionFailed(this, arg);
+                    }
+                    ));
+                    Disconnect();
                 }
-                ));
-                Disconnect();
+                catch(System.ComponentModel.InvalidAsynchronousStateException)
+                {
+
+                }
+                
             }
             catch (Exception ex)
             {

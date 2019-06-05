@@ -25,7 +25,7 @@ namespace SieciowyInkScape
         }
         public enum Tools
         {
-            NOTHING, MODIFY, LINE, RECTANGLE
+            NOTHING, MODIFY, PENCIL, LINE, RECTANGLE, OVAL
         }
 
 
@@ -36,7 +36,7 @@ namespace SieciowyInkScape
             semaphore = new Semaphore(1, 1);
             this.areaSize = areaSize;
             this.state = State.IDLE;
-            selectedTool = Tools.RECTANGLE;
+            selectedTool = Tools.PENCIL;
             objects = new List<DrawingObject>();
             pendingObjects = new Queue<PendingObject>();
         }
@@ -110,32 +110,37 @@ namespace SieciowyInkScape
         {
             public enum ObjectType
             {
-                CIRCLE, RECTANGLE, LINE
+                RECTANGLE, PATH, OVAL
             }
 
             public ObjectType objectType;
 
             public Color color;
 
+            public Int32 ID;
+
             public float xpos;
             public float ypos;
         }
-        public class LineObject : DrawingObject
+        public class PathObject : DrawingObject
         {
-            public float xpos2;
-            public float ypos2;
+            public List<float> anotherXposs = new List<float>();
+            public List<float> anotherYposs = new List<float>();
 
-            public int thickness;
+            public float thickness;
 
-            public LineObject(float xpos, float ypos, float xpos2, float ypos2, int thickness, Color color)
+            public PathObject(Int32 ID, float xpos, float ypos, List<float> anotherXposs, List<float> anotherYposs, float thickness, Color color)
             {
-                this.objectType = ObjectType.LINE;
+                this.objectType = ObjectType.PATH;
                 this.xpos = xpos;
                 this.ypos = ypos;
-                this.xpos2 = xpos2;
-                this.ypos2 = ypos2;
+                this.anotherXposs = anotherXposs;
+                this.anotherYposs = anotherYposs;
                 this.thickness = thickness;
                 this.color = color;
+            }
+            public PathObject()
+            {
             }
         }
         public class RectangleObject : DrawingObject
@@ -147,7 +152,7 @@ namespace SieciowyInkScape
 
             public Color BGColor;
 
-            public RectangleObject(float xpos, float ypos, float width, float height, float thickness, Color FGcolor, Color BGColor)
+            public RectangleObject(Int32 ID, float xpos, float ypos, float width, float height, float thickness, Color FGcolor, Color BGColor)
             {
                 this.objectType = ObjectType.RECTANGLE;
                 this.xpos = xpos;
@@ -162,6 +167,31 @@ namespace SieciowyInkScape
             {
             }
         }
+        public class OvalObject : DrawingObject
+        {
+            public float width;
+            public float height;
+
+            public float thickness;
+
+            public Color BGColor;
+
+            public OvalObject(Int32 ID, float xpos, float ypos, float width, float height, float thickness, Color FGcolor, Color BGColor)
+            {
+                this.objectType = ObjectType.OVAL;
+                this.xpos = xpos;
+                this.ypos = ypos;
+                this.width = width;
+                this.height = height;
+                this.thickness = thickness;
+                this.color = FGcolor;
+                this.BGColor = BGColor;
+            }
+            public OvalObject()
+            {
+            }
+        }
+
 
         public class MousePosition
         {
