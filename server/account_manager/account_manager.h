@@ -12,6 +12,7 @@ namespace tin {
 class AccountManager {
  public:
   enum UserType {
+    NOT_ALLOWED,
     GUEST,
     NORMAL,
     ADMIN,
@@ -21,11 +22,12 @@ class AccountManager {
     ATTACHED_RD,
     ATTACHED_RDWR,
   };
+  static constexpr size_t MAX_SALT_LEN = 32;
 
   AccountManager() : state_(BLANK) {}
   ~AccountManager() {}
 
-  int AttachFile(const char *, bool writable) {}
+  int AttachFile(const char *, bool writable);
   void DetachFile() {}
 
   UserType GetUserInfo(const Username &);
@@ -35,7 +37,7 @@ class AccountManager {
   void UserChPass(Username, std::string passwd) {}
   void UserChPerm(Username, bool admin) {}
 
-  bool Authenticate(const Username &, std::string pass) {return false;}
+  int Authenticate(Username *, std::string pass);
 
   /// Tells if user is an admin.
   bool Authorize(const Username &) {return false;}
