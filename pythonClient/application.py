@@ -15,6 +15,7 @@ class Application(tk.Frame):
         super().__init__(master)
         self.master = master
         self.pack()
+        self.cursors = []
         self.create_widgets()
         self.objects = []
         self.refresh()
@@ -83,7 +84,7 @@ class Application(tk.Frame):
         self.canvas.pack(side="top")
         self.canvas.bind('<1>', self.canvas_click)
 
-        self.cursor2 = cursor.Cursor(self.canvas, 10, 10, "baksiu")
+        self.cursors.append(cursor.Cursor(self.canvas, 10, 10, "baksiu"))
 
         self.text_frame = tk.Frame(self)
         self.text_frame.pack()
@@ -116,8 +117,14 @@ class Application(tk.Frame):
             if self.scroll_bar.get()[1] == 1.0:
                 self.text.see(tk.END)
         if msg.get_type() == 1:
-            if msg.get_name() == "baksiubaksiu":
+            if msg.get_name() == "baksiubaksiu":#TODO
                 self.cursor2.set(msg.get_param()[0], msg.get_param()[1])
+        if msg.get_type() == 3:
+            print("cooo")
+            self.objects.append(rectangle.Rectangle(self.canvas, msg.get_shape()[2][1], msg.get_shape()[2][2], 200, 0, 0))#TODO cos nie dziala
+            self.list_of_objects.insert(tk.END, self.objects[self.objects.__len__() - 1])
+            self.cursors_on_top()
+            self.objects[self.objects.__len__() - 1].set2(msg.get_shape()[2][1]+msg.get_shape()[2][3], msg.get_shape()[2][2]+msg.get_shape()[2][4])
         self.after(100, self.refresh)
 
     def send(self):
@@ -212,6 +219,9 @@ class Application(tk.Frame):
                 self.cursors_on_top()
                 self.drawing = 0
                 self.object = 0
+                msg = message.Message()
+                msg.set_shape("rect", self.objects[self.objects.__len__() - 1].get_color(), self.objects[self.objects.__len__() - 1].get_color(), self.objects[self.objects.__len__() - 1].get_params(),0)
+                self.messenger.put_msg(msg)
         elif self.object == 3:
             if self.drawing == 0:
                 self.objects.append(oval.Oval(self.canvas, event.x, event.y, self.red, self.green, self.blue))
@@ -219,10 +229,13 @@ class Application(tk.Frame):
                 self.cursors_on_top()
                 self.drawing = 1
             else:
-                self.objects[self.objects.__len__() - 1].set2(event.x, event.y)
+                self.objects[self.objects.__len__() - 1].set2(event.x, event.y)#TODO nie zawsze bedzie ostatni ;)
                 self.cursors_on_top()
                 self.drawing = 0
                 self.object = 0
+                msg = message.Message()
+                msg.set_shape("oval", self.objects[self.objects.__len__() - 1].get_color(), self.objects[self.objects.__len__() - 1].get_color(), self.objects[self.objects.__len__() - 1].get_params(),0)
+                self.messenger.put_msg(msg)
 
     def path_click(self):
         if self.object == 1 and self.drawing == 1:
@@ -243,8 +256,8 @@ class Application(tk.Frame):
             self.object = 3
 
     def cursors_on_top(self):
-        # TODO lista kursoruf
-        self.cursor2.move_to_the_top()
+        for i in self.cursors:
+            i.move_to_the_top()
 
     def choose_object(self, event):
         if not self.list_of_objects.curselection() == ():
