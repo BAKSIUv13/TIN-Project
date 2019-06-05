@@ -13,6 +13,7 @@ inline namespace ImageTypes {
 
   using Dist = double;
   using Vec2 = glm::vec<2, Dist>;
+  using Vec3 = glm::vec<3, Dist>;
   using Transform = glm::mat<3, 3, Dist>;
   using Color = glm::vec<4, uint8_t>;
 
