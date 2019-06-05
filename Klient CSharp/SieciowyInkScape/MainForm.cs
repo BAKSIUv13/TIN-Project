@@ -299,7 +299,7 @@ namespace SieciowyInkScape
                         pointsType.Add((byte)System.Drawing.Drawing2D.PathPointType.Line);
                     }
 
-                    gr.DrawPath(new Pen(new SolidBrush(path.color), path.thickness), new System.Drawing.Drawing2D.GraphicsPath(points.ToArray(), pointsType.ToArray()));
+                    gr.DrawPath(new Pen(new SolidBrush(path.color), path.thickness * (float)state.areaSize.X), new System.Drawing.Drawing2D.GraphicsPath(points.ToArray(), pointsType.ToArray()));
 
                     break;
 
