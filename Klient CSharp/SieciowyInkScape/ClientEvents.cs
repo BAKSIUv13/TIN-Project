@@ -104,5 +104,16 @@ namespace SieciowyInkScape
         }
         public delegate void OnServerMessageInbound(object sender, ServerMessageInboundEventArgs e);
         public event OnServerMessageInbound ServerMessageInbound;
+
+        public class UserListInboundEventArgs : EventArgs
+        {
+            public UserListInboundEventArgs(List<string> userList)
+            {
+                this.userList = userList;
+            }
+            public List<string> userList;
+        }
+        public delegate void OnUserListInbound(object sender, UserListInboundEventArgs e);
+        public event OnUserListInbound UserListInbound;
     }
 }

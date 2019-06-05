@@ -81,6 +81,22 @@ namespace SieciowyInkScape
                 parent.SocketSend(bytes.ToArray());
             }
 
+            public void SendUserListRequest()
+            {
+                List<byte> bytes = new List<byte>();
+                ListConcat(bytes, parent.SocketSetString("lsus"));
+
+                parent.SocketSend(bytes.ToArray());
+            }
+
+            public void SendShapeListRequest()
+            {
+                List<byte> bytes = new List<byte>();
+                ListConcat(bytes, parent.SocketSetString("lssh"));
+
+                parent.SocketSend(bytes.ToArray());
+            }
+
             public void SendMousePosition(PointF position)
             {
                 List<byte> bytes = new List<byte>();
@@ -116,19 +132,51 @@ namespace SieciowyInkScape
                 parent.SocketSend(bytes.ToArray());
             }
 
-            public void SendLine(DrawingAreaState.LineObject line)
+            public void SendOval(DrawingAreaState.OvalObject oval)
             {
                 List<byte> bytes = new List<byte>();
 
                 ListConcat(bytes, parent.SocketSetString("crea"));
-                ListConcat(bytes, parent.SocketSetString("line"));
-                ListConcat(bytes, parent.SocketSetByte(line.color.R));
-                ListConcat(bytes, parent.SocketSetByte(line.color.G));
-                ListConcat(bytes, parent.SocketSetByte(line.color.B));
-                ListConcat(bytes, parent.SocketSetDouble((double)line.xpos));
-                ListConcat(bytes, parent.SocketSetDouble((double)line.ypos));
-                ListConcat(bytes, parent.SocketSetDouble((double)line.xpos2));
-                ListConcat(bytes, parent.SocketSetDouble((double)line.ypos2));
+                ListConcat(bytes, parent.SocketSetString("oval"));
+                ListConcat(bytes, parent.SocketSetByte(oval.BGColor.R));
+                ListConcat(bytes, parent.SocketSetByte(oval.BGColor.G));
+                ListConcat(bytes, parent.SocketSetByte(oval.BGColor.B));
+                ListConcat(bytes, parent.SocketSetByte(oval.BGColor.A));
+                ListConcat(bytes, parent.SocketSetByte(oval.color.R));
+                ListConcat(bytes, parent.SocketSetByte(oval.color.G));
+                ListConcat(bytes, parent.SocketSetByte(oval.color.B));
+                ListConcat(bytes, parent.SocketSetByte(oval.color.A));
+                ListConcat(bytes, parent.SocketSetDouble((double)oval.thickness));
+                ListConcat(bytes, parent.SocketSetDouble((double)oval.xpos));
+                ListConcat(bytes, parent.SocketSetDouble((double)oval.ypos));
+                ListConcat(bytes, parent.SocketSetDouble((double)oval.width));
+                ListConcat(bytes, parent.SocketSetDouble((double)oval.height));
+
+
+                parent.SocketSend(bytes.ToArray());
+            }
+
+            public void SendPath(DrawingAreaState.PathObject path)
+            {
+                List<byte> bytes = new List<byte>();
+
+                ListConcat(bytes, parent.SocketSetString("crea"));
+                ListConcat(bytes, parent.SocketSetString("path"));
+                ListConcat(bytes, parent.SocketSetByte(path.color.R));
+                ListConcat(bytes, parent.SocketSetByte(path.color.G));
+                ListConcat(bytes, parent.SocketSetByte(path.color.B));
+                ListConcat(bytes, parent.SocketSetByte(path.color.A));
+                ListConcat(bytes, parent.SocketSetDouble((double)path.thickness));
+                ListConcat(bytes, parent.SocketSetInt32(path.anotherXposs.Count + 1)); // +1 because there is starting point not included in this array!
+
+                ListConcat(bytes, parent.SocketSetDouble((double)path.xpos));
+                ListConcat(bytes, parent.SocketSetDouble((double)path.ypos));
+
+                for(int i = 0; i < path.anotherXposs.Count; ++i)
+                {
+                    ListConcat(bytes, parent.SocketSetDouble((double)path.anotherXposs[i]));
+                    ListConcat(bytes, parent.SocketSetDouble((double)path.anotherYposs[i]));
+                }
 
 
                 parent.SocketSend(bytes.ToArray());
