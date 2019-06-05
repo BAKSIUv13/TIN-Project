@@ -21,7 +21,8 @@ class ListShapes : public OutMessage {
       : username_(un), shapes_count_(0) {
     for (auto it = iterators[0]; it != iterators[1]; ++it) {
       ++shapes_count_;
-      it->WriteToCppString(&shapes_string_);
+      NQuad(it.GetId()).AppendToCppString(&shapes_string_);
+      it.GetShape().WriteToCppString(&shapes_string_);
     }
   }
 
