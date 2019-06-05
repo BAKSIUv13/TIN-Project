@@ -36,7 +36,7 @@ namespace SieciowyInkScape
             semaphore = new Semaphore(1, 1);
             this.areaSize = areaSize;
             this.state = State.IDLE;
-            selectedTool = Tools.RECTANGLE;
+            selectedTool = Tools.PENCIL;
             objects = new List<DrawingObject>();
             pendingObjects = new Queue<PendingObject>();
         }

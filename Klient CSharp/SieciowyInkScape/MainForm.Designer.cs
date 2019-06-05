@@ -75,7 +75,6 @@
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.elipseButton = new System.Windows.Forms.Button();
             this.rectangleButton = new System.Windows.Forms.Button();
-
             this.chatPanel.SuspendLayout();
             this.groupBox5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ThicknessBar)).BeginInit();
@@ -429,6 +428,7 @@
             this.groupBox2.TabIndex = 8;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Logowanie";
+            this.groupBox2.Enter += new System.EventHandler(this.groupBox2_Enter);
             // 
             // buttonLogout
             // 

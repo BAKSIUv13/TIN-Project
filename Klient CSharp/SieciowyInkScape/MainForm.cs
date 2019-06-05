@@ -67,9 +67,11 @@ namespace SieciowyInkScape
             Show();
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
             SetDoubleBuffered(drawing);
+
             client.clientMachine.drawingArea.areaSize.X = drawing.Size.Width;
             client.clientMachine.drawingArea.areaSize.Y = drawing.Size.Height;
 
+            drawing.Cursor = new Cursor(new System.IO.MemoryStream(Properties.Resources.mspaint_pencil_8bit));
         }
 
         void OnLogout(object sender, EventArgs e)
@@ -598,6 +600,8 @@ namespace SieciowyInkScape
             drawingArea.Access();
             drawingArea.selectedTool = DrawingAreaState.Tools.RECTANGLE;
             drawingArea.Exit();
+
+            drawing.Cursor = new Cursor(new System.IO.MemoryStream(Properties.Resources.cross));
         }
 
         private void lineButton_Click(object sender, EventArgs e)
@@ -607,6 +611,8 @@ namespace SieciowyInkScape
             drawingArea.Access();
             drawingArea.selectedTool = DrawingAreaState.Tools.LINE;
             drawingArea.Exit();
+
+            drawing.Cursor = new Cursor(new System.IO.MemoryStream(Properties.Resources.cross));
         }
 
         private void buttonDisconnect_Click(object sender, EventArgs e)
@@ -721,6 +727,8 @@ namespace SieciowyInkScape
             drawingArea.Access();
             drawingArea.selectedTool = DrawingAreaState.Tools.OVAL;
             drawingArea.Exit();
+
+            drawing.Cursor = new Cursor(new System.IO.MemoryStream(Properties.Resources.cross));
         }
 
         private void penButton_Click(object sender, EventArgs e)
@@ -730,6 +738,13 @@ namespace SieciowyInkScape
             drawingArea.Access();
             drawingArea.selectedTool = DrawingAreaState.Tools.PENCIL;
             drawingArea.Exit();
+
+            drawing.Cursor = new Cursor(new System.IO.MemoryStream(Properties.Resources.mspaint_pencil_8bit));
+        }
+
+        private void groupBox2_Enter(object sender, EventArgs e)
+        {
+
         }
     }
 }
