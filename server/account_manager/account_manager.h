@@ -16,11 +16,16 @@ class AccountManager {
     NORMAL,
     ADMIN,
   };
+  enum State {
+    BLANK,
+    ATTACHED_RD,
+    ATTACHED_RDWR,
+  };
 
-  AccountManager() {}
+  AccountManager() : state_(BLANK) {}
   ~AccountManager() {}
 
-  void AttachFile(const char *) {}
+  int AttachFile(const char *, bool writable) {}
   void DetachFile() {}
 
   UserType GetUserInfo(const Username &);
@@ -37,7 +42,9 @@ class AccountManager {
 
  private:
   void ReadUser_() {}
+
   std::fstream the_file_;
+  State state_;
 };  // class AccountManager
 }  // namespace tin
 
