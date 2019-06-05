@@ -16,7 +16,7 @@ namespace tin {
 class ListShapes : public OutMessage {
  public:
   using ShapeIt = Image::ShapeIterator;
-  ListShapes() {}
+  ListShapes() : shapes_count_(0) {}
   explicit ListShapes(const Username &un, std::array<ShapeIt, 2> iterators)
       : username_(un) {
     for (auto it = iterators[0]; it != iterators[1]; ++it) {

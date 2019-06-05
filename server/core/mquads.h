@@ -49,7 +49,7 @@ constexpr NQuad
   USER_LOGGED_OFF {"Ulof"},
 
   SHAPE_RECTANGLE {"rect"},
-  SHAPE_ELLIPSE {"elip"},
+  SHAPE_ELLIPSE {"oval"},
   SHAPE_POLYGONAL_CHAIN {"path"},
 
   NOTHING {"xdxd"};

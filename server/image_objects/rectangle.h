@@ -9,6 +9,8 @@
 
 #include "image/basic_object.h"
 #include "image/utility.h"
+#include "core/nquad.h"
+#include "core/ndouble.h"
 #include "core/mquads.h"
 #include "core/logger.h"
 
@@ -40,8 +42,9 @@ struct Rectangle : BasicObject {
     NDouble(dims.y).AppendToCppString(str);
   }
   Vec2 dims;
+};  // struct Rectangle
 
-static void InitRectangle(Rectangle *rect, Color fill, Color stroke_c,
+inline void InitRectangle(Rectangle *rect, Color fill, Color stroke_c,
     Dist stroke_w,
     Vec2 offset, Vec2 dims) {
   if (rect == nullptr) return;
@@ -50,11 +53,10 @@ static void InitRectangle(Rectangle *rect, Color fill, Color stroke_c,
   rect->stroke_color = stroke_c;
   rect->stroke_width = stroke_w;
   rect->transform = Utility::translate(Transform(1.0), offset);
-  LogH << "Zroiłem prostokąt " << Utility::color_to_hex_str(fill) <<
-    Utility::color_to_hex_str(stroke_c) << '\n';
+  // LogH << "Zroiłem prostokąt " << Utility::color_to_hex_str(fill) <<
+  //   Utility::color_to_hex_str(stroke_c) << '\n';
 }
 
-};  // struct Rectangle
 
 
 }  // namespace tin
