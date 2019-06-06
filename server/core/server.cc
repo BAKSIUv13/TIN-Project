@@ -412,6 +412,17 @@ int Server::LogInUser(const Username &un, const std::string &pw,
         "nie można mieć takiej nazwy");
     return -1;
   }
+  Username un_copy(un);
+  int auth = Auth_(&un_copy, pw);
+  if (auth < 0) {
+    LogH << "Błąd przy sprawdzaniu hasła\n";
+    PushMsg<Sig>(sock_id, MQ::ERR_OTHER, false);
+    return -1;
+  } else if (auth == AccountManager::UserPass::NOT_ALLOWED) {
+    LogH << "Złe dane logowania\n";
+    PushMsg<Sig>(sock_id, MQ::ERR_BAD_LOG, false, "złe dane logowania");
+    return -1;
+  }
   auto it = users_.find(un);
   if (it != users_.end()) {
     LogM << "user [" << un << "] jest zalogowany już\n"
@@ -420,7 +431,12 @@ int Server::LogInUser(const Username &un, const std::string &pw,
       PushMsg<Sig>(sock_id, MQ::ERR_ACC_OCCUPIED, false);
     return -1;
   }
-  auto emplace_ret = users_.emplace(un, std::move(LoggedUser(un, sock_id)));
+  LoggedUser::Mode mode =
+    auth == AccountManager::UserPass::ADMIN ? LoggedUser::Mode::ADMIN :
+    auth == AccountManager::UserPass::NORMAL ? LoggedUser::Mode::NORMAL :
+    LoggedUser::Mode::GUEST;
+  auto emplace_ret =
+    users_.emplace(un, std::move(LoggedUser(un, sock_id, mode)));
   if (emplace_ret.second == false) {
     LogH << "ojej, nie udało się dodać usera do mapy :<\n";
     if (generate_response)

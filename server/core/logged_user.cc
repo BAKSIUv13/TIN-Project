@@ -15,8 +15,8 @@
 
 namespace tin {
 
-LoggedUser::LoggedUser(const Username &name, SockId sid)
-    : sock_id_(sid) {
+LoggedUser::LoggedUser(const Username &name, SockId sid, Mode mode)
+    : sock_id_(sid), mode_(mode) {
   if (Username::GOOD & name.GetState()) {
     name_ = name;
   }

@@ -11,8 +11,8 @@
 namespace tin {
 class AccountManager {
  public:
-  enum UserType {
-    NOT_ALLOWED,
+  enum UserPass {
+    NOT_ALLOWED = 0,
     GUEST,
     NORMAL,
     ADMIN,
@@ -22,31 +22,40 @@ class AccountManager {
     ATTACHED_RD,
     ATTACHED_RDWR,
   };
+  enum class GuestAccess {
+    NONE,
+    EMPTY_PASSWD,
+    ANY_PASSWD,
+  };
+
   static constexpr size_t MAX_SALT_LEN = 32;
 
-  AccountManager() : state_(BLANK) {}
+  AccountManager() : state_(BLANK), ga_(GuestAccess::ANY_PASSWD) {}
   ~AccountManager() {}
 
   int AttachFile(const char *, bool writable);
-  void DetachFile() {}
+  int DetachFile();
 
-  UserType GetUserInfo(const Username &);
+  UserPass GetUserInfo(const Username &);
 
   void UserAdd(Username, std::string passwd) {}
   void UserDel(Username) {}
   void UserChPass(Username, std::string passwd) {}
   void UserChPerm(Username, bool admin) {}
 
-  int Authenticate(Username *, std::string pass);
+  int Authenticate(Username *, std::string passwd);
 
   /// Tells if user is an admin.
   bool Authorize(const Username &) {return false;}
+
+  static int test(int argc, char **argv, char **env);
 
  private:
   void ReadUser_() {}
 
   std::fstream the_file_;
   State state_;
+  GuestAccess ga_;
 };  // class AccountManager
 }  // namespace tin
 

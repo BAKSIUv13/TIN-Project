@@ -49,7 +49,7 @@ class Server {
   // From other thread?? This fn is blocking chyba.
   int StopRun();
 
-  // Returns username assigned to fd. Blank if fd does not have session.
+  // Returns username assigned to fd. Blank if id does not have session.
   Username SockToUn(SockId id);
 
   // xd
@@ -115,6 +115,14 @@ class Server {
     return it;
   }
 
+  int AttachAccountFile(const char *path, bool writable) {
+    return am_.AttachFile(path, writable);
+  }
+
+  int DetachAccountFile() {
+    return am_.DetachFile();
+  }
+
  private:
   int PushMsg_(std::unique_ptr<OutMessage> msg);
   OutMessage *FirstMsg_();
@@ -171,6 +179,10 @@ class Server {
 
   int NextSockId_() {
     return next_sock_id_++;
+  }
+
+  int Auth_(Username *un, std::string passwd) {
+    return am_.Authenticate(un, passwd);
   }
 
   // This variable tells if server is now running.

@@ -122,7 +122,7 @@ std::string make_base64(const std::string &s) {
 
       b64[3] =   normal[2] & 0b00111111;
 
-      for (size_t j = i; j < 4; ++j)
+      for (size_t j = 0; j < 4; ++j)
         res.push_back(BASE64_CHARS[b64[j]]);
       i = 0;
     }
@@ -140,11 +140,11 @@ std::string make_base64(const std::string &s) {
     b64[2] = i >= 2 ?
              ((normal[1] & 0b00001111) << 2) |
              ((normal[2] & 0b11000000) >> 6) :
-             '\x41';
+             '\x40';
 
-    b64[3] = '\x41';
+    b64[3] = '\x40';
 
-    for (size_t j = i; j < 4; ++j)
+    for (size_t j = 0; j < 4; ++j)
       res.push_back(BASE64_CHARS[b64[j]]);
   }
   return res;
@@ -159,9 +159,10 @@ std::string unmake_base64(const std::string &s) noexcept {
     if (x == '=')
       break;
     b64[i] = x;
+    ++i;
     if (i >= 4) {
       for (size_t j = 0; j < 4; ++j)
-        b64[i] = char_b64_to_number(b64[i]);
+        b64[j] = char_b64_to_number(b64[j]);
 
       normal[0] = ((b64[0] & 0b00111111) << 2) |
                   ((b64[1] & 0b00110000) >> 4);
@@ -206,6 +207,7 @@ std::string GetFileLine(std::fstream &file, const Username &un) {
       return buf;
     }
   }
+  file.clear();
   return "";
 }
 
@@ -240,7 +242,7 @@ int make_shadow_line(ShadowLine *sl, const std::string &s) {
   sl->salt = std::move(salt);
   ss.getline(buf, ELEM_BUF_LEN, ':');
   std::string passwd{std::move(unmake_base64(buf))};
-  sl->hash = std::move(salt);
+  sl->hash = std::move(passwd);
   return 0;
 }
 
@@ -264,16 +266,76 @@ int AccountManager::AttachFile(const char *path, bool writable) {
   return 0;
 }
 
+int AccountManager::DetachFile() {
+  if (state_ == BLANK) return -1;
+  the_file_.close();
+  state_ = BLANK;
+  return 0;
+}
+
 int AccountManager::Authenticate(Username *un, std::string passwd) {
-  if (state_ == BLANK) return un->Good() ? 0 : -1;
+  if (!un->Good()) {
+    *un = Username();
+    return UserPass::NOT_ALLOWED;
+  }
+  if (state_ == BLANK)
+    return UserPass::GUEST;
   std::string line = GetFileLine(the_file_, *un);
+  if (line == "") {
+    switch (ga_) {
+      case GuestAccess::ANY_PASSWD:
+        return UserPass::GUEST;
+      case GuestAccess::EMPTY_PASSWD:
+        if (passwd == "") return UserPass::GUEST;
+      case GuestAccess::NONE: default:
+        *un = Username();
+        return UserPass::NOT_ALLOWED;
+    }
+  }
   ShadowLine sl;
   int res = make_shadow_line(&sl, line);
   if (res < 0) return -1;
   if (check_pass(passwd, sl.salt, sl.hash)) {
-    return sl.is_admin ? 1 : 0;
+    *un = sl.name;
+    return sl.is_admin ? UserPass::ADMIN : UserPass::NORMAL;
   }
-  return -1;
+  *un = Username();
+  return UserPass::NOT_ALLOWED;
+}
+
+int AccountManager::test(int argc, char **argv, char **env) {
+  //std::cerr << "Samurai Jack:x:" << make_base64("Aku") << ":" << make_base64(make_hash(xor_strs("Aku", "xdxd"))) << '\n';
+  std::cerr << "admin:x:" << make_base64("11111") << ":" << make_base64(make_hash(xor_strs("1111", "admin"))) << '\n';
+  //std::cerr << "Shrek::" << make_base64("All Star") << ":" << make_base64(make_hash(xor_strs("All Star", "osle!"))) << '\n';
+
+  return 0;
+  int res;
+  AccountManager am;
+  res = am.AttachFile("shadow.log", false);
+  std::cerr << "1: " << res << '\n';
+  Username un("hehehe");
+  //std::cerr << un << '\n';
+  //std::cerr << am.Authenticate(&un, "xdxd") << '\n';
+  //std::cerr << un << '\n';
+  const char *x[][2] = {
+    {"xd", "xd"},
+    {"samuraijack", "xdxd"},
+    {"Teemo", "xd"},
+    {"nkp123", "xd"},
+    {"nkp123", "michau3"},
+    {"SHREK", "osle!"},
+  };
+  for (size_t i = 0; i < sizeof x / (&x[1] - &x[0]); ++i) {
+    Username unn(x[i][0]);
+    std::cerr << unn <<'\n';
+    std::cerr << am.Authenticate(&unn, x[i][1]) << '\n';
+    std::cerr << unn <<'\n';
+  }
+
+  std::string line = GetFileLine(am.the_file_, un);
+  std::cerr << "== " << line << '\n';
+
+  return 0;
 }
 
 }  // namespace tin
