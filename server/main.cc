@@ -31,7 +31,7 @@ static void interrupt(int) {
 int main(int argc, char **argv, char **env) {
   tin::LogH << "Uruchamianie serwera.\n";
 
-  // return tin::AccountManager::test(argc, argv, env);
+  return tin::AccountManager::test(argc, argv, env);
 
   uint16_t port = 0;
   bool arg_port = false;

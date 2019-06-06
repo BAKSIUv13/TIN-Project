@@ -11,6 +11,8 @@
 #include <openssl/buffer.h>
 
 #include <set>
+#include <cassert>
+#include <ctime>
 #include <vector>
 #include <iostream>
 #include <sstream>
@@ -66,6 +68,13 @@ inline Username un_to_delim(const char *s, char delim) {
   return Username(x);
 }
 
+struct ShadowLine {
+  std::string hash;
+  std::string salt;
+  Username name;
+  bool is_admin;
+};
+
 constexpr size_t LINE_BUF_LEN =
   Username::MAX_NAME_LEN +
   1 +  // :
@@ -95,6 +104,7 @@ std::string xor_strs(std::string one, const std::string &two) {
   return one;
 }
 
+
 std::string make_hash(const std::string &s) {
   unsigned char hash[SHA256_DIGEST_LENGTH];
   SHA256_CTX sha;
@@ -103,6 +113,15 @@ std::string make_hash(const std::string &s) {
   SHA256_Final(hash, &sha);
   return std::string(reinterpret_cast<char *>(hash), SHA256_DIGEST_LENGTH);
 }
+
+
+void hash_passwd(const std::string &passwd, AccountManager::Rand *rand,
+    ShadowLine *sl) {
+  AccountManager::Rand::result_type salt_int = rand->operator()();
+  sl->salt = std::string(reinterpret_cast<char *>(&salt_int), sizeof salt_int);
+  sl->hash = make_hash(xor_strs(passwd, sl->salt));
+}
+
 
 // Checks if file is empty or has '\n' on end.
 bool chk_file_end(FILE *file) {
@@ -116,24 +135,22 @@ bool chk_file_end(FILE *file) {
   return false;
 }
 
-int ch_file_bytes(FILE *file, size_t off, size_t len,
+int ch_file_bytes(FILE *file, intptr_t off, intptr_t len,
     const std::string &s) {
-  static constexpr size_t BUF_SIZE = 256;
+  static constexpr intptr_t BUF_SIZE = 256;
   char buf[BUF_SIZE];
-  if (len == s.size()) {
+  if (len == (intptr_t)s.size()) {
     fseek(file, off, SEEK_SET);
-    for (char x : s) {
-      fputc(x, file);
-    }
-    return 0;
-  } else if (s.size() < len) {
+    fwrite(s.c_str(), s.size(), 1, file);
+  } else if ((intptr_t)s.size() < len) {
+    intptr_t end_of_file;
+    fseek(file, 0, SEEK_END);
+    end_of_file = ftell(file);
     fseek(file, off, SEEK_SET);
-    for (char x : s) {
-      fputc(x, file);
-    }
+    fwrite(s.c_str(), s.size(), 1, file);
     bool end;
     fseek(file, off + len, SEEK_SET);
-    size_t i = 0, j = 0;
+    intptr_t i = 0, j = 0;
     while (!end) {
       j = 0;
       while (j < BUF_SIZE) {
@@ -153,12 +170,38 @@ int ch_file_bytes(FILE *file, size_t off, size_t len,
         ++jj;
       }
     }
-    return 0;
+    // truncate
+    fflush(file);
+    fseek(file, 0, SEEK_SET);
+    int fd = fileno(file);
+    ftruncate(fd, end_of_file - (len - s.size()));
+    fflush(file);
+    fseek(file, 0, SEEK_SET);
+    //
   } else {  // s.size() > len
-
+    intptr_t increase = s.size() - len;
+    fseek(file, 0, SEEK_END);
+    intptr_t file_end = ftell(file);
+    bool end = false;
+    intptr_t bytes_to_shift = BUF_SIZE;
+    intptr_t where = file_end;
+    while (!end) {
+      where -= BUF_SIZE;
+      if (where < off + len) {
+        bytes_to_shift -= (off + len) - where;
+        where = off + len;
+        end = true;
+      }
+      fseek(file, where, SEEK_SET);
+      fread(buf, bytes_to_shift, 1, file);
+      fseek(file, where + increase, SEEK_SET);
+      fwrite(buf, bytes_to_shift, 1, file);
+    }
+    fseek(file, off, SEEK_SET);
+    fwrite(s.c_str(), s.size(), 1, file);
   }
-  // file.
-  //file.seekg(beg)
+  fflush(file);
+  return 0;
 }
 
 std::string make_base64(const std::string &s) {
@@ -259,33 +302,33 @@ std::string unmake_base64(const std::string &s) noexcept {
 int read_line(FILE *file, char *buf, size_t len, char delim) {
   int c;
   size_t i = 0;
-  while ((c = fgetc(file)) != EOF && c != delim && i < len) {
+  while ((c = fgetc(file)) != EOF && c != delim && i < len - 1) {
     buf[i] = c;
     ++i;
   }
+  buf[i] = '\0';
   return i;
 }
 
-std::string GetFileLine(FILE *file, const Username &un) {
+int get_file_line(FILE *file, const Username &un, std::string *s) {
   char buf[LINE_BUF_LEN];
   std::stringstream ss;
   fseek(file, 0, SEEK_SET);
+  intptr_t off = 0;
   while (read_line(file, buf, LINE_BUF_LEN, '\n')) {
     Username user = un_to_delim(buf, ':');
     if (user == un) {
-      return buf;
+      if (s != nullptr)
+        *s = std::string(buf);
+      return off;
     }
+    off = ftell(file);
   }
-  return "";
+  return -1;
 }
 
 
-struct ShadowLine {
-  std::string hash;
-  std::string salt;
-  Username name;
-  bool is_admin;
-};
+
 
 int make_shadow_line(ShadowLine *sl, const std::string &s) {
   char buf[ELEM_BUF_LEN];
@@ -335,9 +378,16 @@ std::string gen_shadow_line(const ShadowLine *sl) {
 
 }  // namespace
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
 int AccountManager::AttachFile(const char *path, bool writable) {
   if (state_ != BLANK) return -1;
-  the_file_ = fopen(path, writable ? "rw" : "r");
+  the_file_ = fopen(path, writable ? "r+b" : "rb");
   if (the_file_ == nullptr) return -1;
   // the_file_.open(path, writable ?
   //   std::ios::in | std::ios::out :
@@ -354,15 +404,17 @@ int AccountManager::DetachFile() {
   return 0;
 }
 
-int AccountManager::Authenticate(Username *un, std::string passwd) {
+int AccountManager::Authenticate(Username *un,
+    std::string passwd) {
   if (!un->Good()) {
     *un = Username();
     return UserPass::NOT_ALLOWED;
   }
   if (state_ == State::BLANK)
     return UserPass::GUEST;
-  std::string line = GetFileLine(the_file_, *un);
-  if (line == "") {
+  std::string line;
+  int res = get_file_line(the_file_, *un, &line);
+  if (res < 0) {
     switch (ga_) {
       case GuestAccess::ANY_PASSWD:
         return UserPass::GUEST;
@@ -374,7 +426,7 @@ int AccountManager::Authenticate(Username *un, std::string passwd) {
     }
   }
   ShadowLine sl;
-  int res = make_shadow_line(&sl, line);
+  res = make_shadow_line(&sl, line);
   if (res < 0) return -1;
   if (check_pass(passwd, sl.salt, sl.hash)) {
     *un = sl.name;
@@ -387,53 +439,68 @@ int AccountManager::Authenticate(Username *un, std::string passwd) {
 
 int AccountManager::UserAdd(const Username &un, std::string passwd,
     bool admin) {
-  if (state_ != State::ATTACHED_RDWR) return -1;
-  std::string line = GetFileLine(the_file_, un);
-  if (line != "") return -1;
+  if (!Writable()) return -1;
+  std::string line;
+  int res = get_file_line(the_file_, un, nullptr);
+  if (res >= 0) return -1;
   ShadowLine sl;
   sl.name = un;
   sl.is_admin = admin;
-  Rand::result_type salt = rand_();
-  sl.salt = std::string(reinterpret_cast<char *>(&salt), 8);
-  sl.hash = make_hash(xor_strs(passwd, sl.salt));
+  hash_passwd(passwd, &rand_, &sl);
   line = gen_shadow_line(&sl);
   bool dont_add_enter = chk_file_end(the_file_);
   fseek(the_file_, 0, SEEK_END);
-  fprintf(the_file_, "%s%s\n", (dont_add_enter ? "" : "\n"), line);
+  res = fprintf(the_file_, "%s%s\n", (dont_add_enter ? "" : "\n"), line.c_str());
+  assert(res >= 0);
+  fflush(the_file_);
+  return 0;
+}
+
+int AccountManager::UserDel(const Username &un) {
+  if (!Writable()) return -1;
+  std::string line;
+  int res = get_file_line(the_file_, un, &line);
+  if (res < 0) return -1;
+  ch_file_bytes(the_file_, res, line.size() + 1, "");
+  return 0;
+}
+
+int AccountManager::UserChPass(const Username &un, const std::string &passwd) {
+  if (!Writable()) return -1;
+  std::string line;
+  int res = get_file_line(the_file_, un, &line);
+  if (res < 0) return -1;
+  intptr_t old_len = line.size();
+  ShadowLine sl;
+  make_shadow_line(&sl, line);
+  hash_passwd(passwd, &rand_, &sl);
+  line = gen_shadow_line(&sl);
+  ch_file_bytes(the_file_, res, old_len, line);
+  return 0;
+}
+
+int AccountManager::UserChRole(const Username &un, bool admin) {
+  if (!Writable()) return -1;
+  std::string line;
+  int res = get_file_line(the_file_, un, &line);
+  if (res < 0) return -1;
+  intptr_t old_len = line.size();
+  ShadowLine sl;
+  make_shadow_line(&sl, line);
+  sl.is_admin = admin;
+  line = gen_shadow_line(&sl);
+  ch_file_bytes(the_file_, res, old_len, line);
   return 0;
 }
 
 int AccountManager::test(int argc, char **argv, char **env) {
   //std::cerr << "Samurai Jack:x:" << make_base64("Aku") << ":" << make_base64(make_hash(xor_strs("Aku", "xdxd"))) << '\n';
-  std::cerr << "admin:x:" << make_base64("11111") << ":" << make_base64(make_hash(xor_strs("1111", "admin"))) << '\n';
+  // std::cerr << "admin:x:" << make_base64("11111") << ":" << make_base64(make_hash(xor_strs("1111", "admin"))) << '\n';
   //std::cerr << "Shrek::" << make_base64("All Star") << ":" << make_base64(make_hash(xor_strs("All Star", "osle!"))) << '\n';
-
-  return 0;
   int res;
   AccountManager am;
-  res = am.AttachFile("shadow.log", false);
-  std::cerr << "1: " << res << '\n';
-  Username un("hehehe");
-  //std::cerr << un << '\n';
-  //std::cerr << am.Authenticate(&un, "xdxd") << '\n';
-  //std::cerr << un << '\n';
-  const char *x[][2] = {
-    {"xd", "xd"},
-    {"samuraijack", "xdxd"},
-    {"Teemo", "xd"},
-    {"nkp123", "xd"},
-    {"nkp123", "michau3"},
-    {"SHREK", "osle!"},
-  };
-  for (size_t i = 0; i < sizeof x / (&x[1] - &x[0]); ++i) {
-    Username unn(x[i][0]);
-    std::cerr << unn <<'\n';
-    std::cerr << am.Authenticate(&unn, x[i][1]) << '\n';
-    std::cerr << unn <<'\n';
-  }
-
-  std::string line = GetFileLine(am.the_file_, un);
-  std::cerr << "== " << line << '\n';
+  am.FeedRand(std::time(nullptr) ^ getpid());
+  res = am.AttachFile("shadow.log", true);
 
   return 0;
 }

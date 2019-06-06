@@ -51,14 +51,14 @@ class AccountManager {
   UserPass GetUserInfo(const Username &);
 
   int UserAdd(const Username &, std::string passwd, bool admin);
-  void UserDel(Username) {}
-  void UserChPass(Username, std::string passwd) {}
-  void UserChPerm(Username, bool admin) {}
+  int UserDel(const Username &);
+  int UserChPass(const Username &, const std::string &passwd);
+  int UserChRole(const Username &, bool admin);
 
   int Authenticate(Username *, std::string passwd);
 
   /// Tells if user is an admin.
-  bool Authorize(const Username &) {return false;}
+  // bool Authorize(const Username &) {return false;}
 
   constexpr bool On() {
     return state_ == State::ATTACHED_RD || state_ == State::ATTACHED_RDWR;
@@ -75,7 +75,6 @@ class AccountManager {
   static int test(int argc, char **argv, char **env);
 
  private:
-  void ReadUser_() {}
 
   State state_;
   GuestAccess ga_;
