@@ -203,7 +203,7 @@ namespace SieciowyInkScape
 
                                 usernameLength = SocketReceiveUInt32();
                                 username = SocketReceiveString(usernameLength);
-                                //  username = SocketReceiveString(6);
+
                                 mainForm.Invoke(new Action(() =>
                                 {
                                     ServerMessageInboundEventArgs args = new ServerMessageInboundEventArgs(username + " połączył się.");
@@ -226,6 +226,8 @@ namespace SieciowyInkScape
                                 }
                                 ));
                             }
+
+                            clientMachine.SendUserListRequest();
                         }
                         else if (messageType.Equals("USER"))
                         {
