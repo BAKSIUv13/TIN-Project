@@ -28,6 +28,16 @@ class LoggedUser{
   int GetSockId() const {return sock_id_;}
   void SetSockId(int id) {sock_id_ = id;}
   void ClrSock() {sock_id_ = 0;}
+  int ChMode(Mode mode) {
+    if (mode_ == Mode::NOTHING || mode == Mode::NOTHING) {
+      return -1;
+    }
+    mode_ = mode;
+    return 0;
+  }
+  Mode GetMode() {
+    return mode_;
+  }
 
  private:
   void Move_(LoggedUser *);

@@ -60,10 +60,20 @@ class Server {
     return &instructions.at(id);
   }
 
-  int LogInUser(const Username &un, const std::string &pw, SockId,
+  int LogInUser(Username un, const std::string &pw, SockId,
     bool generate_response);
 
   int LogOutUser(SockId, bool generate_response);
+
+  int UserAdd(const Username &un, const std::string &passwd, bool admin);
+
+  int UserDel(const Username &un);
+
+  int UserChPasswd(const Username &un, const std::string &passwd);
+
+  int UserChPerm(const Username &un, bool admin);
+
+  LoggedUser::Mode UserGetMode(const Username &un);
 
   template <typename T, typename... Args>
   T *PushMsg(Args &&... args) {

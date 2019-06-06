@@ -10,6 +10,7 @@
 #include <cstring>
 #include <ios>
 #include <utility>
+#include <ctime>
 
 #include "core/socket_tcp4.h"
 #include "core/nquad.h"
@@ -49,6 +50,7 @@ Server::Server()
       << std::strerror(errno) << '\n';
     throw std::runtime_error("Server couldn't create a pipe.");
   }
+  am_.FeedRand(std::time(nullptr) ^ getpid() ^ end_pipe_[0]);
   return;
 }
 Server::~Server() {
@@ -394,7 +396,7 @@ int Server::LoopTick_() {
   return 0;
 }
 
-int Server::LogInUser(const Username &un, const std::string &pw,
+int Server::LogInUser(Username un, const std::string &pw,
     SockId sock_id, bool generate_response) {
   // Generate response - chodzi o odpowiedź dokłądnie temu, kto sie zalogował.
   if (socks_to_users_.count(sock_id) > 0) {
@@ -412,8 +414,7 @@ int Server::LogInUser(const Username &un, const std::string &pw,
         "nie można mieć takiej nazwy");
     return -1;
   }
-  Username un_copy(un);
-  int auth = Auth_(&un_copy, pw);
+  int auth = Auth_(&un, pw);
   if (auth < 0) {
     LogH << "Błąd przy sprawdzaniu hasła\n";
     PushMsg<Sig>(sock_id, MQ::ERR_OTHER, false);
@@ -509,5 +510,24 @@ int Server::PopMsg_() {
   return 0;
 }
 
+
+int Server::UserAdd(const Username &un, const std::string &passwd, bool admin) {
+  if (!am_.Writable()) return -1;
+  LoggedUser::Mode old_mode = LoggedUser::Mode::NOTHING;
+  if (users_.count(un) > 0) {
+    old_mode = users_.at(un).GetMode();
+    users_.at(un).ChMode
+      (admin ? LoggedUser::Mode::ADMIN : LoggedUser::Mode::NORMAL);
+  }
+  am_.FeedRand
+   (std::time(nullptr) ^ getpid() ^ client_socks_.size() ^
+     reinterpret_cast<intptr_t>(this));
+  int res = am_.UserAdd(un, passwd, admin);
+  if (res < 0 && old_mode != LoggedUser::Mode::NOTHING) {
+    users_.at(un).ChMode(old_mode);
+    return -1;
+  }
+  return 0;
+}
 
 }  // namespace tin

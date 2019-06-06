@@ -3,6 +3,7 @@
 #include "account_manager/account_manager.h"
 
 #include <unistd.h>
+#include <fcntl.h>
 
 #include <openssl/sha.h>
 #include <openssl/bio.h>
@@ -14,6 +15,7 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include <string>
 #include <ios>
 #include <utility>
 #include <algorithm>
@@ -100,6 +102,63 @@ std::string make_hash(const std::string &s) {
   SHA256_Update(&sha, s.c_str(), s.size());
   SHA256_Final(hash, &sha);
   return std::string(reinterpret_cast<char *>(hash), SHA256_DIGEST_LENGTH);
+}
+
+// Checks if file is empty or has '\n' on end.
+bool chk_file_end(FILE *file) {
+  fseek(file, 0, SEEK_END);
+  if (ftell(file) == 0) {
+    return true;
+  }
+  fseek(file, -1, SEEK_END);
+  if (fgetc(file) == '\n')
+    return true;
+  return false;
+}
+
+int ch_file_bytes(FILE *file, size_t off, size_t len,
+    const std::string &s) {
+  static constexpr size_t BUF_SIZE = 256;
+  char buf[BUF_SIZE];
+  if (len == s.size()) {
+    fseek(file, off, SEEK_SET);
+    for (char x : s) {
+      fputc(x, file);
+    }
+    return 0;
+  } else if (s.size() < len) {
+    fseek(file, off, SEEK_SET);
+    for (char x : s) {
+      fputc(x, file);
+    }
+    bool end;
+    fseek(file, off + len, SEEK_SET);
+    size_t i = 0, j = 0;
+    while (!end) {
+      j = 0;
+      while (j < BUF_SIZE) {
+        int c = fgetc(file);
+        if (c == EOF) {
+          end = true;
+          break;
+        }
+        buf[i] = c;
+        ++i;
+        ++j;
+      }
+      fseek(file, off + s.size() + i - j, SEEK_SET);
+      int jj = 0;
+      while (jj < j) {
+        fputc(buf[jj], file);
+        ++jj;
+      }
+    }
+    return 0;
+  } else {  // s.size() > len
+
+  }
+  // file.
+  //file.seekg(beg)
 }
 
 std::string make_base64(const std::string &s) {
@@ -197,17 +256,26 @@ std::string unmake_base64(const std::string &s) noexcept {
   return res;
 }
 
-std::string GetFileLine(std::fstream &file, const Username &un) {
+int read_line(FILE *file, char *buf, size_t len, char delim) {
+  int c;
+  size_t i = 0;
+  while ((c = fgetc(file)) != EOF && c != delim && i < len) {
+    buf[i] = c;
+    ++i;
+  }
+  return i;
+}
+
+std::string GetFileLine(FILE *file, const Username &un) {
   char buf[LINE_BUF_LEN];
   std::stringstream ss;
-  file.seekg(0);
-  while (file.getline(buf, LINE_BUF_LEN, '\n')) {
+  fseek(file, 0, SEEK_SET);
+  while (read_line(file, buf, LINE_BUF_LEN, '\n')) {
     Username user = un_to_delim(buf, ':');
     if (user == un) {
       return buf;
     }
   }
-  file.clear();
   return "";
 }
 
@@ -252,23 +320,36 @@ bool check_pass(std::string passwd, std::string salt, std::string hash) {
   return passwd == hash;
 }
 
+
+std::string gen_shadow_line(const ShadowLine *sl) {
+  std::string res;
+  res.append(sl->name);
+  res.push_back(':');
+  if (sl->is_admin) res.push_back('x');
+  res.push_back(':');
+  res.append(make_base64(sl->salt));
+  res.push_back(':');
+  res.append(make_base64(sl->hash));
+  return res;
+}
+
 }  // namespace
 
 int AccountManager::AttachFile(const char *path, bool writable) {
   if (state_ != BLANK) return -1;
-  the_file_.open(path, writable ?
-    std::ios::in | std::ios::out :
-    std::ios::in);
-  if (!the_file_.is_open()) {
-    return -1;
-  }
+  the_file_ = fopen(path, writable ? "rw" : "r");
+  if (the_file_ == nullptr) return -1;
+  // the_file_.open(path, writable ?
+  //   std::ios::in | std::ios::out :
+  //   std::ios::in);
+  // We need this to have fd to use ftruncate/
   state_ = writable ? ATTACHED_RDWR : ATTACHED_RD;
   return 0;
 }
 
 int AccountManager::DetachFile() {
   if (state_ == BLANK) return -1;
-  the_file_.close();
+  fclose(the_file_);
   state_ = BLANK;
   return 0;
 }
@@ -278,7 +359,7 @@ int AccountManager::Authenticate(Username *un, std::string passwd) {
     *un = Username();
     return UserPass::NOT_ALLOWED;
   }
-  if (state_ == BLANK)
+  if (state_ == State::BLANK)
     return UserPass::GUEST;
   std::string line = GetFileLine(the_file_, *un);
   if (line == "") {
@@ -301,6 +382,25 @@ int AccountManager::Authenticate(Username *un, std::string passwd) {
   }
   *un = Username();
   return UserPass::NOT_ALLOWED;
+}
+
+
+int AccountManager::UserAdd(const Username &un, std::string passwd,
+    bool admin) {
+  if (state_ != State::ATTACHED_RDWR) return -1;
+  std::string line = GetFileLine(the_file_, un);
+  if (line != "") return -1;
+  ShadowLine sl;
+  sl.name = un;
+  sl.is_admin = admin;
+  Rand::result_type salt = rand_();
+  sl.salt = std::string(reinterpret_cast<char *>(&salt), 8);
+  sl.hash = make_hash(xor_strs(passwd, sl.salt));
+  line = gen_shadow_line(&sl);
+  bool dont_add_enter = chk_file_end(the_file_);
+  fseek(the_file_, 0, SEEK_END);
+  fprintf(the_file_, "%s%s\n", (dont_add_enter ? "" : "\n"), line);
+  return 0;
 }
 
 int AccountManager::test(int argc, char **argv, char **env) {

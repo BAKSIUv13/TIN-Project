@@ -5,6 +5,7 @@
 
 #include <fstream>
 #include <string>
+#include <random>
 
 #include "core/username.h"
 
@@ -28,17 +29,28 @@ class AccountManager {
     ANY_PASSWD,
   };
 
-  static constexpr size_t MAX_SALT_LEN = 32;
+  using Rand = std::mt19937_64;
 
-  AccountManager() : state_(BLANK), ga_(GuestAccess::ANY_PASSWD) {}
-  ~AccountManager() {}
+  static constexpr size_t MAX_SALT_LEN = 32;
+  static constexpr Rand::result_type INIT_SEED = 32390;
+
+  AccountManager() : state_(BLANK), ga_(GuestAccess::ANY_PASSWD),
+      the_file_(nullptr) {
+    rand_.seed(INIT_SEED ^ rand_.default_seed);
+  }
+  ~AccountManager() {
+    if (the_file_) {
+      fclose(the_file_);
+      the_file_ = nullptr;
+    }
+  }
 
   int AttachFile(const char *, bool writable);
   int DetachFile();
 
   UserPass GetUserInfo(const Username &);
 
-  void UserAdd(Username, std::string passwd) {}
+  int UserAdd(const Username &, std::string passwd, bool admin);
   void UserDel(Username) {}
   void UserChPass(Username, std::string passwd) {}
   void UserChPerm(Username, bool admin) {}
@@ -48,14 +60,27 @@ class AccountManager {
   /// Tells if user is an admin.
   bool Authorize(const Username &) {return false;}
 
+  constexpr bool On() {
+    return state_ == State::ATTACHED_RD || state_ == State::ATTACHED_RDWR;
+  }
+
+  constexpr bool Writable() {
+    return state_ == State::ATTACHED_RDWR;
+  }
+
+  void FeedRand(Rand::result_type number) {
+    rand_.seed(rand_() ^ number);
+  }
+
   static int test(int argc, char **argv, char **env);
 
  private:
   void ReadUser_() {}
 
-  std::fstream the_file_;
   State state_;
   GuestAccess ga_;
+  FILE *the_file_;
+  Rand rand_;
 };  // class AccountManager
 }  // namespace tin
 
