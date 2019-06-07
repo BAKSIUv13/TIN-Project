@@ -43,6 +43,32 @@ class Messenger(threading.Thread):
                     self.sender.put_double64(self.msg.get_shape()[2][2])
                     self.sender.put_double64(self.msg.get_shape()[2][3])
                     self.sender.put_double64(self.msg.get_shape()[2][4])
+                elif self.msg.get_shape_type() == "oval":
+                    self.sender.put_string("OwO!creaoval")
+                    self.sender.put_char8(self.msg.get_shape()[0][0])
+                    self.sender.put_char8(self.msg.get_shape()[0][1])
+                    self.sender.put_char8(self.msg.get_shape()[0][2])
+                    self.sender.put_char8(self.msg.get_shape()[0][3])
+                    self.sender.put_char8(self.msg.get_shape()[1][0])
+                    self.sender.put_char8(self.msg.get_shape()[1][1])
+                    self.sender.put_char8(self.msg.get_shape()[1][2])
+                    self.sender.put_char8(self.msg.get_shape()[1][3])
+                    self.sender.put_double64(self.msg.get_shape()[2][0])
+                    self.sender.put_double64(self.msg.get_shape()[2][1])
+                    self.sender.put_double64(self.msg.get_shape()[2][2])
+                    self.sender.put_double64(self.msg.get_shape()[2][3])
+                    self.sender.put_double64(self.msg.get_shape()[2][4])
+                elif self.msg.get_shape_type() == "path":
+                    self.sender.put_string("OwO!creapath")
+                    self.sender.put_char8(self.msg.get_path()[0][0])
+                    self.sender.put_char8(self.msg.get_path()[0][1])
+                    self.sender.put_char8(self.msg.get_path()[0][2])
+                    self.sender.put_char8(self.msg.get_path()[0][3])
+                    self.sender.put_double64(self.msg.get_path()[1])
+                    self.sender.put_int32(self.msg.get_path()[2])
+                    for i in range(0,self.msg.get_path()[2]):
+                        self.sender.put_double64(self.msg.get_path()[3][0+i*2])
+                        self.sender.put_double64(self.msg.get_path()[3][1+i*2])
             self.msg_is_ready = 0
 
     def join(self, timeout=None):

@@ -3,7 +3,7 @@ from data import *
 
 
 class Oval:
-    def __init__(self, canvas, x, y, r, g, b):
+    def __init__(self, canvas, x, y, r, g, b, a):
         self.x1 = x
         self.y1 = y
         self.x2 = x
@@ -11,7 +11,7 @@ class Oval:
         self.r = r
         self.g = g
         self.b = b
-        self.a = 0 #TODO aplha
+        self.a = a #TODO aplha
         self.thick = 0 #TODO
         self.canvas = canvas
         self.oval = self.canvas.create_oval(x, y, x, y, fill="#%02x%02x%02x" % (self.r, self.g, self.b))
@@ -38,5 +38,6 @@ class Oval:
     def get_color(self):
         return [self.r,self.g,self.b,self.a]
 
-    def get_params(self):
-        return [self.thick,self.x1,self.y1,self.x2-self.x1,self.y2-self.y1]
+    def get_params(self, size):
+        return [self.thick / size, self.x1 / size, self.y1 / size, (self.x2 - self.x1) / size,
+                (self.y2 - self.y1) / size]

@@ -7,11 +7,11 @@ class Cursor:
         self.x = x
         self.y = y
         self.canvas = canvas
+        self.name = name
         # self.cursor2=self.canvas.create_rectangle(x-3, y-3, x+3, y+3, fill=color)
         self.obj1 = self.canvas.create_line(x, y - 5, x, y + 5)
         self.obj2 = self.canvas.create_line(x - 5, y, x + 5, y)
         self.obj3 = self.canvas.create_text(x, y + 15, text=name)
-        # self.pack()
 
     def set(self, x, y):
         self.x = x
@@ -24,3 +24,6 @@ class Cursor:
         self.canvas.tag_raise(self.obj1)
         self.canvas.tag_raise(self.obj2)
         self.canvas.tag_raise(self.obj3)
+
+    def get_name(self):
+        return self.name
