@@ -203,99 +203,6 @@ int Server::WriteToSocks_() {
   }
   return sockets_written;
 }
-/*
-int Server::MsgsToBufs_() {
-  OutMessage *msg = nullptr;
-  int added_to_buf;
-  while ((msg = FirstMsg_()) != nullptr) {
-    switch (msg->Audience()) {
-      case OutMessage::BROADCAST_S:
-        LogM << "OutMessage::BROADCAST_S\n";
-        for (auto &x : client_socks_) {
-          added_to_buf = msg->AddToBuf(&x.second.WrBuf());
-          if (added_to_buf < 0) {
-            LogH << "Błąd przy dodawaniu wiadomości do bufora. :<\n" <<
-              "Socket o id " << x.first << " i fd " <<
-              x.second.GetSocket().GetFD() << '\n';
-            if (socks_to_users_.count(x.first) > 0) {
-              LogM << "Jest na nim zalogowany user [[" <<
-                socks_to_users_.at(x.first)->GetName() << "]]\n";
-            } else {
-              LogM << "Niezalogowane gniazdo :>\n";
-            }
-            x.second.ForceRemove();
-            // Force, bo już i tak nic nie napiszemy raczej
-          }
-        }
-        break;
-      case OutMessage::BROADCAST_U:
-        LogM << "OutMessage::BROADCAST_U\n";
-        for (auto &x : users_) {
-          SocketStuff *stuff = &client_socks_.at(x.second.GetSockId());
-          added_to_buf = msg->AddToBuf(&stuff->WrBuf());
-          if (added_to_buf < 0) {
-            LogH << "Błąd dodawania wiad' do buf'\n" <<
-              "Socket o id " << stuff->GetId() << " i fd " <<
-              stuff->GetSocket().GetFD() << "\nuser: " << x.first << '\n';
-            stuff->ForceRemove();
-            // :>
-          }
-        }
-        break;
-      case OutMessage::LIST_S:
-        LogH << "OutMessage::LIST_S jeszcze nie działa xd\n";
-        throw std::runtime_error("OutMessage::LIST_S not implemented");
-      case OutMessage::LIST_U:
-        LogH << "OutMessage::LIST_U jeszcze nie działa xd\n";
-        throw std::runtime_error("OutMessage::LIST_U not implemented");
-      case OutMessage::ONE_S:
-        LogM << "OutMessage::ONE_S\n";
-        {
-          SockId id = msg->Sock();
-          if (client_socks_.count(id) < 1) {
-            LogH << "Lol, nie ma gniazda o id " << id << " xd\n";
-            break;
-          }
-          auto &stuff = client_socks_.at(id);
-          added_to_buf = msg->AddToBuf(&stuff.WrBuf());
-          if (added_to_buf < 0) {
-            LogH << "Błąd dodawania wiad' do buf'\n" <<
-              "Socket o id " << id << " i fd " <<
-              stuff.GetSocket().GetFD() << '\n';
-            if (socks_to_users_.count(id) > 0) {
-              LogH << "Jest na nim zalogowany user [" <<
-                socks_to_users_.at(id)->GetName() << "]\n";
-            } else {
-              LogH << "nlog gniazdo :>\n";
-            }
-            stuff.ForceRemove();
-            // Force, bo już i tak nic nie napiszemy raczej
-          }
-        }
-        break;
-      case OutMessage::ONE_U:
-        Username un = msg->User();
-        if (users_.count(un) < 1) {
-          LogH << "nie ma gniazda usera [" << un << "]\n";
-          return -1;
-        }
-        SockId id = users_.at(un).GetSockId();
-        SocketStuff *stuff = &client_socks_.at(id);
-        added_to_buf = msg->AddToBuf(&stuff->WrBuf());
-        if (added_to_buf < 0) {
-          LogH << "Błąd dodawania wiad' do buf'\n"
-            << stuff->GetId() << " " <<
-            stuff->GetSocket().GetFD() << "\nuser: " << un << '\n';
-          stuff->ForceRemove();
-          // :>
-        }
-        break;
-    }
-    PopMsg_();
-  }
-  return 0;
-}
-*/
 
 bool Server::CheckIfSendMsg_(const SocketStuff *connection,
     const OutMessage *msg) {
@@ -303,12 +210,12 @@ bool Server::CheckIfSendMsg_(const SocketStuff *connection,
     case OutMessage::BROADCAST_S:
       return true;
     case OutMessage::BROADCAST_U:
-      return SockToUn(connection->GetId());
+      return SockToUn(connection->GetId()).Good();
     case OutMessage::ONE_S:
       return msg->Sock() == connection->GetId();
     case OutMessage::ONE_U: {
       Username un = SockToUn(connection->GetId());
-      return un && un == msg->User();
+      return un.Good() && un == msg->User();
     }
     case OutMessage::LIST_S: case OutMessage::LIST_U: default:
       // Not implemented
@@ -370,7 +277,9 @@ int Server::DropSock_(SockId id) {
   intptr_t msgs_to_lower = calculate_remaining_msgs(msg, next_msg_it_,
     queued_msgs_);
   for (intptr_t i = 0; i < msgs_to_lower; ++i) {
-    if (--msg_queue_[msg].sockets_remaining < 1) {
+    intptr_t msg_index = (msg + i) % MESG_QUE_LEN;
+    if (--msg_queue_[msg_index].sockets_remaining < 1) {
+      assert(msg_queue_[msg_index].sockets_remaining >= 0);
       PopMsg_();
     }
   }
@@ -575,11 +484,12 @@ int Server::WriteToOneSock_(SocketStuff *stuff) {
   char buf[WRT_BUF];
   std::array<intptr_t, 2> place = stuff->GetMsgPlace();
   std::bitset<MESG_QUE_LEN> shall_send;
-  intptr_t copied = 0, written;
+  intptr_t copied = 0, written = 0;
   intptr_t msg_i = 0;
   intptr_t chars_to_copy;
   intptr_t msg_offset = place[1];
-  while (copied < WRT_BUF && msg_i < queued_msgs_) {
+  while (copied < WRT_BUF &&
+      (msg_i + place[0]) % MESG_QUE_LEN != next_msg_it_) {
     intptr_t msg_number = (place[0] + msg_i) % MESG_QUE_LEN;
     MsgCell &cell = msg_queue_[msg_number];
     // Niżej sprawdzamy, czy mamy wysłać tę wiadomość na to gniazdo,
@@ -600,55 +510,60 @@ int Server::WriteToOneSock_(SocketStuff *stuff) {
     ++msg_i;
     msg_offset = 0;
   }
-  if (copied == 0) {
-    return 0;
-  }
-  written = write(stuff->GetSocket().GetFD(), buf, copied);
-  if (written < 0) {
-    // Oj, bardzo źle.
-    LogH << "Błąd pisania do gniazda (funkcja write), " << stuff->GetId() << ' '
-      << stuff->GetSocket().GetFD() << '\n';
-    stuff->ForceRemove();
-    return -2;
-  }
-  if (written == 0) {
-    // chyba zamknięte
-    LogVL << "gniazdo zamknięte??\n";
-    stuff->Remove();
-    return -1;
+  if (copied > 0) {
+    written = write(stuff->GetSocket().GetFD(), buf, copied);
+    if (written < 0) {
+      // Oj, bardzo źle.
+      LogH << "Błąd pisania do gniazda (funkcja write), " << stuff->GetId() << ' '
+        << stuff->GetSocket().GetFD() << '\n' << std::strerror(errno) << '\n';
+      stuff->ForceRemove();
+      return -2;
+    }
+    if (written == 0) {
+      // chyba zamknięte
+      LogVL << "gniazdo zamknięte??\n";
+      stuff->Remove();
+      return -1;
+    }
   }
   intptr_t msg_bytes;
   msg_offset = place[1];
   intptr_t seen_msgs = msg_i;
   intptr_t to_subtract = 0;
   msg_i = 0;
-  while (written > 0 && msg_i < seen_msgs) {
+  while (msg_i < seen_msgs) {
     bool ignore = false;
     intptr_t msg_number = (place[0] + msg_i) % MESG_QUE_LEN;
-    msg_bytes = msg_queue_[msg_number].str.size() - msg_offset;
     msg_offset = 0;
     if (!shall_send[msg_i]) {
-      ++msg_i;
       to_subtract = 0;
       ignore = true;
-      continue;
+      msg_bytes = 0;
+    } else {
+      msg_bytes = msg_queue_[msg_number].str.size() - msg_offset;
+      to_subtract = std::min(msg_bytes, written);
+      ignore = false;
     }
-    to_subtract = std::min(msg_bytes, written);
-    ++msg_i;
     written -= to_subtract;
     if (to_subtract == msg_bytes || ignore) {
       msg_queue_[msg_number].sockets_remaining -= 1;
+      assert(msg_queue_[msg_number].sockets_remaining >= 0);
       if (msg_queue_[msg_number].sockets_remaining < 1) {
         PopMsg_();
       }
+      ++msg_i;
+    } else {
+      assert(written == 0);
+      break;
     }
   }
   assert(written == 0);
   intptr_t final_msg = (place[0] + msg_i) % MESG_QUE_LEN;
-  if (final_msg == next_msg_it_) {
-    to_subtract = 0;
+  intptr_t final_offset = 0;
+  if (final_msg != next_msg_it_) {
+    final_offset = to_subtract;
   }
-  stuff->SetMsgPlace(final_msg, to_subtract);
+  stuff->SetMsgPlace(final_msg, final_offset);
   return 1;
 }
 

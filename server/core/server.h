@@ -97,7 +97,8 @@ class Server {
         .sockets_remaining = static_cast<int>(client_socks_.size()),
       };
       msg_queue_[next_msg_it_].str = x->GetStr();
-      ++next_msg_it_;
+      next_msg_it_ = (next_msg_it_ + 1) % MESG_QUE_LEN;
+      ++queued_msgs_;
     } catch (std::bad_alloc &e) {
       return -1;
     }
