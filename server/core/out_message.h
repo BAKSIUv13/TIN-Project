@@ -33,21 +33,21 @@ class OutMessage {
   OutMessage() {}
   virtual ~OutMessage() {}
 
-  virtual std::string GetTypeName() = 0;
+  virtual std::string GetTypeName() const = 0;
 
-  virtual int Audience() = 0;
+  virtual int Audience() const = 0;
 
   // User list.
-  virtual std::list<Username> Users();
+  virtual std::list<Username> Users() const;
 
   // Socket list to send.
-  virtual std::list<SockId> Socks();
+  virtual std::list<SockId> Socks() const;
 
-  virtual Username User();
+  virtual Username User() const;
 
-  virtual SockId Sock();
+  virtual SockId Sock() const;
 
-  virtual int AddToBuf(WriteBuf *) = 0;
+  virtual std::string GetStr() const = 0;
 
   template <typename T>
   static std::unique_ptr<OutMessage> UP(T *t) {

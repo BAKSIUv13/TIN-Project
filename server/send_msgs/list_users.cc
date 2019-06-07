@@ -8,7 +8,7 @@
 #include "core/mquads.h"
 
 namespace tin {
-int ListUsers::AddToBuf(WriteBuf *buf) {
+std::string ListUsers::GetStr() const {
   std::string str;
   MQ::OWO.AppendToCppString(&str);
   MQ::SERV_LS_USERS.AppendToCppString(&str);
@@ -17,6 +17,6 @@ int ListUsers::AddToBuf(WriteBuf *buf) {
     NQuad(x.Len()).AppendToCppString(&str);
     str.append(x);
   }
-  return buf->Add(str);
+  return str;
 }
 }  // namespace tin

@@ -19,15 +19,15 @@ class ListUsers : public OutMessage {
 
   virtual ~ListUsers() {}
 
-  virtual std::string GetTypeName() {return "ListUsers";}
+  virtual std::string GetTypeName() const {return "ListUsers";}
 
-  virtual int Audience() {return ONE_U;}
+  virtual int Audience() const {return ONE_U;}
 
-  Username User() override {
+  Username User() const override {
     return username_;
   }
 
-  virtual int AddToBuf(WriteBuf *buf);
+  virtual std::string GetStr() const;
 
  private:
   Username username_;

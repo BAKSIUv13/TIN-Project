@@ -20,15 +20,15 @@ class MouseMoved : public OutMessage {
 
   virtual ~MouseMoved() {}
 
-  virtual std::string GetTypeName() {return "MouseMoved";}
+  virtual std::string GetTypeName() const {return "MouseMoved";}
 
-  virtual int Audience() {return BROADCAST_U;}
+  virtual int Audience() const {return BROADCAST_U;}
 
   Username GetUsername() const {return username_;}
   constexpr double x() const {return x_;}
   constexpr double y() const {return y_;}
 
-  virtual int AddToBuf(WriteBuf *buf);
+  virtual std::string GetStr() const;
  private:
   Username username_;
   double x_, y_;

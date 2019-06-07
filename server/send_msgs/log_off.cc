@@ -8,10 +8,10 @@
 #include "core/mquads.h"
 
 namespace tin {
-int LogOff::AddToBuf(WriteBuf *buf) {
+std::string LogOff::GetStr() const {
   std::string str;
   MQ::OWO.AppendToCppString(&str);
   MQ::SERV_LOG_OUT.AppendToCppString(&str);
-  return buf->Add(str);
+  return str;
 }
 }  // namespace tin

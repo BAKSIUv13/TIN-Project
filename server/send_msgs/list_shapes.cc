@@ -8,12 +8,12 @@
 #include "core/mquads.h"
 
 namespace tin {
-int ListShapes::AddToBuf(WriteBuf *buf) {
+std::string ListShapes::GetStr() const {
   std::string str;
   MQ::OWO.AppendToCppString(&str);
   MQ::SERV_LS_SHAPES.AppendToCppString(&str);
   NQuad(shapes_count_).AppendToCppString(&str);
   str.append(shapes_string_);
-  return buf->Add(str);
+  return str;
 }
 }  // namespace tin

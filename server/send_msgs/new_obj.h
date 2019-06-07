@@ -26,15 +26,15 @@ class NewObj : public OutMessage {
 
   virtual ~NewObj();
 
-  virtual std::string GetTypeName() {return "NewObj";}
+  virtual std::string GetTypeName() const {return "NewObj";}
 
-  virtual int Audience() {return BROADCAST_U;}
+  virtual int Audience() const {return BROADCAST_U;}
 
   Username GetUsername() const {return username_;}
   constexpr ObjectId Id() const {return id_;}
   const std::string &Code() const {return shape_code_;}
 
-  virtual int AddToBuf(WriteBuf *buf);
+  virtual std::string GetStr() const;
  private:
   Username username_;
   ObjectId id_;

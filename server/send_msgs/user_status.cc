@@ -8,13 +8,13 @@
 
 namespace tin {
 
-int UserStatus::AddToBuf(WriteBuf *buf) {
+std::string UserStatus::GetStr() const {
   std::string str;
   MQ::OWO.AppendToCppString(&str);
   MQ::SERV_USER_STATUS.AppendToCppString(&str);
   what_.AppendToCppString(&str);
   NQuad(GetUsername().Len()).AppendToCppString(&str);
   str.append(GetUsername());
-  return buf->Add(str);
+  return str;
 }
 }  // namespace tin

@@ -8,7 +8,7 @@
 #include "core/mquads.h"
 
 namespace tin {
-int Sig::AddToBuf(WriteBuf *buf) {
+std::string Sig::GetStr() const {
   std::string str;
   MQ::OWO.AppendToCppString(&str);
   if (IsHeavy()) {
@@ -19,6 +19,6 @@ int Sig::AddToBuf(WriteBuf *buf) {
   code_.AppendToCppString(&str);
   NQuad(static_cast<uint32_t>(msg_.size())).AppendToCppString(&str);
   str.append(msg_);
-  return buf->Add(str);
+  return str;
 }
 }  // namespace tin
