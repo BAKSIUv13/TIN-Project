@@ -534,7 +534,6 @@ int Server::WriteToOneSock_(SocketStuff *stuff) {
   while (msg_i < seen_msgs) {
     bool ignore = false;
     intptr_t msg_number = (place[0] + msg_i) % MESG_QUE_LEN;
-    msg_offset = 0;
     if (!shall_send[msg_i]) {
       to_subtract = 0;
       ignore = true;
@@ -544,6 +543,7 @@ int Server::WriteToOneSock_(SocketStuff *stuff) {
       to_subtract = std::min(msg_bytes, written);
       ignore = false;
     }
+    msg_offset = 0;
     written -= to_subtract;
     if (to_subtract == msg_bytes || ignore) {
       msg_queue_[msg_number].sockets_remaining -= 1;
@@ -562,6 +562,10 @@ int Server::WriteToOneSock_(SocketStuff *stuff) {
   intptr_t final_offset = 0;
   if (final_msg != next_msg_it_) {
     final_offset = to_subtract;
+    if (place[0] == final_msg) {
+      // Może nie za ładnie ale zadziała.
+      final_offset += place[1];
+    }
   }
   stuff->SetMsgPlace(final_msg, final_offset);
   return 1;
