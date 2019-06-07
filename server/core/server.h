@@ -33,7 +33,7 @@ class Server {
   static constexpr int MAX_UN_LEN = Username::MAX_NAME_LEN;
   static constexpr int MAX_PW_LEN = 32;
   static constexpr int MESG_QUE_LEN = 48;
-  static constexpr int WRT_BUF = 4096;
+  static constexpr int WRT_BUF = 256 * 1024;
   static constexpr int MAX_CLIENTS = 100;
 
   static const std::map<InstrId, InstrSupp> instructions;
