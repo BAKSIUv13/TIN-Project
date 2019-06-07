@@ -128,15 +128,14 @@ int Server::DoSel_() {
 }
 
 int Server::ReadMainFds_() {
-  static constexpr std::streamsize IN_BUF_SIZE = 256;
-  char in_buf[IN_BUF_SIZE];
+  char in_buf[STDIN_BUF_SIZE];
   if (Sel::READ & sel_.Get(end_pipe_[0])) {
     LogH << "Przyszło zamknięcie ze specjanego potoku.\n";
     runs_ = false;
     return 1;
   }
   if (DEAL_WITH_STDIN && (Sel::READ & sel_.Get(STDIN_FD))) {
-    std::cin.getline(in_buf, IN_BUF_SIZE);
+    std::cin.getline(in_buf, STDIN_BUF_SIZE, '\n');
     if (std::cin.eof()) {
       LogH << "Na stdin przyszedł koniec, zamykanko :>\n";
       runs_ = false;
@@ -181,8 +180,23 @@ Username Server::SockToUn(SockId id) {
 }
 
 int Server::DealWithStdinBuf_(const char *s) {
+  static constexpr size_t BUF_SIZE = 128;
+  char buf[BUF_SIZE];
   if (strncmp(s, "stop", 4) == 0 && (s[4] == '\n' || s[4] == ' ')) {
     StopRun();
+  }
+  std::stringstream ss(s);
+  std::string str;
+  ss.getline(buf, BUF_SIZE, ' ');
+  str = buf;
+  while (str.back() == '\\' && ss.good()) {
+    ss.getline(buf, BUF_SIZE, ' ');
+    str += buf;
+  }
+  if (str == "exit" || str == "quit" || str == "stop") {
+    runs_ = false;
+  } else if (str == "clear") {
+    
   }
   return 0;
 }
@@ -293,26 +307,15 @@ void Server::SpecialHardcodeInit() {
 }
 
 int Server::LoopTick_() {
-  int feed_sel_ret = FeedSel_();
-  int do_sel_ret = DoSel_();
+  FeedSel_();
+  DoSel_();
   int read_main_fds_ret = ReadMainFds_();
   if (read_main_fds_ret > 0)
     return 0;
-  int write_to_socks_ret = WriteToSocks_();
-  int read_clients_ret = ReadClients_();
-  int do_world_work_ret = DoWorldWork_();
-  // int msgs_to_bufs_ret = MsgsToBufs_();
-  int delete_marked_socks_ret = DeleteMarkedSocks_();
-  {
-    (void)feed_sel_ret;
-    (void)do_sel_ret;
-    // (void)msgs_to_bufs_ret;
-    (void)read_main_fds_ret;
-    (void)write_to_socks_ret;
-    (void)read_clients_ret;
-    (void)do_world_work_ret;
-    (void)delete_marked_socks_ret;
-  }
+  WriteToSocks_();
+  ReadClients_();
+  DoWorldWork_();
+  DeleteMarkedSocks_();
 
   return 0;
 }

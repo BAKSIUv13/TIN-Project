@@ -35,6 +35,7 @@ class Server {
   static constexpr int MESG_QUE_LEN = 48;
   static constexpr int WRT_BUF = 256 * 1024;
   static constexpr int MAX_CLIENTS = 100;
+  static constexpr size_t STDIN_BUF_SIZE = 512;
 
   static const std::map<InstrId, InstrSupp> instructions;
 
@@ -92,9 +93,9 @@ class Server {
     try {
       T *x = new T(std::forward<Args>(args)...);
       std::unique_ptr<OutMessage> u(std::move(x));
-      msg_queue_[next_msg_it_] = MsgCell{
-        .msg = std::move(u),
-        .sockets_remaining = static_cast<int>(client_socks_.size()),
+      msg_queue_[next_msg_it_] = MsgCell {
+        msg : std::move(u),
+        sockets_remaining : static_cast<int>(client_socks_.size()),
       };
       msg_queue_[next_msg_it_].str = x->GetStr();
       next_msg_it_ = (next_msg_it_ + 1) % MESG_QUE_LEN;
