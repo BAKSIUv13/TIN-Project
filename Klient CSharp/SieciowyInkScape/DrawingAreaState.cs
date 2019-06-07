@@ -15,7 +15,7 @@ namespace SieciowyInkScape
         
 
         
-        public int drawingAckTime_ms = 250;
+        public int drawingAckTime_ms = 500;
         public int mousePositionTimeOut_s = 30;
 
 

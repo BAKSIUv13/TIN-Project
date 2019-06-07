@@ -332,6 +332,15 @@ namespace SieciowyInkScape
                     ));
                 }
             }
+            catch(FormatException fEx)
+            {
+                mainForm.Invoke(new Action(() =>
+                {
+                    ConnectionFailedEventArgs arg = new ConnectionFailedEventArgs(fEx);
+                    ConnectionFailed(this, arg);
+                }
+                ));
+            }
             catch
             {
                 throw;
@@ -549,7 +558,7 @@ namespace SieciowyInkScape
         double SocketReceiveDouble()
         {
             SocketReceive(8);
-            //if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 8);
+           // if (System.BitConverter.IsLittleEndian) Array.Reverse(buf, 0, 8);
             return System.BitConverter.ToDouble(buf, 0);
         }
         string SocketReceiveString(UInt32 size)

@@ -150,6 +150,14 @@ namespace SieciowyInkScape
             {
                 ChatBoxWriteLine("Połączenie przerwane. Status socketa: " + e.socketException.Message);
             }
+            else if (e.reason == Client.ConnectionFailedEventArgs.ConnectionFailReasons.formatException)
+            {
+                ChatBoxWriteLine("Połączenie przerwane. Błąd adresu: " + e.formatException.Message);
+            }
+            else if (e.reason == Client.ConnectionFailedEventArgs.ConnectionFailReasons.otherException)
+            {
+                ChatBoxWriteLine("Połączenie przerwane. Wyjątek: " + e.exception);
+            }
             else
             {
                 ChatBoxWriteLine("Połączenie przerwane. Powód: " + e.reason.ToString("g"));
