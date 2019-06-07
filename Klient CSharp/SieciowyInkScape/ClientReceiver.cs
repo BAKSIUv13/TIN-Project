@@ -360,7 +360,11 @@ namespace SieciowyInkScape
                 {
 
                 }
-                
+                catch (ObjectDisposedException)
+                {
+
+                }
+
             }
             catch (Exception ex)
             {
