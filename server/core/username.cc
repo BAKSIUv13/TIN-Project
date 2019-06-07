@@ -35,8 +35,12 @@ Username::Username(const std::string &str) {
 }
 
 Username::Username(const char *c) {
-  strncpy(c_, c, MAX_NAME_LEN);
-  c_[MAX_NAME_LEN] = '\0';
+  strncpy(c_, c, MAX_NAME_LEN + 1);
+  if (c_[MAX_NAME_LEN] != '\0') {
+    c_[0] = '\0';
+    state_ = BAD;
+    return;
+  }
   state_ = Check_();
   ZeroBad_();
 }

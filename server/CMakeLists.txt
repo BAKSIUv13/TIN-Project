@@ -63,4 +63,5 @@ add_executable(server
 )
 
 target_link_libraries(server
+  "crypto"
 )

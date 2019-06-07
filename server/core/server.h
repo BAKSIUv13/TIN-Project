@@ -49,7 +49,7 @@ class Server {
   // From other thread?? This fn is blocking chyba.
   int StopRun();
 
-  // Returns username assigned to fd. Blank if fd does not have session.
+  // Returns username assigned to fd. Blank if id does not have session.
   Username SockToUn(SockId id);
 
   // xd
@@ -60,10 +60,20 @@ class Server {
     return &instructions.at(id);
   }
 
-  int LogInUser(const Username &un, const std::string &pw, SockId,
+  int LogInUser(Username un, const std::string &pw, SockId,
     bool generate_response);
 
   int LogOutUser(SockId, bool generate_response);
+
+  int UserAdd(const Username &un, const std::string &passwd, bool admin);
+
+  int UserDel(const Username &un);
+
+  int UserChPasswd(const Username &un, const std::string &passwd);
+
+  int UserChPerm(const Username &un, bool admin);
+
+  LoggedUser::Mode UserGetMode(const Username &un);
 
   template <typename T, typename... Args>
   T *PushMsg(Args &&... args) {
@@ -113,6 +123,14 @@ class Server {
     it.server_ = this;
     it.it_ = users_.cend();
     return it;
+  }
+
+  int AttachAccountFile(const char *path, bool writable) {
+    return am_.AttachFile(path, writable);
+  }
+
+  int DetachAccountFile() {
+    return am_.DetachFile();
   }
 
  private:
@@ -171,6 +189,10 @@ class Server {
 
   int NextSockId_() {
     return next_sock_id_++;
+  }
+
+  int Auth_(Username *un, std::string passwd) {
+    return am_.Authenticate(un, passwd);
   }
 
   // This variable tells if server is now running.
