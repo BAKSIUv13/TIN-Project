@@ -19,7 +19,7 @@ namespace SieciowyInkScape
         DateTime mousePositionLastSentTime = new DateTime(0);
         int mousePositionSendInterval_ms = 100;
         DateTime pencilLastSentTime = new DateTime(0);
-        int pencilSendInterval_ms = 33;
+        int pencilSendInterval_ms = 16;
 
         Client client;
 
@@ -87,6 +87,8 @@ namespace SieciowyInkScape
             textBoxPort.Enabled = false;
             textBoxUsername.Enabled = true;
             textBoxPassword.Enabled = true;
+
+            userListBox.Text = "";
         }
         void OnLoginSucceeded(object sender, EventArgs e)
         {
@@ -115,6 +117,8 @@ namespace SieciowyInkScape
             textBoxPort.Enabled = false;
             textBoxUsername.Enabled = true;
             textBoxPassword.Enabled = true;
+
+            userListBox.Text = "";
         }
         void OnConnectionSucceeded(object sender, EventArgs e)
         {
@@ -160,6 +164,8 @@ namespace SieciowyInkScape
             textBoxPort.Enabled = true;
             textBoxUsername.Enabled = true;
             textBoxPassword.Enabled = true;
+
+            userListBox.Text = "";
         }
         void OnLogicError(object sender, Client.LogicErrorEventArgs e)
         {
@@ -222,7 +228,7 @@ namespace SieciowyInkScape
             string output = "";
             for(int x = 0; x < e.userList.Count; ++x)
             {
-                output += e.userList[x] + "\n";
+                output += e.userList[x] + "\r\n";
             }
 
             UserListWrite(output);
@@ -457,7 +463,7 @@ namespace SieciowyInkScape
             drawingArea.mousePosition.X = (float)e.Location.X / (float)drawingArea.areaSize.X;
             drawingArea.mousePosition.Y = (float)e.Location.Y / (float)drawingArea.areaSize.Y;
 
-            if(client.loggedIn)
+            if(client.loggedIn && checkBox1.Checked)
             {
                 if (mousePositionLastSentTime + new TimeSpan(0, 0, 0, 0, mousePositionSendInterval_ms) < DateTime.Now)
                 {
@@ -494,8 +500,17 @@ namespace SieciowyInkScape
                             DrawingAreaState.PathObject path = (DrawingAreaState.PathObject)obj;
                             path.anotherXposs.Add((float)(mn.X) / (float)drawingArea.areaSize.X);
                             path.anotherYposs.Add((float)(mn.Y) / (float)drawingArea.areaSize.Y);
-                        }
 
+                            if (path.anotherXposs.Count > 300)
+                            {
+                                // dirty fix -> every 5 seconds end existing path and begin next to circumvent overflow exception.
+                                drawingArea.Exit();
+                                drawing_MouseUp(sender, e);
+                                drawing_MouseDown(sender, e);
+                                drawingArea.Access();
+                            }
+                        }
+                        
 
                         break;
 
@@ -746,5 +761,6 @@ namespace SieciowyInkScape
         {
 
         }
+
     }
 }
