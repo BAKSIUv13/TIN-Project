@@ -225,6 +225,16 @@ int Server::DealWithStdinBuf_(const char *s) {
       str = get_word(ss);
       std::string passwd(str);
       UserAdd(un, passwd, false);
+  } else if (str == "userdel") {
+      str = get_word(ss);
+      Username un(str);
+      UserDel(un);
+  } else if (str == "userchpasswd") {
+      str = get_word(ss);
+      Username un(str);
+      str = get_word(ss);
+      std::string passwd(str);
+      UserChPasswd(un, passwd);
   }
   return 0;
 }

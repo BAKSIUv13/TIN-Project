@@ -138,7 +138,8 @@ bool chk_file_end(FILE *file) {
 int ch_file_bytes(FILE *file, intptr_t off, intptr_t len,
     const std::string &s) {
   static constexpr intptr_t BUF_SIZE = 256;
-  char buf[BUF_SIZE];
+  char buf[BUF_SIZE + 1];
+  buf[BUF_SIZE] = '\0';
   if (len == (intptr_t)s.size()) {
     fseek(file, off, SEEK_SET);
     fwrite(s.c_str(), s.size(), 1, file);
@@ -165,7 +166,7 @@ int ch_file_bytes(FILE *file, intptr_t off, intptr_t len,
       }
       fseek(file, off + s.size() + i - j, SEEK_SET);
       int jj = 0;
-      while (jj < j) {
+      while (jj < j && jj < BUF_SIZE) {
         fputc(buf[jj], file);
         ++jj;
       }
