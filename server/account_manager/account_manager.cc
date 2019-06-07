@@ -465,7 +465,7 @@ int AccountManager::UserDel(const Username &un) {
   return 0;
 }
 
-int AccountManager::UserChPass(const Username &un, const std::string &passwd) {
+int AccountManager::UserChPasswd(const Username &un, const std::string &passwd) {
   if (!Writable()) return -1;
   std::string line;
   int res = get_file_line(the_file_, un, &line);
@@ -494,15 +494,12 @@ int AccountManager::UserChRole(const Username &un, bool admin) {
 }
 
 int AccountManager::test(int argc, char **argv, char **env) {
-  //std::cerr << "Samurai Jack:x:" << make_base64("Aku") << ":" << make_base64(make_hash(xor_strs("Aku", "xdxd"))) << '\n';
-  // std::cerr << "admin:x:" << make_base64("11111") << ":" << make_base64(make_hash(xor_strs("1111", "admin"))) << '\n';
-  //std::cerr << "Shrek::" << make_base64("All Star") << ":" << make_base64(make_hash(xor_strs("All Star", "osle!"))) << '\n';
   int res;
   AccountManager am;
   am.FeedRand(std::time(nullptr) ^ getpid());
   res = am.AttachFile("shadow.log", true);
 
-  return 0;
+  return 0 & res;
 }
 
 }  // namespace tin
