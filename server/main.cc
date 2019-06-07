@@ -71,7 +71,7 @@ int main(int argc, char **argv, char **env) {
   }
 
   server.SpecialHardcodeInit();
-  // server.AttachAccountFile("shadow.log", false);
+  server.AttachAccountFile("shadow.log", true);
   arg_port ? server.Run(port) : server.Run();
   sigaction(SIGINT, &old_sa, nullptr);
 }

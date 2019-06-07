@@ -459,6 +459,46 @@ int Server::DisposeMsg_() {
   return cut_connections;
 }
 
+int Server::UserDel(const Username &un) {
+  if (!am_.Writable()) return -1;
+  LoggedUser::Mode old_mode = LoggedUser::Mode::NOTHING;
+  if (users_.count(un) > 0) {
+    old_mode = users_.at(un).GetMode();
+    users_.at(un).ChMode(LoggedUser::Mode::GUEST);
+  }
+  int res = am_.UserDel(un);
+  if (res < 0 && old_mode != LoggedUser::Mode::NOTHING) {
+    users_.at(un).ChMode(old_mode);
+    return -1;
+  }
+  return 0;
+}
+
+
+int Server::UserChRole(const Username &un, bool admin) {
+  if (!am_.Writable()) return -1;
+  LoggedUser::Mode old_mode = LoggedUser::Mode::NOTHING;
+  if (users_.count(un) > 0) {
+    old_mode = users_.at(un).GetMode();
+    users_.at(un).ChMode
+      (admin ? LoggedUser::Mode::ADMIN : LoggedUser::Mode::NORMAL);
+  }
+  int res = am_.UserChRole(un, admin);
+  if (res < 0 && old_mode != LoggedUser::Mode::NOTHING) {
+    users_.at(un).ChMode(old_mode);
+    return -1;
+  }
+  return 0;
+}
+
+
+int Server::UserChPasswd(const Username &un, const std::string &passwd) {
+  if (!am_.Writable()) return -1;
+  FeedRand_();
+  int res = am_.UserChPasswd(un, passwd);
+  return res;
+}
+
 
 int Server::UserAdd(const Username &un, const std::string &passwd, bool admin) {
   if (!am_.Writable()) return -1;
@@ -468,9 +508,7 @@ int Server::UserAdd(const Username &un, const std::string &passwd, bool admin) {
     users_.at(un).ChMode
       (admin ? LoggedUser::Mode::ADMIN : LoggedUser::Mode::NORMAL);
   }
-  am_.FeedRand
-   (std::time(nullptr) ^ getpid() ^ client_socks_.size() ^
-     reinterpret_cast<intptr_t>(this));
+  FeedRand_();
   int res = am_.UserAdd(un, passwd, admin);
   if (res < 0 && old_mode != LoggedUser::Mode::NOTHING) {
     users_.at(un).ChMode(old_mode);
@@ -569,6 +607,12 @@ int Server::WriteToOneSock_(SocketStuff *stuff) {
   }
   stuff->SetMsgPlace(final_msg, final_offset);
   return 1;
+}
+
+
+void Server::FeedRand_() {
+  return am_.FeedRand(std::time(nullptr) ^ getpid() ^ client_socks_.size() ^
+  reinterpret_cast<intptr_t>(this));
 }
 
 }  // namespace tin

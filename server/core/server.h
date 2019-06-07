@@ -80,7 +80,7 @@ class Server {
 
   int UserChPasswd(const Username &un, const std::string &passwd);
 
-  int UserChPerm(const Username &un, bool admin);
+  int UserChRole(const Username &un, bool admin);
 
   LoggedUser::Mode UserGetMode(const Username &un);
 
@@ -217,6 +217,8 @@ class Server {
   }
 
   bool CheckIfSendMsg_(const SocketStuff *, const OutMessage *);
+
+  void FeedRand_();
 
   // This variable tells if server is now running.
   bool runs_;

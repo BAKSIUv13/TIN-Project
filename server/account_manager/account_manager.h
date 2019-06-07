@@ -52,7 +52,7 @@ class AccountManager {
 
   int UserAdd(const Username &, std::string passwd, bool admin);
   int UserDel(const Username &);
-  int UserChPass(const Username &, const std::string &passwd);
+  int UserChPasswd(const Username &, const std::string &passwd);
   int UserChRole(const Username &, bool admin);
 
   int Authenticate(Username *, std::string passwd);
