@@ -30,13 +30,18 @@ namespace SieciowyInkScape
         {
             public enum ConnectionFailReasons
             {
-                socketException, otherException, socketNotCreated, alreadyConnected, alreadyConnecting,  /* disconnected, */ criticalLogicErrorHappened
+                socketException, formatException, otherException, socketNotCreated, alreadyConnected, alreadyConnecting,  /* disconnected, */ criticalLogicErrorHappened
             }
 
             public ConnectionFailedEventArgs(System.Net.Sockets.SocketException socketException)
             {
                 this.reason = ConnectionFailReasons.socketException;
                 this.socketException = socketException;
+            }
+            public ConnectionFailedEventArgs(FormatException formatException)
+            {
+                this.reason = ConnectionFailReasons.formatException;
+                this.formatException = formatException;
             }
             public ConnectionFailedEventArgs(Exception exception)
             {
@@ -49,6 +54,8 @@ namespace SieciowyInkScape
                 this.reason = reason;
             }
             public System.Net.Sockets.SocketException socketException;
+            public FormatException formatException;
+
             public Exception exception;
             public ConnectionFailReasons reason;
         }
@@ -68,7 +75,7 @@ namespace SieciowyInkScape
         {
             public enum LoginFailReasons
             {
-                badl, band, wasl, acoc, loer, nlog, LNun, LNpw
+                badl, band, wasl, acoc, loer, nlog, LNun, LNpw, KICK
             }
             public LoginFailedEventArgs(LoginFailReasons reason, string serverMessage)
             {
