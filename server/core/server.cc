@@ -196,6 +196,8 @@ int Server::DealWithStdinBuf_(const char *s) {
   if (str == "exit" || str == "quit" || str == "stop") {
     runs_ = false;
   } else if (str == "clear") {
+    world_.ClearImage();
+  } else if (str == "kick") {
     
   }
   return 0;

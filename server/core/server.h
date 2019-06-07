@@ -93,10 +93,9 @@ class Server {
     try {
       T *x = new T(std::forward<Args>(args)...);
       std::unique_ptr<OutMessage> u(std::move(x));
-      msg_queue_[next_msg_it_] = MsgCell {
-        msg : std::move(u),
-        sockets_remaining : static_cast<int>(client_socks_.size()),
-      };
+      msg_queue_[next_msg_it_].msg = std::move(u);
+      msg_queue_[next_msg_it_].sockets_remaining =
+        static_cast<int>(client_socks_.size());
       msg_queue_[next_msg_it_].str = x->GetStr();
       next_msg_it_ = (next_msg_it_ + 1) % MESG_QUE_LEN;
       ++queued_msgs_;
