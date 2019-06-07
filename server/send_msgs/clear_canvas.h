@@ -22,7 +22,7 @@ class ClearCanvas : public OutMessage {
 
   virtual int Audience() const {return BROADCAST_U;}
 
-  virtual int AddToBuf(WriteBuf *buf) const;
+  virtual std::string GetStr() const;
 };  // class LogOk
 }  // namespace tin
 

@@ -27,7 +27,7 @@ class UserMsg : public OutMessage {
   Username GetUsername() const {return username_;}
   const std::string &GetContent() const {return content_;}
 
-  virtual int AddToBuf(WriteBuf *buf) const;
+  virtual std::string GetStr() const;
  private:
   Username username_;
   std::string content_;

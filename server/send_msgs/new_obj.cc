@@ -12,7 +12,7 @@ namespace tin {
 
 NewObj::~NewObj() {}
 
-int NewObj::AddToBuf(WriteBuf *buf) const {
+std::string NewObj::GetStr() const {
   std::string str;
   MQ::OWO.AppendToCppString(&str);
   MQ::SERV_NEW_OBJECT.AppendToCppString(&str);
@@ -21,6 +21,6 @@ int NewObj::AddToBuf(WriteBuf *buf) const {
   NQuad(un_len).AppendToCppString(&str);
   str.append(username_, un_len);
   str.append(shape_code_);
-  return buf->Add(str);
+  return str;
 }
 }  // namespace tin

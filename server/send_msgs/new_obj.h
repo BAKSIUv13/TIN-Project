@@ -34,7 +34,7 @@ class NewObj : public OutMessage {
   constexpr ObjectId Id() const {return id_;}
   const std::string &Code() const {return shape_code_;}
 
-  virtual int AddToBuf(WriteBuf *buf) const;
+  virtual std::string GetStr() const;
  private:
   Username username_;
   ObjectId id_;

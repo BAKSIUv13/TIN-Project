@@ -8,7 +8,7 @@
 
 namespace tin {
 
-int UserMsg::AddToBuf(WriteBuf *buf) const {
+std::string UserMsg::GetStr() const {
   std::string str;
   MQ::OWO.AppendToCppString(&str);
   MQ::SERV_MESG.AppendToCppString(&str);
@@ -18,6 +18,6 @@ int UserMsg::AddToBuf(WriteBuf *buf) const {
   uint32_t content_size = GetContent().size();
   NQuad(content_size).AppendToCppString(&str);
   str.append(GetContent());
-  return buf->Add(str);
+  return str;
 }
 }  // namespace tin

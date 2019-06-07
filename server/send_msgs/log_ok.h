@@ -25,7 +25,7 @@ class LogOk : public OutMessage {
 
   virtual SockId Sock() const {return id_;}
 
-  virtual int AddToBuf(WriteBuf *buf) const;
+  virtual std::string GetStr() const;
  private:
   SockId id_;
 };  // class LogOk

@@ -28,7 +28,7 @@ class MouseMoved : public OutMessage {
   constexpr double x() const {return x_;}
   constexpr double y() const {return y_;}
 
-  virtual int AddToBuf(WriteBuf *buf) const;
+  virtual std::string GetStr() const;
  private:
   Username username_;
   double x_, y_;

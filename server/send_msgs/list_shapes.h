@@ -36,7 +36,7 @@ class ListShapes : public OutMessage {
     return username_;
   }
 
-  virtual int AddToBuf(WriteBuf *buf) const;
+  virtual std::string GetStr() const;
 
  private:
   Username username_;

@@ -28,7 +28,7 @@ class Sig : public OutMessage {
 
   virtual int Audience() const {return ONE_S;}
   virtual SockId Sock() const {return id_;}
-  virtual int AddToBuf(WriteBuf *buf) const;
+  virtual std::string GetStr() const;
 
   bool IsHeavy() const {return heavy_;}
   const std::string &GetMsg() const {return msg_;}

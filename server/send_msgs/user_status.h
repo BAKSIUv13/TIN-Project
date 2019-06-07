@@ -27,7 +27,7 @@ class UserStatus : public OutMessage {
   Username GetUsername() const {return username_;}
   constexpr NQuad What() const {return what_;}
 
-  virtual int AddToBuf(WriteBuf *buf) const;
+  virtual std::string GetStr() const;
  private:
   Username username_;
   NQuad what_;

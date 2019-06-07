@@ -8,10 +8,10 @@
 #include "core/mquads.h"
 
 namespace tin {
-int LogOk::AddToBuf(WriteBuf *buf) const {
+std::string LogOk::GetStr() const {
   std::string str;
   MQ::OWO.AppendToCppString(&str);
   MQ::SERV_LOGIN_OK.AppendToCppString(&str);
-  return buf->Add(str);
+  return str;
 }
 }  // namespace tin
