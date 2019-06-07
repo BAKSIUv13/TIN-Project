@@ -14,13 +14,13 @@ _W_QUEUE_SIZE = 1024
 
 # seconds
 SEND_GET_BYTE_TIMEOUT_SEC = 1
-PUT_BYTE_TIMEOUT_SEC = 15
+PUT_BYTE_TIMEOUT_SEC = 60
 
 class Sender(threading.Thread):
     """Class responsible for sending data."""
 
     def __init__(self, socket, send_read_pipe, recv_write_pipe):
-        """Prepare sender resources."""
+        """Prepare Sender resources."""
         threading.Thread.__init__(self)
         self._s = socket
         self._write_bytes_objects_queue = queue.Queue(_W_QUEUE_SIZE)
