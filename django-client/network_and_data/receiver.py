@@ -13,7 +13,7 @@ _RECV_PORTION_SIZE = 4
 _RECV_QUEUE_SIZE = 32 * 1024
 
 # seconds
-GET_BYTE_TIMEOUT_SEC = 15
+GET_BYTE_TIMEOUT_SEC = 60
 RECV_PUT_BYTE_TIMEOUT_SEC = 1
 
 class Receiver(threading.Thread):
