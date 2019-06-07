@@ -76,15 +76,15 @@ class Server {
   LoggedUser::Mode UserGetMode(const Username &un);
 
   template <typename T, typename... Args>
-  T *PushMsg(Args &&... args) {
-    T *x = new T(std::forward<Args>(args)...);
-    std::unique_ptr<OutMessage> u(std::move(x));
+  int PushMsg(Args &&... args) {
     try {
+      T *x = new T(std::forward<Args>(args)...);
+      std::unique_ptr<OutMessage> u(std::move(x));
       messages_to_send_.emplace_back(std::move(u));
     } catch (std::bad_alloc &e) {
-      return nullptr;
+      return -1;
     }
-    return x;
+    return 0;
   }
 
 

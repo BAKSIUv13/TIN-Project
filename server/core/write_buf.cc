@@ -6,8 +6,29 @@
 
 namespace tin {
 
-int WriteBuf::Add(const char *s) {
+int WriteBuf::Add(const char *s, size_t n) {
+  if (Bad()) {
+    return -1;
+  } else if (n > static_cast<size_t>(Place())) {
+    // Przepełniony
+    start_ = -1;
+    return -1;
+  }
+  int i = 0;
+  int j = i + len_;
+  while (static_cast<size_t>(i) < n) {
+    buf_[GetAt_(j)] = s[i];
+    ++i;
+    ++j;
+  }
+  len_ += i;
+  return i;
+}
+
+/*
+int WriteBuf::Add(const char *s, size_t n) {
   if (Bad()) return -1;
+  
   const char *x = s;
   int i = 0;
   int j = i + len_;
@@ -25,7 +46,12 @@ int WriteBuf::Add(const char *s) {
   }
   return i;
 }
+*/
 
+int WriteBuf::Add(const std::string &str) {
+  return Add(str.c_str(), str.size());
+}
+/*
 int WriteBuf::Add(const std::string &str) {
   if (Bad()) {
     return -1;
@@ -44,7 +70,7 @@ int WriteBuf::Add(const std::string &str) {
   len_ += i;
   return i;
 }
-
+*/
 int WriteBuf::Get(char *s, int n) {
   if (Bad()) {
     return -1;

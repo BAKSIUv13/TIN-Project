@@ -13,13 +13,14 @@ namespace tin {
 int ReqLsUsers::Fn(Server *server, SocketStuff *stuff, World *) {
   Username un = server->SockToUn(stuff->GetId());
   if (un) {
-    ListUsers *lu = server->PushMsg<ListUsers>(un);
-    if (lu == nullptr) {
+    std::list<Username> user_list;
+    for (auto it = server->usercbegin(); it != server->usercend(); ++it) {
+      user_list.push_back(*it);
+    }
+    int res = server->PushMsg<ListUsers>(un, std::move(user_list));
+    if (res < 0) {
       LogH << "lsus - chyba się pamięć kończy\n";
       return -1;
-    }
-    for (auto it = server->usercbegin(); it != server->usercend(); ++it) {
-      lu->AddUser(*it);
     }
   } else {
     server->PushMsg<Sig>(stuff->GetId(), MQ::ERR_NOT_LOGGED, false);

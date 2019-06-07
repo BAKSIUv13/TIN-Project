@@ -17,7 +17,7 @@
 namespace tin {
 
 struct LinePath : BasicObject {
-  static constexpr size_t MAX_POINT_COUNT = 12000;
+  static constexpr size_t MAX_POINT_COUNT = 1600;
 
   virtual ~LinePath() = default;
   const char *GetType() const override {
@@ -48,7 +48,7 @@ struct LinePath : BasicObject {
 inline void InitLinePath(LinePath *l, Color stroke_c, Dist stroke_w,
     std::vector<Vec2> pts) {
   if (l == nullptr) return;
-  l->transform = Transform();
+  l->transform = Transform(1.0);
   l->fill_color = Color();
   l->stroke_color = stroke_c;
   l->stroke_width = stroke_w;
