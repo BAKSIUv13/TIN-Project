@@ -32,8 +32,17 @@ class Server {
   static constexpr int NQS = sizeof(NQuad);
   static constexpr int MAX_UN_LEN = Username::MAX_NAME_LEN;
   static constexpr int MAX_PW_LEN = 32;
+  static constexpr int MESG_QUE_LEN = 48;
+  static constexpr int WRT_BUF = 4096;
+  static constexpr int MAX_CLIENTS = 100;
 
   static const std::map<InstrId, InstrSupp> instructions;
+
+  struct MsgCell {
+    std::unique_ptr<OutMessage> msg;
+    std::string str;
+    int sockets_remaining;
+  };
 
   Server();
   Server(const Server &) = delete;
@@ -77,16 +86,23 @@ class Server {
 
   template <typename T, typename... Args>
   int PushMsg(Args &&... args) {
+    if (queued_msgs_ >= MESG_QUE_LEN - 1) {
+      DisposeMsg_();
+    }
     try {
       T *x = new T(std::forward<Args>(args)...);
       std::unique_ptr<OutMessage> u(std::move(x));
-      messages_to_send_.emplace_back(std::move(u));
+      msg_queue_[next_msg_it_] = MsgCell{
+        .msg = std::move(u),
+        .sockets_remaining = static_cast<int>(client_socks_.size()),
+      };
+      msg_queue_[next_msg_it_].str = x->GetStr();
+      ++next_msg_it_;
     } catch (std::bad_alloc &e) {
       return -1;
     }
     return 0;
   }
-
 
   class UserIterator {
    public:
@@ -134,9 +150,10 @@ class Server {
   }
 
  private:
-  int PushMsg_(std::unique_ptr<OutMessage> msg);
   OutMessage *FirstMsg_();
   int PopMsg_();
+
+  int DisposeMsg_();
 
   bool IsLogged_(const Username &un) {
     return users_.count(un) > 0;
@@ -169,6 +186,9 @@ class Server {
   // Write data to client sockets.
   int WriteToSocks_();
 
+  // Write data to one client socket.
+  int WriteToOneSock_(SocketStuff *);
+
   // Reads client sockets and deal with it.
   int ReadClients_();
 
@@ -195,6 +215,8 @@ class Server {
     return am_.Authenticate(un, passwd);
   }
 
+  bool CheckIfSendMsg_(const SocketStuff *, const OutMessage *);
+
   // This variable tells if server is now running.
   bool runs_;
 
@@ -206,9 +228,13 @@ class Server {
   std::map<SockId, LoggedUser *> socks_to_users_;
   TheConfig conf_;
   AccountManager am_;
-  std::list<std::unique_ptr<OutMessage> > messages_to_send_;
+  // usune jak będzie działąć nastrępne
+  // std::list<std::unique_ptr<OutMessage> > messages_to_send_;
+  std::array<MsgCell, MESG_QUE_LEN> msg_queue_;
 
   SockId next_sock_id_;
+  int queued_msgs_;
+  int next_msg_it_;
 
   // Pipe that may be used to tell the server to stop.
   int end_pipe_[2];

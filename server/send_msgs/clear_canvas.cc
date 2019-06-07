@@ -8,7 +8,7 @@
 #include "core/mquads.h"
 
 namespace tin {
-int ClearCanvas::AddToBuf(WriteBuf *buf) {
+int ClearCanvas::AddToBuf(WriteBuf *buf) const {
   std::string str;
   MQ::OWO.AppendToCppString(&str);
   MQ::SERV_CLEAR_CANVAS.AppendToCppString(&str);

@@ -40,13 +40,16 @@ class SocketStuff {
 
   static constexpr int NQS = sizeof(NQuad);
 
-  explicit SocketStuff(Server *s, SockId id, SocketTCP4 &&socket)
+  explicit SocketStuff(Server *s, SockId id, SocketTCP4 &&socket,
+    intptr_t next_msg)
       : serv_(s),
         socket_(std::move(socket)),
         shall_read_var_(false),
         shall_be_removed_(RemoveEnum::NO),
         cm_processed_(0), msg_len_(0), msg_processed_(0), strct_(nullptr),
         supp_(),
+        msg_n_(next_msg),
+        msg_char_(0),
         id_(id) {
     read_buf_[BUF_SIZE] = '\0';
   }
@@ -60,7 +63,6 @@ class SocketStuff {
 
   // Mark socket to remove.
   void Remove() {
-    // ToDO dodać wylogowanko
     shall_be_removed_ = std::max(shall_be_removed_, RemoveEnum::YES);
   }
 
@@ -71,29 +73,26 @@ class SocketStuff {
 
   // This fn marks socket to remove even if it has sth to write.
   void ForceRemove() {
-    // TODO dodać wylogowanko
     shall_be_removed_ = RemoveEnum::FORCE;
   }
 
   // Tells if in next deletion step server shall close this socket.
-  constexpr bool ShallBeRemoved() const {
-    return shall_be_removed_ >= RemoveEnum::YES && !ShallWrite();
+  bool ShallBeRemoved(intptr_t nxt, intptr_t n) const {
+    return shall_be_removed_ >= RemoveEnum::YES && !ShallWrite(nxt, n);
   }
 
   // This tells if socket is handled in 'read step'.
-  constexpr bool ShallRead() const {
-    return shall_read_var_ && !ShallWrite() && !ShallBeRemoved();
+  bool ShallRead(intptr_t nxt, intptr_t n) const {
+    return shall_read_var_ && !ShallWrite(nxt, n) && !ShallBeRemoved(nxt, n);
   }
 
   // This tells if program shall write to this socket in next 'write step'.
-  constexpr bool ShallWrite() const {
-    return write_buf_.Chars() > 0 && shall_be_removed_ < RemoveEnum::FORCE;
+  bool ShallWrite(intptr_t nxt, intptr_t n) const {
+    return this->shall_be_removed_ < RemoveEnum::FORCE &&
+      !(n == 0 || nxt == this->msg_n_);
   }
 
-  // write buf
-  WriteBuf &WrBuf() {
-    return write_buf_;
-  }
+
 
   // This reads from socket to our buffer as much chars as it can.
   int ReadCharsFromSocket() {
@@ -218,7 +217,7 @@ class SocketStuff {
 
   int ChooseInstr();
 
-  SockId GetId() {
+  SockId GetId() const {
     return id_;
   }
 
@@ -282,6 +281,15 @@ class SocketStuff {
     return 0;
   }
 
+  void SetMsgPlace(intptr_t msg_no, intptr_t char_no) {
+    msg_n_ = msg_no;
+    msg_char_ = char_no;
+  }
+
+  std::array<intptr_t, 2> GetMsgPlace() {
+    return std::array<intptr_t, 2>{msg_n_, msg_char_};
+  }
+
  private:
   void Shift_(int how_much) {
     cm_processed_ += how_much;
@@ -334,7 +342,13 @@ class SocketStuff {
   NQuad instr2_;
 
   // Buffer to send with write fn.
-  WriteBuf write_buf_;
+  // WriteBuf write_buf_;
+
+  // Number of message connection does something.
+  intptr_t msg_n_;
+
+  // Character it is at.
+  intptr_t msg_char_;
 
   // Id of socekt
   SockId id_;

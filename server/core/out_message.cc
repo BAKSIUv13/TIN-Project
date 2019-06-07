@@ -4,19 +4,19 @@
 
 namespace tin {
 
-std::list<Username> OutMessage::Users() {
+std::list<Username> OutMessage::Users() const {
   return std::list<Username>{};
 }
 
-std::list<SockId> OutMessage::Socks() {
+std::list<SockId> OutMessage::Socks() const {
   return std::list<SockId>{};
 }
 
-Username OutMessage::User() {
+Username OutMessage::User() const {
   return Username{};
 }
 
-SockId OutMessage::Sock() {
+SockId OutMessage::Sock() const {
   return 0;  // 0 nigdy nie jest używane
 }
 

@@ -18,13 +18,13 @@ class LogOff : public OutMessage {
 
   virtual ~LogOff() {}
 
-  virtual std::string GetTypeName() {return "LogOff";}
+  virtual std::string GetTypeName() const {return "LogOff";}
 
-  virtual int Audience() {return ONE_S;}
+  virtual int Audience() const {return ONE_S;}
 
-  virtual SockId Sock() {return id_;}
+  virtual SockId Sock() const {return id_;}
 
-  virtual int AddToBuf(WriteBuf *buf);
+  virtual int AddToBuf(WriteBuf *buf) const;
  private:
   SockId id_;
 };  // class LogOff

@@ -20,14 +20,14 @@ class UserStatus : public OutMessage {
 
   virtual ~UserStatus() {}
 
-  virtual std::string GetTypeName() {return "UserStatus";}
+  virtual std::string GetTypeName() const {return "UserStatus";}
 
-  virtual int Audience() {return BROADCAST_U;}
+  virtual int Audience() const {return BROADCAST_U;}
 
   Username GetUsername() const {return username_;}
   constexpr NQuad What() const {return what_;}
 
-  virtual int AddToBuf(WriteBuf *buf);
+  virtual int AddToBuf(WriteBuf *buf) const;
  private:
   Username username_;
   NQuad what_;

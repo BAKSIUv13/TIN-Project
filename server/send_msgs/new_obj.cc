@@ -12,7 +12,7 @@ namespace tin {
 
 NewObj::~NewObj() {}
 
-int NewObj::AddToBuf(WriteBuf *buf) {
+int NewObj::AddToBuf(WriteBuf *buf) const {
   std::string str;
   MQ::OWO.AppendToCppString(&str);
   MQ::SERV_NEW_OBJECT.AppendToCppString(&str);

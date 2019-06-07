@@ -19,13 +19,13 @@ class LogOk : public OutMessage {
 
   virtual ~LogOk() {}
 
-  virtual std::string GetTypeName() {return "LogOk";}
+  virtual std::string GetTypeName() const {return "LogOk";}
 
-  virtual int Audience() {return ONE_S;}
+  virtual int Audience() const {return ONE_S;}
 
-  virtual SockId Sock() {return id_;}
+  virtual SockId Sock() const {return id_;}
 
-  virtual int AddToBuf(WriteBuf *buf);
+  virtual int AddToBuf(WriteBuf *buf) const;
  private:
   SockId id_;
 };  // class LogOk

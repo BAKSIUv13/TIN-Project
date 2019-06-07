@@ -9,7 +9,7 @@
 
 namespace tin {
 
-int MouseMoved::AddToBuf(WriteBuf *buf) {
+int MouseMoved::AddToBuf(WriteBuf *buf) const {
   std::string str;
   MQ::OWO.AppendToCppString(&str);
   MQ::SERV_MOUSE.AppendToCppString(&str);

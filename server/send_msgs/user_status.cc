@@ -8,7 +8,7 @@
 
 namespace tin {
 
-int UserStatus::AddToBuf(WriteBuf *buf) {
+int UserStatus::AddToBuf(WriteBuf *buf) const {
   std::string str;
   MQ::OWO.AppendToCppString(&str);
   MQ::SERV_USER_STATUS.AppendToCppString(&str);

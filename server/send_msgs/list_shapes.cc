@@ -8,7 +8,7 @@
 #include "core/mquads.h"
 
 namespace tin {
-int ListShapes::AddToBuf(WriteBuf *buf) {
+int ListShapes::AddToBuf(WriteBuf *buf) const {
   std::string str;
   MQ::OWO.AppendToCppString(&str);
   MQ::SERV_LS_SHAPES.AppendToCppString(&str);

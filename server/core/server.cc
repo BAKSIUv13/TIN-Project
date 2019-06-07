@@ -11,6 +11,8 @@
 #include <ios>
 #include <utility>
 #include <ctime>
+#include <algorithm>
+#include <bitset>
 
 #include "core/socket_tcp4.h"
 #include "core/nquad.h"
@@ -25,26 +27,28 @@
 
 static constexpr int STDIN_FD = STDIN_FILENO;
 
+namespace tin {
+
 namespace {
 
-class TempIO {
- public:
-  explicit TempIO(std::ios *ios)
-    : ios_(ios), ios_state_(nullptr) {
-    ios_state_.copyfmt(*ios);
+inline intptr_t calculate_remaining_msgs(intptr_t from, intptr_t next_no,
+    intptr_t n) {
+  static constexpr intptr_t mod = Server::MESG_QUE_LEN;
+  intptr_t i = from, res = 0;
+  while (/*n >= 0 &&*/ i != next_no) {
+    // n = (n + mod - 1) % mod;
+    i = (i + 1) % mod;
+    ++res;
   }
-  ~TempIO() {
-    ios_->copyfmt(ios_state_);
-  }
- private:
-  std::ios *ios_;
-  std::ios ios_state_;
-};
-}  // namespace
+  if (n < res)
+    return 0;
+  return res;
+}
 
-namespace tin {
+}
+
 Server::Server()
-    : runs_(false), next_sock_id_(1) {
+    : runs_(false), next_sock_id_(1), queued_msgs_(0), next_msg_it_(0) {
   if (pipe(end_pipe_)) {
     LogH << "Serwer się nie zrobił bo potok się nie otworzył :< "
       << std::strerror(errno) << '\n';
@@ -95,10 +99,10 @@ int Server::FeedSel_() {
   for (auto sock_it = client_socks_.begin();
       sock_it != client_socks_.end();
       ++sock_it) {
-    if (sock_it->second.ShallRead()) {
+    if (sock_it->second.ShallRead(next_msg_it_, queued_msgs_)) {
       sel_.AddFD(sock_it->second.GetSocket().GetFD(), Sel::READ);
     }
-    if (sock_it->second.ShallWrite()) {
+    if (sock_it->second.ShallWrite(next_msg_it_, queued_msgs_)) {
       sel_.AddFD(sock_it->second.GetSocket().GetFD(), Sel::WRITE);
     }
   }
@@ -108,7 +112,7 @@ int Server::FeedSel_() {
 int Server::RegisterSockFromAccept_(SocketTCP4 &&sock) {
   SockId id = NextSockId_();
   auto emplace_ret = client_socks_.emplace(id,
-    SocketStuff {this, id, std::move(sock)});
+    SocketStuff {this, id, std::move(sock), next_msg_it_});
   if (!emplace_ret.second) {
     LogH << "Nie udało się dodać socketu do mapy z socketami :<\n"
       "id: " << id
@@ -188,38 +192,18 @@ int Server::StopRun() {
 }
 
 int Server::WriteToSocks_() {
-  static constexpr int WRT_BUF = WriteBuf::SIZE;
-  char buf[WRT_BUF];
   int sockets_written = 0;
   for (auto it = client_socks_.begin(); it != client_socks_.end(); ++it) {
-    if (!(it->second.ShallWrite())
+    if (!(it->second.ShallWrite(next_msg_it_, queued_msgs_))
         || !(Sel::WRITE & sel_.Get(it->second.GetSocket().GetFD()))) {
       continue;
     }
-    WriteBuf &swb = it->second.WrBuf();
-    int loaded_from_buf = swb.Get(buf, WRT_BUF);
-    if (loaded_from_buf < 0) {
-      // Tutaj mamy obsługę gniazda w tak złym stanie, że musimy je zamknąć.
-      it->second.ForceRemove();
-      continue;
-    }
-    int written = write(it->second.GetSocket().GetFD(), buf, loaded_from_buf);
-    if (written < 0) {
-      // Tutaj też jest źle.
-      it->second.ForceRemove();
-      continue;
-    }
-    if (written == 0) {
-      // chyba zamknięte
-      LogVL << "gniazdo zamknięte??\n";
-      it->second.Remove();
-    }
-    swb.Pop(written);
-    ++sockets_written;
+    int res = WriteToOneSock_(&it->second);
+    if (res >= 0) ++sockets_written;
   }
   return sockets_written;
 }
-
+/*
 int Server::MsgsToBufs_() {
   OutMessage *msg = nullptr;
   int added_to_buf;
@@ -311,11 +295,31 @@ int Server::MsgsToBufs_() {
   }
   return 0;
 }
+*/
+
+bool Server::CheckIfSendMsg_(const SocketStuff *connection,
+    const OutMessage *msg) {
+  switch (msg->Audience()) {
+    case OutMessage::BROADCAST_S:
+      return true;
+    case OutMessage::BROADCAST_U:
+      return SockToUn(connection->GetId());
+    case OutMessage::ONE_S:
+      return msg->Sock() == connection->GetId();
+    case OutMessage::ONE_U: {
+      Username un = SockToUn(connection->GetId());
+      return un && un == msg->User();
+    }
+    case OutMessage::LIST_S: case OutMessage::LIST_U: default:
+      // Not implemented
+      return false;
+  }
+}
 
 int Server::ReadClients_() {
   int sockets_read = 0;
   for (auto it = client_socks_.begin(); it != client_socks_.end(); ++it) {
-    if (!(it->second.ShallRead())
+    if (!(it->second.ShallRead(next_msg_it_, queued_msgs_))
          || !(Sel::READ & sel_.Get(it->second.GetSocket().GetFD()))) {
        continue;
     }
@@ -362,6 +366,14 @@ int Server::DropSock_(SockId id) {
     socks_to_users_.erase(id);
     PushMsg<UserStatus>(un, MQ::USER_LOGGED_OFF);
   }
+  intptr_t msg = client_socks_.at(id).GetMsgPlace()[0];
+  intptr_t msgs_to_lower = calculate_remaining_msgs(msg, next_msg_it_,
+    queued_msgs_);
+  for (intptr_t i = 0; i < msgs_to_lower; ++i) {
+    if (--msg_queue_[msg].sockets_remaining < 1) {
+      PopMsg_();
+    }
+  }
   client_socks_.erase(id);
   LogM << "drop: ok, wychodzonko\n";
   return 0;
@@ -380,12 +392,12 @@ int Server::LoopTick_() {
   int write_to_socks_ret = WriteToSocks_();
   int read_clients_ret = ReadClients_();
   int do_world_work_ret = DoWorldWork_();
-  int msgs_to_bufs_ret = MsgsToBufs_();
+  // int msgs_to_bufs_ret = MsgsToBufs_();
   int delete_marked_socks_ret = DeleteMarkedSocks_();
   {
     (void)feed_sel_ret;
     (void)do_sel_ret;
-    (void)msgs_to_bufs_ret;
+    // (void)msgs_to_bufs_ret;
     (void)read_main_fds_ret;
     (void)write_to_socks_ret;
     (void)read_clients_ret;
@@ -489,7 +501,7 @@ int Server::LogOutUser(SockId id, bool generate_response) {
 int Server::DeleteMarkedSocks_() {
   auto it = client_socks_.begin();
   while (it != client_socks_.end()) {
-    if (it->second.ShallBeRemoved()) {
+    if (it->second.ShallBeRemoved(next_msg_it_, queued_msgs_)) {
       SockId id = it->first;
       ++it;
       DropSock_(id);
@@ -500,14 +512,42 @@ int Server::DeleteMarkedSocks_() {
   return 0;
 }
 
-OutMessage *Server::FirstMsg_() {
-  if (messages_to_send_.size() < 1) return nullptr;
-  return &*messages_to_send_.front();
-}
+
 
 int Server::PopMsg_() {
-  messages_to_send_.erase(messages_to_send_.begin());
+  if (queued_msgs_ < 1) {
+    return - 1;
+  }
+  size_t msg_index =
+    (MESG_QUE_LEN + next_msg_it_ - queued_msgs_) % MESG_QUE_LEN;
+  msg_queue_[msg_index].msg.reset();
+  msg_queue_[msg_index].str.clear();
+  msg_queue_[msg_index].sockets_remaining = 0;
+  --queued_msgs_;
   return 0;
+}
+
+int Server::DisposeMsg_() {
+  assert(queued_msgs_ == MESG_QUE_LEN - 1);
+  assert((MESG_QUE_LEN + next_msg_it_ - queued_msgs_) % MESG_QUE_LEN ==
+    (next_msg_it_ + 1) % MESG_QUE_LEN);
+  int cut_connections = 0;
+  intptr_t msg_index = (next_msg_it_ + 1) % MESG_QUE_LEN;
+  for (auto &connection : client_socks_) {
+    SockId id = connection.first;
+    SocketStuff &stuff = connection.second;
+    if (stuff.GetMsgPlace()[0] == msg_index) {
+      // Połączenie jest za wolne, zrywamy gniazdo.
+      Username un = SockToUn(id);
+      if (un) {
+        LogOutUser(id, false);
+      }
+      stuff.ForceRemove();
+      ++cut_connections;
+    }
+  }
+  PopMsg_();
+  return cut_connections;
 }
 
 
@@ -528,6 +568,88 @@ int Server::UserAdd(const Username &un, const std::string &passwd, bool admin) {
     return -1;
   }
   return 0;
+}
+
+
+int Server::WriteToOneSock_(SocketStuff *stuff) {
+  char buf[WRT_BUF];
+  std::array<intptr_t, 2> place = stuff->GetMsgPlace();
+  std::bitset<MESG_QUE_LEN> shall_send;
+  intptr_t copied = 0, written;
+  intptr_t msg_i = 0;
+  intptr_t chars_to_copy;
+  intptr_t msg_offset = place[1];
+  while (copied < WRT_BUF && msg_i < queued_msgs_) {
+    intptr_t msg_number = (place[0] + msg_i) % MESG_QUE_LEN;
+    MsgCell &cell = msg_queue_[msg_number];
+    // Niżej sprawdzamy, czy mamy wysłać tę wiadomość na to gniazdo,
+    // sprawdzenie msg_offset == 0 jest po to, że jak nie jest to nie ma po co
+    // sprawdzać, bo już to wczześniej zrobiliśmy.
+    if (msg_offset == 0 && !CheckIfSendMsg_(stuff, &*cell.msg)) {
+      chars_to_copy = 0;
+      shall_send[msg_i] = false;
+    } else {
+      chars_to_copy =
+        std::min(WRT_BUF - copied,
+          (intptr_t)msg_queue_[msg_number].str.size() - msg_offset);
+      memcpy(&buf[copied], &msg_queue_[msg_number].str.c_str()[msg_offset],
+        chars_to_copy);
+      copied += chars_to_copy;
+      shall_send[msg_i] = true;
+    }
+    ++msg_i;
+    msg_offset = 0;
+  }
+  if (copied == 0) {
+    return 0;
+  }
+  written = write(stuff->GetSocket().GetFD(), buf, copied);
+  if (written < 0) {
+    // Oj, bardzo źle.
+    LogH << "Błąd pisania do gniazda (funkcja write), " << stuff->GetId() << ' '
+      << stuff->GetSocket().GetFD() << '\n';
+    stuff->ForceRemove();
+    return -2;
+  }
+  if (written == 0) {
+    // chyba zamknięte
+    LogVL << "gniazdo zamknięte??\n";
+    stuff->Remove();
+    return -1;
+  }
+  intptr_t msg_bytes;
+  msg_offset = place[1];
+  intptr_t seen_msgs = msg_i;
+  intptr_t to_subtract = 0;
+  msg_i = 0;
+  while (written > 0 && msg_i < seen_msgs) {
+    bool ignore = false;
+    intptr_t msg_number = (place[0] + msg_i) % MESG_QUE_LEN;
+    msg_bytes = msg_queue_[msg_number].str.size() - msg_offset;
+    msg_offset = 0;
+    if (!shall_send[msg_i]) {
+      ++msg_i;
+      to_subtract = 0;
+      ignore = true;
+      continue;
+    }
+    to_subtract = std::min(msg_bytes, written);
+    ++msg_i;
+    written -= to_subtract;
+    if (to_subtract == msg_bytes || ignore) {
+      msg_queue_[msg_number].sockets_remaining -= 1;
+      if (msg_queue_[msg_number].sockets_remaining < 1) {
+        PopMsg_();
+      }
+    }
+  }
+  assert(written == 0);
+  intptr_t final_msg = (place[0] + msg_i) % MESG_QUE_LEN;
+  if (final_msg == next_msg_it_) {
+    to_subtract = 0;
+  }
+  stuff->SetMsgPlace(final_msg, to_subtract);
+  return 1;
 }
 
 }  // namespace tin

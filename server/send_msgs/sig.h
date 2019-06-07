@@ -22,17 +22,17 @@ class Sig : public OutMessage {
 
   virtual ~Sig() {}
 
-  virtual std::string GetTypeName() {
+  virtual std::string GetTypeName() const {
     return IsHeavy() ? "Signal Heavy" : "Signal Light";
   }
 
-  virtual int Audience() {return ONE_S;}
-  virtual SockId Sock() {return id_;}
-  virtual int AddToBuf(WriteBuf *buf);
+  virtual int Audience() const {return ONE_S;}
+  virtual SockId Sock() const {return id_;}
+  virtual int AddToBuf(WriteBuf *buf) const;
 
-  bool IsHeavy() {return heavy_;}
-  const std::string GetMsg() {return msg_;}
-  NQuad GetCode() {return code_;}
+  bool IsHeavy() const {return heavy_;}
+  const std::string &GetMsg() const {return msg_;}
+  NQuad GetCode() const {return code_;}
 
  private:
   SockId id_;

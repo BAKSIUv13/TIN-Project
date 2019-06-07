@@ -18,11 +18,11 @@ class ClearCanvas : public OutMessage {
 
   virtual ~ClearCanvas() {}
 
-  virtual std::string GetTypeName() {return "ClearCanvas";}
+  virtual std::string GetTypeName() const {return "ClearCanvas";}
 
-  virtual int Audience() {return BROADCAST_U;}
+  virtual int Audience() const {return BROADCAST_U;}
 
-  virtual int AddToBuf(WriteBuf *buf);
+  virtual int AddToBuf(WriteBuf *buf) const;
 };  // class LogOk
 }  // namespace tin
 

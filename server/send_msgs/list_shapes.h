@@ -28,15 +28,15 @@ class ListShapes : public OutMessage {
 
   virtual ~ListShapes() {}
 
-  virtual std::string GetTypeName() {return "ListShapes";}
+  virtual std::string GetTypeName() const {return "ListShapes";}
 
-  virtual int Audience() {return ONE_U;}
+  virtual int Audience() const {return ONE_U;}
 
-  Username User() override {
+  Username User() const override {
     return username_;
   }
 
-  virtual int AddToBuf(WriteBuf *buf);
+  virtual int AddToBuf(WriteBuf *buf) const;
 
  private:
   Username username_;
