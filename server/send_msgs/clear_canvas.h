@@ -14,8 +14,6 @@ namespace tin {
 class ClearCanvas : public OutMessage {
  public:
   ClearCanvas() {}
-  explicit ClearCanvas(SockId id) {}
-
   virtual ~ClearCanvas() {}
 
   virtual std::string GetTypeName() const {return "ClearCanvas";}

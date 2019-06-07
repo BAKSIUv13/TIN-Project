@@ -24,6 +24,7 @@
 #include "send_msgs/log_off.h"
 #include "send_msgs/user_msg.h"
 #include "send_msgs/user_status.h"
+#include "send_msgs/clear_canvas.h"
 
 static constexpr int STDIN_FD = STDIN_FILENO;
 
@@ -43,6 +44,20 @@ inline intptr_t calculate_remaining_msgs(intptr_t from, intptr_t next_no,
   if (n < res)
     return 0;
   return res;
+}
+
+inline std::string get_word(std::istream &ss) {
+  static constexpr size_t BUF_SIZE = 128;
+  char buf[BUF_SIZE];
+  std::string str;
+  ss.getline(buf, BUF_SIZE, ' ');
+  str = buf;
+  if (str.size() == 0) return str;
+  while (str.back() == '\\' && ss.good()) {
+    ss.getline(buf, BUF_SIZE, ' ');
+    str += buf;
+  }
+  return str;
 }
 
 }
@@ -180,23 +195,36 @@ Username Server::SockToUn(SockId id) {
 }
 
 int Server::DealWithStdinBuf_(const char *s) {
-  static constexpr size_t BUF_SIZE = 128;
-  char buf[BUF_SIZE];
-  if (strncmp(s, "stop", 4) == 0 && (s[4] == '\n' || s[4] == ' ')) {
-    StopRun();
-  }
   std::stringstream ss(s);
   std::string str;
-  ss.getline(buf, BUF_SIZE, ' ');
-  str = buf;
-  while (str.back() == '\\' && ss.good()) {
-    ss.getline(buf, BUF_SIZE, ' ');
-    str += buf;
-  }
+  str = get_word(ss);
   if (str == "exit" || str == "quit" || str == "stop") {
     runs_ = false;
   } else if (str == "clear") {
-    
+    world_.ClearImage();
+    PushMsg<ClearCanvas>();
+  } else if (str == "kick") {
+    str = get_word(ss);
+    // ERRR_KICK
+    Username un(str);
+    LogH << "Próba wyrzucenia: " << un << '\n';
+    if (un.Good()) {
+      SockId id;
+      try {
+        id = users_.at(un).GetSockId();
+        PushMsg<Sig>(id, MQ::ERRR_KICK, true);
+        LogOutUser(id, false);
+        client_socks_.at(id).Remove();
+      } catch (std::out_of_range &e) {
+        LogH << "Nie ma\n";
+      }
+    }
+  } else if (str == "useradd") {
+      str = get_word(ss);
+      Username un(str);
+      str = get_word(ss);
+      std::string passwd(str);
+      UserAdd(un, passwd, false);
   }
   return 0;
 }
