@@ -31,7 +31,7 @@ static void interrupt(int) {
 int main(int argc, char **argv, char **env) {
   tin::LogH << "Uruchamianie serwera.\n";
 
-  return tin::AccountManager::test(argc, argv, env);
+  // return tin::AccountManager::test(argc, argv, env);
 
   uint16_t port = 0;
   bool arg_port = false;
@@ -71,7 +71,7 @@ int main(int argc, char **argv, char **env) {
   }
 
   server.SpecialHardcodeInit();
-  server.AttachAccountFile("shadow.log", false);
+  // server.AttachAccountFile("shadow.log", false);
   arg_port ? server.Run(port) : server.Run();
   sigaction(SIGINT, &old_sa, nullptr);
 }
