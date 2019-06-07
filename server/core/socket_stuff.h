@@ -60,6 +60,7 @@ class SocketStuff {
 
   // Mark socket to remove.
   void Remove() {
+    // ToDO dodać wylogowanko
     shall_be_removed_ = std::max(shall_be_removed_, RemoveEnum::YES);
   }
 
@@ -70,6 +71,7 @@ class SocketStuff {
 
   // This fn marks socket to remove even if it has sth to write.
   void ForceRemove() {
+    // TODO dodać wylogowanko
     shall_be_removed_ = RemoveEnum::FORCE;
   }
 

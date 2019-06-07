@@ -14,18 +14,14 @@ namespace tin {
 class ListUsers : public OutMessage {
  public:
   ListUsers() {}
-  explicit ListUsers(const Username &un)
-      : username_(un) {}
+  explicit ListUsers(const Username &un, std::list<Username> &&users)
+      : username_(un), users_(users) {}
 
   virtual ~ListUsers() {}
 
   virtual std::string GetTypeName() {return "ListUsers";}
 
   virtual int Audience() {return ONE_U;}
-
-  void AddUser(Username un) {
-    users_.push_back(un);
-  }
 
   Username User() override {
     return username_;

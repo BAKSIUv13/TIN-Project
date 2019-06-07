@@ -16,7 +16,7 @@ class WriteBuf {
   constexpr WriteBuf() : buf_(), start_(0), len_(0) {}
   ~WriteBuf() {}
 
-  int Add(const char *);
+  int Add(const char *, size_t n);
   int Add(const std::string &);
   int Get(char *, int);
   std::string GetString(int);

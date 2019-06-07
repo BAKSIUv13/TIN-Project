@@ -248,7 +248,7 @@ int Server::MsgsToBufs_() {
           SocketStuff *stuff = &client_socks_.at(x.second.GetSockId());
           added_to_buf = msg->AddToBuf(&stuff->WrBuf());
           if (added_to_buf < 0) {
-            LogH << "Błąd przy dodawaniu wiadomości do bufora. :<\n" <<
+            LogH << "Błąd dodawania wiad' do buf'\n" <<
               "Socket o id " << stuff->GetId() << " i fd " <<
               stuff->GetSocket().GetFD() << "\nuser: " << x.first << '\n';
             stuff->ForceRemove();
@@ -273,7 +273,7 @@ int Server::MsgsToBufs_() {
           auto &stuff = client_socks_.at(id);
           added_to_buf = msg->AddToBuf(&stuff.WrBuf());
           if (added_to_buf < 0) {
-            LogH << "Błąd dodawania wiadomości do buf'\n" <<
+            LogH << "Błąd dodawania wiad' do buf'\n" <<
               "Socket o id " << id << " i fd " <<
               stuff.GetSocket().GetFD() << '\n';
             if (socks_to_users_.count(id) > 0) {
