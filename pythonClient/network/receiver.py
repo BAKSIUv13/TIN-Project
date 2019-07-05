@@ -19,9 +19,10 @@ class Receiver(threading.Thread):
     def run(self):
         while not self.stop_request.isSet():
             str = self._s.recv(1024)
+            if str != b'':
+                print(str)
             if str:
                 for byte in str:
-                    # the only place with a put operation
                     try:
                         self._r_bytes_queue.put(
                             byte,
@@ -38,5 +39,7 @@ class Receiver(threading.Thread):
         return
 
     def get_byte(self):
-        return self._r_bytes_queue.get(block=True,
+        if not self._r_bytes_queue.empty():
+            return self._r_bytes_queue.get(block=True,
+
                                        timeout=GET_BYTE_TIMEOUT_SEC)
