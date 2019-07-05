@@ -2,6 +2,7 @@ import threading
 import queue
 import struct
 
+
 _SEND_PORTION_SIZE = 4
 _SEND_QUEUE_SIZE = 32 * 1024
 
@@ -34,6 +35,7 @@ class Sender(threading.Thread):
                     #self._s.sendall(byte.to_bytes(4,byteorder='big'))
                     self._s.sendall(byte)
 
+
     def join(self, timeout=None):
         self.stop_request.set()
         super(Sender, self).join(timeout)
@@ -56,3 +58,4 @@ class Sender(threading.Thread):
 
     def put_string(self, string):
         self.put_byte(string.encode())
+

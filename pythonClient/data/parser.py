@@ -2,6 +2,7 @@ import threading
 import time
 import struct
 
+
 from network import *
 from data import message
 
@@ -184,6 +185,7 @@ class Parser(threading.Thread):
         to_return = message.Message()
         if self.msg_is_ready:
             to_return.clone(self.msg)
+
             self.msg.set(0, 0, 0)
             self.msg_is_ready = 0
             return to_return

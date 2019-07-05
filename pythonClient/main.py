@@ -4,6 +4,7 @@ import struct
 
 from application import Application
 from login import Login
+
 from network import *
 from data import *
 
@@ -91,6 +92,7 @@ app = Application(parser, messenger, master=root)
 app.mainloop()
 
 sender.put_string("OwO!lout")
+
 
 messenger.join()
 parser.join()

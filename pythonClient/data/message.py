@@ -20,6 +20,7 @@ class Message():
         self.name = name
         self.param = param
 
+
     def set_shape(self, shape, rgba, rgba1, shape_param, shape_points, points):
         self.type = 3
         self.rgba = rgba
@@ -72,3 +73,4 @@ class Message():
 
     def get_path(self):
         return [self.rgba, self.shape_param[0], self.shape_points, self.points]
+

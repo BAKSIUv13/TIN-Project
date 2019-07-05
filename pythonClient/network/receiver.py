@@ -41,4 +41,5 @@ class Receiver(threading.Thread):
     def get_byte(self):
         if not self._r_bytes_queue.empty():
             return self._r_bytes_queue.get(block=True,
+
                                        timeout=GET_BYTE_TIMEOUT_SEC)

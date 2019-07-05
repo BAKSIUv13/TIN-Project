@@ -14,6 +14,23 @@ ustawiony, że ma ją trzymać), zaznaczone (zablokowane) obiekty. Będzie równ
 możliwość zalogowania się jako administrator, który będzie mógł cofać ruchy
 innych, wyrzucać ich, banować i robić właściwie wszystko, co się da.
 
+## Użycie
+
+```
+server [port]
+```
+
+Jeśli port nie jest podany, serwer włącza się na domyślnym porcie 42000.
+
+Zakończenie wejścia (Ctrl-D) kończy program, podobnie jak wpisanie `exit` na
+wejściu.
+
+Można usunąć zalogowaną sesję wpisując na wejściu
+
+```
+l [nazwa użytkownika]
+```
+
 ## Uwierzytelnianie
 
 Będą trzy rodzaje użytkowników:
